@@ -38,7 +38,7 @@ void thread_pool::add_task(const _STD function<void(void*)>& func, void* data = 
 	mutex_condition_.notify_one();
 }
 
-void thread_pool::add_task(const _Pair_fvp& pair) {
+void thread_pool::add_task(_Pair_fvp& pair) {
 	{
 		_STD lock_guard<_STD mutex> lock(queue_mutex_);
 		task_queue_.emplace_back(pair);

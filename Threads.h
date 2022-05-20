@@ -32,6 +32,7 @@ _NSTD_BEGIN
 //};
 
 class thread_pool {
+public:
 	typedef _STD pair <_STD function<void(void*)>, void*> _Pair_fvp;
 	/* NOTE:
 	* The use of void* as a parameter for each function is done so for abstraction.
@@ -52,7 +53,7 @@ class thread_pool {
 	* or use a custom system to protect its/their contents from curroption;
 	* see make_thread_safe function below.
 	*/
-
+private:
 	_STD vector<_STD thread> vThreads_;
 	_STD deque<_Pair_fvp> task_queue_;
 	_STD mutex queue_mutex_;
@@ -75,7 +76,7 @@ public:
 	void thread_loop();
 
 	void add_task(const _STD function<void(void*)>&, void*);
-	void add_task(const _Pair_fvp&);
+	void add_task(_Pair_fvp&);
 	void add_task(_STD vector<_Pair_fvp>);
 
 	template <class R, class... Args>
@@ -87,9 +88,9 @@ public:
 		mutex_condition_.notify_one();
 	}
 	template <class R, class... Args>
-	void add_task(const _STD function<R(Args...)>& func, R* ret, Args&&... args) {
-		_STD mutex dummy_mutex;
-		add_task(func, dummy_mutex, _STD make_tuple(ret, args...));
+	void add_task(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex, R* ret, Args&&... args) {
+		_STD tuple<R*, Args...> t = _STD make_tuple(ret, args...);
+		add_task(func, ret_mutex, t);
 	}
 
 
@@ -111,7 +112,8 @@ public:
 		return _STD function<void(void*)>(
 			[&func, &tuple_mutex](void* p) {
 				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
-				func(_STD get<Args>(*reinterpret_cast<_STD tuple<Args...>*>(p)) ...);
+				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
+				func(_STD get<Args>(*t) ...);
 			}
 		);
 	}
