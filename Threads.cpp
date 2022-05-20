@@ -56,8 +56,5 @@ void thread_pool::add_task(_STD vector<_Pair_fvp> task_list) {
 		mutex_condition_.notify_one();
 }
 
-
-
-
 _NSTD_END
 #endif // _NSTD_THREADS_
