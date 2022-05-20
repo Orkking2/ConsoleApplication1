@@ -20,7 +20,8 @@
 #define _NSTD ::nstd::
 #define _NSTD_BEGIN namespace nstd {
 #define _NSTD_END }
-
+#define _MULTITHREAD_BEGIN namespace multithreaded {
+#define _MULTITHREAD_END }
 
 
 #endif // ifndef _NSTD_DEFINES_

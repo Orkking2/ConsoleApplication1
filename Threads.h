@@ -41,7 +41,7 @@ public:
 	* within the function.
 	*
 	* If the void* parameter is not used, it is recomended to set the associated
-	* pair::second to NULL or nullptr and to simply ignore it within the function.
+	* date element to NULL or nullptr and to simply ignore it within the function.
 	*
 	* Functions passed into this thread pool should reinterpret the void*, e.g.
 	* reinterpret_vast<T*> (void* p), before use.
