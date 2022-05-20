@@ -4,7 +4,7 @@
 
 int main()
 {
-    
+    std::cout << "Your mother\n";
     
     std::system("pause");
 }
