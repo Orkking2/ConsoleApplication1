@@ -125,7 +125,7 @@ public:
 				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
 				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
-				delete p;
+				delete t;
 			}
 		);
 	}
