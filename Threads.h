@@ -97,6 +97,7 @@ public:
 
 	// Function wrappers;
 
+	// ret_mutex is intended to protect the R* addressed in t, not the tuple in its entirety
 	template <class R, class... Args>
 	_NODISCARD _Func make_thread_safe_TUPLE(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex) {
 		return _Func(
