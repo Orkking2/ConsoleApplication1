@@ -33,7 +33,8 @@ _NSTD_BEGIN
 
 class thread_pool {
 public:
-	typedef _STD pair <_STD function<void(void*)>, void*> _Pair_fvp;
+	typedef _STD function<void(void*)> _Func;
+	typedef _STD pair <_Func, void*> _Pair_fvp;
 	/* NOTE:
 	* The use of void* as a parameter for each function is done so for abstraction.
 	*
@@ -75,7 +76,7 @@ public:
 
 	void thread_loop();
 
-	void add_task(const _STD function<void(void*)>&, void*);
+	void add_task(const _Func&, void*);
 	void add_task(_Pair_fvp&);
 	void add_task(_STD vector<_Pair_fvp>);
 
@@ -90,17 +91,17 @@ public:
 	template <class R, class... Args>
 	void add_task(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex, R* ret, Args&&... args) {
 		_STD tuple<R*, Args...> t = _STD make_tuple(ret, args...);
-		add_task(func, ret_mutex, t);
+		add_task(make_thread_safe_TUPLE(func, ret_mutex), t);
 	}
 
 
 	// Function wrappers;
 
 	template <class R, class... Args>
-	_NODISCARD _STD function<void(void*)> make_thread_safe_TUPLE(const _STD function<R(Args...)>& func, _STD mutex& tuple_mutex) {
-		return _STD function<void(void*)>(
-			[&func, &tuple_mutex](void* p) {
-				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
+	_NODISCARD _Func make_thread_safe_TUPLE(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex) {
+		return _Func(
+			[&func, &ret_mutex](void* p) {
+				_STD lock_guard<_STD mutex> tuple_guard(ret_mutex);
 				_STD tuple<R*, Args...>* t = reinterpret_cast<_STD tuple<R*, Args...>*>(p);
 				*_STD get<R*>(*t) = func(_STD get<Args>(*t) ...);
 			}
@@ -108,10 +109,9 @@ public:
 	}
 
 	template <class... Args>
-	_NODISCARD _STD function<void(void*)> make_thread_safe_TUPLE_NORETURN(const _STD function<void(Args...)>& func, _STD mutex& tuple_mutex) {
-		return _STD function<void(void*)>(
-			[&func, &tuple_mutex](void* p) {
-				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
+	_NODISCARD _Func make_thread_safe_TUPLE_NORETURN(const _STD function<void(Args...)>& func) {
+		return _Func(
+			[&func](void* p) {
 				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
 			}
@@ -119,10 +119,9 @@ public:
 	}
 
 	template <class... Args>
-	_NODISCARD _STD function<void(void*)> make_thread_safe_TUPLE_NORETURN_DELETE_PTR(const _STD function<void(Args...)>& func, _STD mutex& tuple_mutex) {
-		return _STD function<void(void*)>(
-			[&func, &tuple_mutex](void* p) {
-				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
+	_NODISCARD _Func make_thread_safe_TUPLE_NORETURN_DELETE_PTR(const _STD function<void(Args...)>& func) {
+		return _Func(
+			[&func](void* p) {
 				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
 				delete t;
