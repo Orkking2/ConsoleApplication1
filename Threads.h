@@ -60,19 +60,19 @@ private:
 	_STD condition_variable mutex_condition_;
 	bool done_;
 public:
-	thread_pool(unsigned int count = _STD thread::hardware_concurrency()) : done_(false) {
+	thread_pool(unsigned int count = _STD thread::hardware_concurrency() - 1) : done_(false) {
 		unsigned int hc = _STD thread::hardware_concurrency();
 		if (count > hc)
 			count = hc;
 		vThreads_.resize(count);
 		for (_STD thread& t : vThreads_)
-			t = _STD thread( [this] { thread_loop(); });
+			t = _STD thread([this] { thread_loop(); });
 	}
 	void release();
 	~thread_pool() { release(); }
-	
+
 	_NODISCARD unsigned int num_threads() { return vThreads_.size(); }
-	
+
 	void thread_loop();
 
 	void add_task(const _STD function<void(void*)>&, void*);
@@ -114,6 +114,18 @@ public:
 				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
 				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
+			}
+		);
+	}
+
+	template <class... Args>
+	_NODISCARD _STD function<void(void*)> make_thread_safe_TUPLE_NORETURN_DELETE_PTR(const _STD function<void(Args...)>& func, _STD mutex& tuple_mutex) {
+		return _STD function<void(void*)>(
+			[&func, &tuple_mutex](void* p) {
+				_STD lock_guard<_STD mutex> tuple_guard(tuple_mutex);
+				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
+				func(_STD get<Args>(*t) ...);
+				delete p;
 			}
 		);
 	}
