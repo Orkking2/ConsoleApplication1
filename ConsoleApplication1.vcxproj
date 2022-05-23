@@ -145,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Defines.h" />
+    <ClInclude Include="Huff.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Threads.h" />
   </ItemGroup>
