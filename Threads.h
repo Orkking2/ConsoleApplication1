@@ -97,13 +97,12 @@ public:
 
 	// Function wrappers;
 
-	// ret_mutex is intended to protect the R* addressed in t, not the tuple in its entirety
 	template <class R, class... Args>
 	_NODISCARD _Func make_thread_safe_TUPLE(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex) {
 		return _Func(
 			[&func, &ret_mutex](void* p) {
 				_STD lock_guard<_STD mutex> tuple_guard(ret_mutex);
-				_STD tuple<R*, Args...>* t = reinterpret_cast<_STD tuple<R*, Args...>*>(p);
+				auto* t = reinterpret_cast<_STD tuple<R*, Args...>*>(p);
 				*_STD get<R*>(*t) = func(_STD get<Args>(*t) ...);
 			}
 		);
@@ -113,7 +112,7 @@ public:
 	_NODISCARD _Func make_thread_safe_TUPLE_NORETURN(const _STD function<void(Args...)>& func) {
 		return _Func(
 			[&func](void* p) {
-				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
+				auto* t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
 			}
 		);
@@ -123,7 +122,7 @@ public:
 	_NODISCARD _Func make_thread_safe_TUPLE_NORETURN_DELETE_PTR(const _STD function<void(Args...)>& func) {
 		return _Func(
 			[&func](void* p) {
-				auto t = reinterpret_cast<_STD tuple<Args...>*>(p);
+				auto* t = reinterpret_cast<_STD tuple<Args...>*>(p);
 				func(_STD get<Args>(*t) ...);
 				delete t;
 			}
