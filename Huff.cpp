@@ -3,7 +3,7 @@
 
 _NSTD_BEGIN
 
-const void*& HuffTree::Node::GetP(_STD deque<bool>& deque) const {
+const void* HuffTree::Node::GetP(_STD deque<bool>& deque) const {
 	bool cashe = deque.front();
 	deque.pop_front();
 	switch (cashe) {
@@ -12,7 +12,11 @@ const void*& HuffTree::Node::GetP(_STD deque<bool>& deque) const {
 	}
 }
 
-
+//void HuffTree::vPtr::operator= (const IElement*& r) {
+//	vPtr* p = reinterpret_cast<vPtr*>(const_cast<IElement*>(r));
+//	ptr_ = p->ptr_;
+//	freq_ = p->freq_;
+//}
 
 
 _NSTD_END
