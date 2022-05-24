@@ -26,7 +26,7 @@ public:
 		const uint freq_;
 	public:
 		vPtr(const void* ptr = NULL, const uint freq = 0) : ptr_(ptr), freq_(freq) {}
-		const void*& GetP(_STD deque<bool>& ignore) const override { return ptr_; }
+		const void*& GetP(_STD deque<bool>&) const override { return ptr_; }
 		const uint GetFreq()                        const override { return freq_; }
 		const bool isNode()                         const override { return false; }
 	};
@@ -35,7 +35,7 @@ public:
 		const IElement* l_, * r_;
 	public:
 		Node(const IElement* l, const IElement* r) : l_(l), r_(r) {}
-		const void*& GetP(_STD deque<bool>& deque) const override;
+		const void*& GetP(_STD deque<bool>&) const override;
 		const uint GetFreq()                       const override { return (l_->GetFreq() + r_->GetFreq()); }
 		const bool isNode()                        const override { return true; }
 	};
