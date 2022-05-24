@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Huff.cpp" />
     <ClCompile Include="Threads.cpp" />
   </ItemGroup>
   <ItemGroup>
