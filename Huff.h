@@ -15,9 +15,9 @@ class HuffTree {
 public:
 	struct IElement {
 		virtual ~IElement() = default;
-		virtual const void* GetP(_STD deque<bool>&)  const = 0;
-		virtual const uint GetFreq()                 const = 0;
-		virtual const bool isNode()                  const = 0;
+		virtual const void* GetP(_STD deque<bool>&) const = 0;
+		virtual const uint GetFreq()                const = 0;
+		virtual const bool isNode()                 const = 0;
 	};
 
 	class vPtr : public IElement {
@@ -32,9 +32,9 @@ public:
 	};
 
 	class Node : public IElement {
-		const IElement* l_, * r_;
+		IElement* l_, * r_;
 	public:
-		Node(const IElement* l, const IElement* r) : l_(l), r_(r) {}
+		Node(IElement* l, IElement* r) : l_(l), r_(r) {}
 		const void* GetP(_STD deque<bool>&) const override;
 		const uint GetFreq()                const override { return (l_->GetFreq() + r_->GetFreq()); }
 		const bool isNode()                 const override { return true; }
@@ -43,14 +43,8 @@ private:
 	_STD vector<IElement*> Nodes_;
 	_STD unordered_map<void*, _STD vector<bool>> map_;
 public:
-	HuffTree() : Nodes_(), map_() {}
-	template <class _Ty>
-	HuffTree(_STD vector<_Ty> objs) {
-		Nodes_.resize(objs.size(), NULL);
-		for (_Ty& obj : objs) {
-
-		}
-	}
+	HuffTree() {}
+	
 };
 
 _NSTD_END
