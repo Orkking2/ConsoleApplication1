@@ -40,10 +40,11 @@ public:
 		const bool isNode()                 const override { return true; }
 	};
 private:
+	_STD vector<void*> ptrs_;
 	_STD vector<IElement*> Nodes_;
 	_STD unordered_map<void*, _STD vector<bool>> map_;
 public:
-	HuffTree() : Nodes_(), map_() {}
+	HuffTree() : ptrs_(), Nodes_(), map_() {}
 	template <class _Ty>
 	HuffTree(_STD vector<_Ty> objs) {
 		Nodes_.resize(objs.size(), NULL);
