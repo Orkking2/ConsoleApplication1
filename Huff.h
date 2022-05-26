@@ -40,6 +40,7 @@ public:
 		const bool isNode()                 const override { return true; }
 	};
 private:
+	_STD vector<void*> ptrs_;
 	_STD vector<IElement*> Nodes_;
 	_STD unordered_map<void*, _STD vector<bool>> map_;
 public:
