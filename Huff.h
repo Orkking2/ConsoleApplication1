@@ -53,7 +53,9 @@ public:
 		}
 	}
 	template <class _Ty>
-	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_map(_STD vector<_Ty>&);
+	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_map(_STD vector<_Ty>& val_list) {
+
+	}
 };
 
 _NSTD_END
