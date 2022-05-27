@@ -11,6 +11,7 @@ _NSTD_BEGIN
 
 class HuffTree {
 	typedef unsigned int uint;
+	typedef _STD pair<void*, int> vfp;
 
 public:
 	struct IElement {
@@ -44,7 +45,7 @@ private:
 	_STD vector<IElement*> Nodes_;
 	_STD unordered_map<void*, _STD vector<bool>> map_;
 public:
-	HuffTree() : ptrs_(), Nodes_(), map_() {}
+	HuffTree() {}
 
 
 
