@@ -45,13 +45,10 @@ private:
 	_STD unordered_map<void*, _STD vector<bool>> map_;
 public:
 	HuffTree() : ptrs_(), Nodes_(), map_() {}
-	template <class _Ty>
-	HuffTree(_STD vector<_Ty> objs) {
-		Nodes_.resize(objs.size(), NULL);
-		for (_Ty& obj : objs) {
 
-		}
-	}
+
+
+
 	template <class _Ty>
 	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_map(_STD vector<_Ty>& val_list) {
 		
