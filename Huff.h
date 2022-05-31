@@ -119,6 +119,8 @@ public:
 	}
 
 	template <class _Ty>
+	// This method takes a loooong time
+	// Between O(2n) and O(2kn) where k = ptrs_.size()
 	_NODISCARD _STD deque<bool> encode(_STD vector<_Ty> vals) {
 		_STD vector<void*> out;
 		if (ptrs_set_) {
@@ -126,6 +128,7 @@ public:
 				for (void* p : ptrs_) {
 					if (*reinterpret_cast<_Ty*> (p) == val) {
 						out.push_back(p);
+						break;
 					}
 				}
 			}
