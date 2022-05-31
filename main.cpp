@@ -4,10 +4,18 @@
 
 int main()
 {
-    std::string s("Test_String");
-    nstd::HuffTree tree;
-    tree.create_tree()
-    
+    std::unordered_map<int, int> map;
+    _NSTD_FOR_I(100) {
+        _NSTD_FOR(j, 5) {
+            if (!map.contains(j)) {
+                map[j] = 1;
+            } else {
+                map[j]++;
+            }
+        }
+    }
+    _NSTD_FOR_I(5)
+        std::cout << map[i] << '\n';
     std::system("pause");
 }
 

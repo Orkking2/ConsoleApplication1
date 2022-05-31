@@ -88,7 +88,7 @@ public:
 	_NODISCARD static _STD vector<_STD pair<void*, uint>> gen_freqs(_STD vector<_Ty> vals) {
 		_STD unordered_map<_Ty, uint> checker;
 		_STD vector<void*> unique_ptrs;
-		for (_Ty& val : vals) {
+		for (const _Ty& val : vals) {
 			if (!checker.contains(val)) {
 				// If a HuffTree object creates a tree using this method, 
 				// it should call HuffTree::release_ptrs<_Ty>()
@@ -123,7 +123,7 @@ public:
 		_STD vector<_Ty> out;
 		if (ptrs_set_) {
 			while (!bool_list.empty())
-				out.push_back(*reinterpret_cast<_Ty*> (const_cast<void*> (Fin_node_->GetP(bool_list)));
+				out.push_back(*reinterpret_cast<_Ty*> (const_cast<void*> (Fin_node_->GetP(bool_list))));
 		}
 		return out;
 	}
@@ -135,6 +135,7 @@ public:
 			while (!bool_list.empty())
 				out.push_back(const_cast<void*> (Fin_node_->GetP(bool_list)));
 		}
+		return out;
 	}
 };
 
