@@ -119,6 +119,34 @@ public:
 	}
 
 	template <class _Ty>
+	_NODISCARD _STD deque<bool> encode(_STD vector<_Ty> vals) {
+		_STD vector<void*> out;
+		if (ptrs_set_) {
+			for (_Ty& val : vals) {
+				for (void* p : ptrs_) {
+					if (*reinterpret_cast<_Ty*> (p) == val) {
+						out.push_back(p);
+					}
+				}
+			}
+		}
+		return encode(out);
+	}
+
+	template <>
+	_NODISCARD _STD deque<bool> encode<void*>(_STD vector<void*> ptrs) {
+		_STD deque<bool> out;
+		if (ptrs_set_) {
+			for (void*& p : ptrs) {
+				for (bool b : map_[p]) {
+					out.push_back(b);
+				}
+			}
+		}
+		return out;
+	}
+
+	template <class _Ty>
 	_NODISCARD _STD vector<_Ty> decode(_STD deque<bool>& bool_list) {
 		_STD vector<_Ty> out;
 		if (ptrs_set_) {
