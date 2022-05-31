@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _NSTD_THREADS_
+#define _NSTD_THREADS_
+
 #include "Defines.h"
 #include <functional>
 #include <utility>
@@ -8,9 +11,6 @@
 #include <tuple>
 #include <deque>
 #include <mutex>
-
-#ifndef _NSTD_THREADS_
-#define _NSTD_THREADS_
 
 _NSTD_BEGIN
 

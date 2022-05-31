@@ -52,7 +52,7 @@ void thread_pool::add_task(_STD vector<_Pair_fvp> task_list) {
 		for (_Pair_fvp& task : task_list)
 			task_queue_.push_back(task);
 	}
-	_NSTD_FOR(task_list.size())
+	_NSTD_FOR_I(task_list.size())
 		mutex_condition_.notify_one();
 }
 
