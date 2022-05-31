@@ -85,7 +85,7 @@ public:
 	void create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals);
 
 	template <class _Ty>
-	_NODISCARD _STD vector<_STD pair<void*, uint>> gen_freqs(_STD vector<_Ty> vals) {
+	_NODISCARD static _STD vector<_STD pair<void*, uint>> gen_freqs(_STD vector<_Ty> vals) {
 		_STD unordered_map<_Ty, uint> checker;
 		_STD vector<void*> unique_ptrs;
 		for (_Ty& val : vals) {
@@ -119,13 +119,22 @@ public:
 	}
 
 	template <class _Ty>
-	_NODISCARD _STD vector<_Ty> decode(_STD deque<_Ty>& deque) {
+	_NODISCARD _STD vector<_Ty> decode(_STD deque<bool>& bool_list) {
 		_STD vector<_Ty> out;
 		if (ptrs_set_) {
-			while (!deque.empty()) 
-				out.push_back(*reinterpret_cast<_Ty*> (Fin_node_->GetP(deque))
+			while (!bool_list.empty())
+				out.push_back(*reinterpret_cast<_Ty*> (const_cast<void*> (Fin_node_->GetP(bool_list)));
 		}
 		return out;
+	}
+
+	template <>
+	_NODISCARD _STD vector<void*> decode<void*>(_STD deque<bool>& bool_list) {
+		_STD vector<void*> out;
+		if (ptrs_set_) {
+			while (!bool_list.empty())
+				out.push_back(const_cast<void*> (Fin_node_->GetP(bool_list)));
+		}
 	}
 };
 
