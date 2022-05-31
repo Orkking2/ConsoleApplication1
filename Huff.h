@@ -76,42 +76,56 @@ public:
 	void release_ptrs() {
 		for (void*& ptr : ptrs_) 
 			delete reinterpret_cast<_Ty*> (ptr);
-		ptrs_.~vector();
-		ptrs_set_ = false;
+		release_ptrs_NODELETE();
 	}
+
+	void release_ptrs_NODELETE();
 
 	void create_tree(_STD vector<_STD pair<void*, uint>> vals);
 	void create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals);
 
 	template <class _Ty>
-	void translate_map(_STD vector<_Ty>& unique_val_vector, _STD unordered_map<_Ty, _STD vector<bool>>& val_map) {
+	_NODISCARD _STD vector<_STD pair<void*, uint>> gen_freqs(_STD vector<_Ty> vals) {
+		_STD unordered_map<_Ty, uint> checker;
+		_STD vector<void*> unique_ptrs;
+		for (_Ty& val : vals) {
+			if (!checker.contains(val)) {
+				// If a HuffTree object creates a tree using this method, 
+				// it should call HuffTree::release_ptrs<_Ty>()
+				unique_ptrs.push_back(reinterpret_cast<void*> (new _Ty(val)));
+				checker[val] = 1;
+			} else {
+				checker[val]++;
+			}
+		}
+
+		_STD vector<_STD pair<void*, uint>> out;
+		for (void*& p : unique_ptrs) 
+			out.push_back(_STD pair<void*, uint>(p, *reinterpret_cast<_Ty*> (p)));
+		
+		return out;
+	}
+
+	template <class _Ty>
+	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_val_map() {
+		_STD unordered_map<_Ty, _STD vector<bool>> out;
 		if (ptrs_set_) {
 			for (void* p : ptrs_) {
 				const _Ty* pVal = reinterpret_cast<_Ty*> (p);
-				unique_val_vector.push_back(*pVal);
-				val_map[*pVal] = map_[p];
+				out[*pVal] = map_[p];
 			}
 		}
+		return out;
 	}
 
 	template <class _Ty>
-	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_map(_STD vector<_Ty>& val_list) {
-		_STD unordered_map<_Ty, uint> val_map;
-		_STD vector<_Ty> unique_vals;
-		for (_Ty& val : val_list) {
-			if (!val_map.contains(val)) {
-				unique_vals.emplace_back(val);
-				val_map[val] = 1;
-			} else {
-				val_map[val]++;
-			}
+	_NODISCARD _STD vector<_Ty> decode(_STD deque<_Ty>& deque) {
+		_STD vector<_Ty> out;
+		if (ptrs_set_) {
+			while (!deque.empty()) 
+				out.push_back(*reinterpret_cast<_Ty*> (Fin_node_->GetP(deque))
 		}
-
-	}
-
-	template <class _Ty>
-	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_map(_STD vector<_STD pair<_Ty, uint>> vals) {
-
+		return out;
 	}
 };
 

@@ -1,10 +1,12 @@
 #include <iostream>
-#include "Threads.h"
+#include "Huff.h"
 
 
 int main()
 {
-    std::cout << "Your mother\n";
+    std::string s("Test_String");
+    nstd::HuffTree tree;
+    tree.create_tree()
     
     std::system("pause");
 }

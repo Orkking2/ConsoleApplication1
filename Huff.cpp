@@ -3,6 +3,7 @@
 
 _NSTD_BEGIN
 
+// HuffTree::Node:: methods
 const void* HuffTree::Node::GetP(_STD deque<bool>& deque) const {
 	bool cashe = deque.front();
 	deque.pop_front();
@@ -19,6 +20,12 @@ _STD vector<void*> HuffTree::Node::vpArr() const {
 	return l;
 }
 
+// HuffTree:: methods
+void HuffTree::release_ptrs_NODELETE() {
+	ptrs_.~vector();
+	ptrs_set_ = false;
+}
+
 void HuffTree::create_tree(_STD vector<_STD pair<void*, uint>> vals) {
 	create_tree_NOREVERSE(vals);
 	for (void* p : ptrs_)
@@ -26,6 +33,9 @@ void HuffTree::create_tree(_STD vector<_STD pair<void*, uint>> vals) {
 }
 
 void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
+	// Pointers should be released before another tree is constructed using same HuffTree object
+	if (ptrs_set_)
+		return;
 	// Initialize ptr set -- for deletion when obj is deconstructed
 	ptrs_.resize(vals.size(), NULL);
 	// Disallow deconstructor of HuffTree object while void*s have not been released
@@ -36,8 +46,8 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 			// No void* should have freq 0 -> any with freq 0 are pruned
 			vals.erase(vals.begin() + i);
 			ptrs_.erase(ptrs_.begin() + i);
-		}
-		else {
+			i--;
+		} else {
 			ptrs_[i] = vals[i].first;
 			elements.push_back(new vPtr(vals[i]));
 		}
@@ -85,7 +95,6 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 //	ptr_ = p->ptr_;
 //	freq_ = p->freq_;
 //}
-
 
 _NSTD_END
 #else // ^^^^ _NSTD_HUFF_ / !_NSTD_HUFF_ vvvv
