@@ -77,10 +77,7 @@ int main()
 
 
 	std::cout << t2.get_ptrs().size() << "\n\n";
-	_NSTD_FOR_I(t2.get_ptrs().size())
-		std::cout << *reinterpret_cast<int*> (t2.get_ptrs()[i]) << ", ";
-	std::cout << "\n\n";
-
+	
 	_NSTD_FOR_I(100) {
 		_STD deque<bool> d = t2.encode(_STD vector<int>{ (int)i });
 		_NSTD_FOR_J(d.size())
