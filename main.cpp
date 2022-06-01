@@ -57,7 +57,47 @@ int main()
 		test(num_tests, _STD function<int(void)>([]()->int { return rand() % 100; }));
 		std::cout << "\n\n\n";
 	}
-    
+	std::vector<int> int_list;
+	int_list.resize(num_tests);
+	_NSTD_FOR_I(num_tests)
+		int_list[i] = rand() % 100;
+	auto pairs = nstd::HuffTree::gen_freqs(int_list);
+
+	std::cout << pairs.size() << "\n";
+	_NSTD_FOR_I(pairs.size()) {
+		if (*reinterpret_cast<int*> (pairs[i].first) == 0) {
+			std::cout << pairs[i].second;
+			break;
+		}
+	}
+	std::cout << '\n';
+
+	nstd::HuffTree t2;
+	t2.create_tree(pairs);
+
+
+	std::cout << t2.get_ptrs().size() << "\n\n";
+	_NSTD_FOR_I(t2.get_ptrs().size())
+		std::cout << *reinterpret_cast<int*> (t2.get_ptrs()[i]) << ", ";
+	std::cout << "\n\n";
+
+	_NSTD_FOR_I(100) {
+		_STD deque<bool> d = t2.encode(_STD vector<int>{ (int)i });
+		_NSTD_FOR_J(d.size())
+			std::cout << d[j];
+		std::cout << ", ";
+	}
+	std::cout << "END ENCODE";
+	std::cout << "\n\n";
+	_NSTD_FOR_I(100) {
+		std::cout << t2.decode<int>(t2.encode<int>(_STD vector{ (int)i })).size() << ", ";
+	}
+	std::cout << "\n\nEncode 0 test:\n";
+	_STD deque<bool> d2 = t2.encode(_STD vector<int>{ (int)0 });
+	_NSTD_FOR_I(d2.size())
+		std::cout << d2[i];
+
+	t2.release_ptrs<int>();
     std::cout << '\n';
     std::system("pause");
 }

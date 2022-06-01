@@ -24,13 +24,11 @@ public:
 	};
 
 	class vPtr : public IElement {
-		bool is_set_;
-
 		void* ptr_;
 		uint freq_;
 	public:
-		vPtr(void* ptr, const uint freq) : ptr_(ptr), freq_(freq), is_set_(true) {}
-		vPtr(_STD pair<void*, uint> val_pair) : ptr_(val_pair.first), freq_(val_pair.second), is_set_(true) {}
+		vPtr(void* ptr, const uint freq) : ptr_(ptr), freq_(freq) {}
+		vPtr(_STD pair<void*, uint> val_pair) : ptr_(val_pair.first), freq_(val_pair.second) {}
 
 		_NODISCARD const void* GetP(_STD deque<bool>&) const override { return ptr_; }
 		_NODISCARD const bool isNode()                 const override { return false; }
@@ -39,11 +37,9 @@ public:
 	};
 
 	class Node : public IElement {
-		bool is_set_;
-
 		IElement* l_, * r_;
 	public:
-		Node(IElement* l, IElement* r) : l_(l), r_(r), is_set_(true) {}
+		Node(IElement* l, IElement* r) : l_(l), r_(r){}
 		~Node() override {
 			if (l_->isNode())
 				delete reinterpret_cast<Node*> (l_);
@@ -70,6 +66,11 @@ public:
 	HuffTree() : ptrs_set_(false), Fin_node_(NULL) {}
 	~HuffTree() {
 		assert(!ptrs_set_);
+	}
+
+	// Debugging
+	_STD vector<void*>& get_ptrs() {
+		return ptrs_;
 	}
 
 	template <class _Ty>
@@ -120,7 +121,7 @@ public:
 
 	template <class _Ty>
 	_NODISCARD _STD deque<bool> encode(_STD vector<_Ty> vals) {
-		auto map(gen_val_map<_Ty>());
+		_STD unordered_map<_Ty, _STD vector<bool>> map = gen_val_map<_Ty>();
 		_STD deque<bool> out;
 		if (ptrs_set_) {
 			for (const _Ty& val : vals) {

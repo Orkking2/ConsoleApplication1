@@ -14,6 +14,7 @@
 
 #define _NSTD_FOR(variable_name, len) for (unsigned int variable_name = 0; variable_name < len; variable_name++)
 #define _NSTD_FOR_I(len) _NSTD_FOR(i, len)
+#define _NSTD_FOR_J(len) _NSTD_FOR(j, len)
 
 #define _NSTD_ITSL { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
 
