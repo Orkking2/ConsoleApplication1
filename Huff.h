@@ -110,7 +110,7 @@ public:
 	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_val_map() {
 		_STD unordered_map<_Ty, _STD vector<bool>> out;
 		if (ptrs_set_) {
-			for (void* p : ptrs_) {
+			for (void*& p : ptrs_) {
 				const _Ty* pVal = reinterpret_cast<_Ty*> (p);
 				out[*pVal] = map_[p];
 			}
@@ -119,21 +119,17 @@ public:
 	}
 
 	template <class _Ty>
-	// This method takes a loooong time
-	// Between O(2n) and O(2kn) where k = ptrs_.size()
 	_NODISCARD _STD deque<bool> encode(_STD vector<_Ty> vals) {
-		_STD vector<void*> out;
+		auto map(gen_val_map<_Ty>());
+		_STD deque<bool> out;
 		if (ptrs_set_) {
-			for (_Ty& val : vals) {
-				for (void* p : ptrs_) {
-					if (*reinterpret_cast<_Ty*> (p) == val) {
-						out.push_back(p);
-						break;
-					}
+			for (const _Ty& val : vals) {
+				for (bool b : map[val]) {
+					out.push_back(b);
 				}
 			}
 		}
-		return encode(out);
+		return out;
 	}
 
 	template <>
@@ -141,7 +137,7 @@ public:
 		_STD deque<bool> out;
 		if (ptrs_set_) {
 			for (void*& p : ptrs) {
-				for (bool b : map_[p]) {
+				for (const bool& b : map_[p]) {
 					out.push_back(b);
 				}
 			}
