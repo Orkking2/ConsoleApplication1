@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Deque.h" />
+    <ClInclude Include="Assert.h" />
     <ClInclude Include="Huff.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Threads.h" />

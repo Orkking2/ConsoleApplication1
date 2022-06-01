@@ -146,7 +146,7 @@ public:
 	}
 
 	template <class _Ty>
-	_NODISCARD _STD vector<_Ty> decode(_STD deque<bool>& bool_list) {
+	_NODISCARD _STD vector<_Ty> decode(_STD deque<bool> bool_list) {
 		_STD vector<_Ty> out;
 		if (ptrs_set_) {
 			while (!bool_list.empty())
@@ -156,7 +156,7 @@ public:
 	}
 
 	template <>
-	_NODISCARD _STD vector<void*> decode<void*>(_STD deque<bool>& bool_list) {
+	_NODISCARD _STD vector<void*> decode<void*>(_STD deque<bool> bool_list) {
 		_STD vector<void*> out;
 		if (ptrs_set_) {
 			while (!bool_list.empty())

@@ -41,5 +41,8 @@
     <ClInclude Include="Deque.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
