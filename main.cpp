@@ -52,9 +52,9 @@ void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generato
 
 int main()
 {
-    unsigned int num_tests(10000);
+    unsigned int num_tests(100000);
 	_NSTD_FOR_I(4) {
-		test(num_tests, _STD function<int(void)>([]()->int { return rand() % 100; }));
+		test(num_tests, _STD function<char(void)>([]()->char { if (rand() % 100 > 40) return 'a'; return 'a' + rand() % 26; }));
 		std::cout << "\n\n\n";
 	}
     std::cout << '\n';
