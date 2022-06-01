@@ -102,7 +102,7 @@ public:
 
 		_STD vector<_STD pair<void*, uint>> out;
 		for (void*& p : unique_ptrs) 
-			out.push_back(_STD pair<void*, uint>(p, *reinterpret_cast<_Ty*> (p)));
+			out.push_back(_STD pair<void*, uint>(p, checker[*reinterpret_cast<_Ty*> (p)]));
 		
 		return out;
 	}
