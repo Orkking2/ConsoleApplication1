@@ -38,10 +38,10 @@
     <ClInclude Include="Huff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Deque.h">
+    <ClInclude Include="Assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Assert.h">
+    <ClInclude Include="BoolDeque.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
