@@ -24,9 +24,9 @@ class deque<bool> {
 	uchar* bitX_;
 
 	uchar* carr_;
-	uint arr_sz_, real_sz_, Hpos_, Tpos_, pos_;
+	uint arr_sz_, Hpos_, Tpos_;
 public:
-	deque(uint size = 10) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[size]), arr_sz_(size), real_sz_(0), Hpos_(0), Tpos_(7), pos_(0) {
+	deque(uint size = 10) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[size]), arr_sz_(size), Hpos_(0), Tpos_(0) {
 		_NSTD_FOR_I(CHAR_BIT - 1)
 			bitX_[i + 1] = 2 * bitX_[i];
 	}
@@ -34,52 +34,44 @@ public:
 		delete[] bitX_;
 	}
 	_NODISCARD bool front() {
-		_NSTD_ASSERT(real_sz_, "attempting to pop val of empty deque");
-		return carr_[pos_] & bitX_[Hpos_];
+		_NSTD_ASSERT(Tpos_ >= Hpos_, "attempting to pop val of empty deque");
+		return carr_[static_cast<uint> (Hpos_ / CHAR_BIT)] & bitX_[Hpos_ % CHAR_BIT];
 	}
 	bool pop_front() {
 		bool out(front());
-		if (--Hpos_ < 0) {
-			Hpos_ = 0;
-			pos_++;
-		}
+		++Hpos_;
 		return out;
 	}
 	_NODISCARD bool back() {
-		_NSTD_ASSERT(real_sz_, "attempting to pop val of empty deque");
-		return carr_[pos_ + real_sz_ - 1] & bitX_[Tpos_];
+		_NSTD_ASSERT(Tpos_ >= Hpos_, "attempting to pop val of empty deque");
+		return carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] & bitX_[Tpos_ % CHAR_BIT];
 	}
 	bool pop_back() {
 		bool out(back());
-		if (--Tpos_ < 0) {
-			Tpos_ = 0;
-			real_sz_--;
-		}
+		--Tpos_;
 		return out;
 	}
 	deque& push_back(bool b) {
-		if (++Tpos_ >= CHAR_BIT) {
-			Tpos_ = 0;
-			if (++real_sz_ + pos_ > arr_sz_) {
-				uchar* cashe(carr_);
-				carr_ = new uchar[(real_sz_ + pos_) * 2](0);
-				_NSTD_FOR_I(arr_sz_)
-					carr_[i] = cashe[i];
-				arr_sz_ = (real_sz_ + pos_) * 2;
-				delete[] cashe;
-			}
+		if (static_cast<uint> (++Tpos_ / CHAR_BIT) > arr_sz_) {
+			uchar* cashe(carr_);
+			uint nsz(static_cast<uint> (Tpos_ / CHAR_BIT) * 2);
+			carr_ = new uchar[nsz](0);
+			_NSTD_FOR_I(arr_sz_)
+				carr_[i] = cashe[i];
+			arr_sz_ = nsz;
+			delete[] cashe;
 		}
 		if (b)
-			carr_[pos_ + real_sz_ - 1] |= bitX_[Tpos_];
+			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] |=  bitX_[Tpos_ % CHAR_BIT];
 		else
-			carr_[pos_ + real_sz_ - 1] &= ~bitX_[Tpos_];
+			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] &= ~bitX_[Tpos_ % CHAR_BIT];
 		return *this;
 	}
 
 	bool operator[] (uint pos) {
-		uint real_pos(pos_ + static_cast<uint> (pos / CHAR_BIT));
-		_NSTD_ASSERT(real_pos < real_sz_, "tried to access deque element outside deque bounds");
-		return carr_[real_pos] & bitX_[pos % CHAR_BIT];
+		uint real_pos(pos + Hpos_);
+		_NSTD_ASSERT(real_pos < Tpos_, "tried to access deque element outside deque bounds");
+		return carr_[static_cast<uint> (real_pos / CHAR_BIT)] & bitX_[real_pos % CHAR_BIT];
 	}
 
 	// Missing deque& push_front(bool) because I'm lazy

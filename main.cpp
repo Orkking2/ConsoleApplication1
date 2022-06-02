@@ -57,7 +57,7 @@ int main()
 	//}
 
 	nstd::deque<bool> d;
-	d.push_back(false).push_back(true).push_back(false);
+	d.push_back(false).push_back(false).push_back(true);
 
 	std::cout << d.pop_front() << d.pop_back() << d.pop_front();
 
