@@ -26,14 +26,14 @@ class deque<bool> {
 	uchar* carr_;
 	uint arr_sz_, real_sz_, Hpos_, Tpos_, pos_;
 public:
-	deque(uint size = 10) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[size]), arr_sz_(size), real_sz_(0), Hpos_(0), Tpos_(0), pos_(0) {
+	deque(uint size = 10) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[size]), arr_sz_(size), real_sz_(0), Hpos_(0), Tpos_(7), pos_(0) {
 		_NSTD_FOR_I(CHAR_BIT - 1)
 			bitX_[i + 1] = 2 * bitX_[i];
 	}
 	~deque() {
 		delete[] bitX_;
 	}
-	bool front() {
+	_NODISCARD bool front() {
 		_NSTD_ASSERT(real_sz_, "attempting to pop val of empty deque");
 		return carr_[pos_] & bitX_[Hpos_];
 	}
@@ -45,7 +45,7 @@ public:
 		}
 		return out;
 	}
-	bool back() {
+	_NODISCARD bool back() {
 		_NSTD_ASSERT(real_sz_, "attempting to pop val of empty deque");
 		return carr_[pos_ + real_sz_ - 1] & bitX_[Tpos_];
 	}
