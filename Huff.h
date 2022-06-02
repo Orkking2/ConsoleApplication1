@@ -3,7 +3,6 @@
 #define _NSTD_HUFF_
 
 #include <unordered_map>
-#include <assert.h>
 #include <vector>
 #include <deque>
 #include "Defines.h"
@@ -65,7 +64,7 @@ private:
 public:
 	HuffTree() : ptrs_set_(false), Fin_node_(NULL) {}
 	~HuffTree() {
-		assert(!ptrs_set_);
+		release_ptrs();
 	}
 
 	// Debugging
@@ -73,10 +72,9 @@ public:
 		return ptrs_;
 	}
 
-	template <class _Ty>
 	void release_ptrs() {
 		for (void*& ptr : ptrs_) 
-			delete reinterpret_cast<_Ty*> (ptr);
+			delete ptr;
 		release_ptrs_NODELETE();
 	}
 

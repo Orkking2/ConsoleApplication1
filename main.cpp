@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Deque.h"
 #include "Huff.h"
 
 #include <functional>
@@ -23,7 +24,6 @@ void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generato
 
 	if (vals.size() != v.size()) {
 		std::cout << "ERROR: vals.size() = " << vals.size() << " != v.size() = " << v.size();
-		t1.release_ptrs<_Ty>();
 		return;
 	}
 
@@ -46,8 +46,6 @@ void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generato
 	std::cout << "\nSize of original array:\n" << sizeof(vals.front()) * vals.size();
 	std::cout << "\nSize of encoded array:\n" << d.size() / 8;
 	std::cout << "\nPercent of original size:\n" << ((double)d.size() / 8) / (sizeof(vals.front()) * vals.size()) * 100 << "%\n";
-
-	t1.release_ptrs<_Ty>();
 }
 
 int main()
@@ -57,6 +55,12 @@ int main()
 	//	test(num_tests, _STD function<char(void)>([]()->char { if (rand() % 100 > 40) return 'a'; return 'a' + rand() % 26; }));
 	//	std::cout << "\n\n\n";
 	//}
+
+	nstd::deque<bool> d;
+	d.push_back(false);
+
+	std::cout << d.pop_front();
+
 	std::cout << '\n';
 	std::system("pause");
 }

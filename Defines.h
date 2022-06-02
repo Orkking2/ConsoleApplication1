@@ -12,6 +12,8 @@
 #define _NODISCARD [[nodiscard]]
 #endif // _NODISCARD
 
+#define _NSTD_ASSERT(cond, msg) _STL_VERIFY(cond, msg)
+
 #define _NSTD_FOR(variable_name, len) for (unsigned int variable_name = 0; variable_name < len; variable_name++)
 #define _NSTD_FOR_I(len) _NSTD_FOR(i, len)
 #define _NSTD_FOR_J(len) _NSTD_FOR(j, len)
