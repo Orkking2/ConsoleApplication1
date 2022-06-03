@@ -14,9 +14,9 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 	t1.create_tree(nstd::HuffTree::gen_freqs<_Ty>(vals));
 	_NSTD deque<bool> d(t1.encode(vals));
 	if (err_switch) {
-		// Introduce error
 		unsigned int error_pos(rand() % d.size());
-		d.set(error_pos, !d[error_pos]);
+		// Introduce error
+		d.flip(error_pos);
 		std::cout << "Error at pos " << error_pos << '\n';
 	}
 
@@ -52,7 +52,7 @@ int main()
 {
     unsigned int num_tests(100000);
 	_NSTD_FOR_I(4) {
-		test(num_tests, _STD function<char(void)>([]()->char { return (rand() % 100) >= 0 ? 'a' : 'a' + rand(); }));
+		test(num_tests, _STD function<char(void)>([]()->char { return (rand() % 100) > 0 ? 'a' : 'a' + rand(); }));
 		std::cout << "\n\n\n";
 	}
 	

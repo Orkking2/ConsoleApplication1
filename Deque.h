@@ -105,22 +105,24 @@ public:
 			arr_sz_ = nsz;
 			delete[] cashe;
 		}
-		if (b)
-			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] |=  bitX_[Tpos_ % CHAR_BIT];
-		else
-			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] &= ~bitX_[Tpos_ % CHAR_BIT];
+		set(Tpos_ - Hpos_, b);
 		return *this;
 	}
 	// Missing deque& push_front(bool) because I'm lazy & it serves no purpose for Huff.h
 
 	// Note that this does not allow one to change the value of a bit at pos, it only retrieves the stored val at pos
 	bool operator[] (uint pos) {
+		return at(pos);
+	}
+	bool at(uint pos) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
 		return carr_[static_cast<uint> (real_pos / CHAR_BIT)] & bitX_[real_pos % CHAR_BIT];
 	}
 
-	// Flip syntax: d.set(pos, !d[pos]);
+	deque& flip(uint pos) {
+		return set(pos, !at(pos));
+	}
 	deque& set(uint pos, bool val = true) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");

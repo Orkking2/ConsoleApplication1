@@ -26,9 +26,9 @@ void HuffTree::create_tree(_STD vector<_STD pair<void*, uint>> vals) {
 
 void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 	_NSTD_ASSERT(!ptrs_set_, "HuffTree pointers must be released before another tree is constructed using the same HuffTree object");
-	// Initialize ptr set -- for deletion when obj is deconstructed
+	// Initialize val set
 	ptrs_.resize(vals.size(), NULL);
-	// Disallow deconstructor of HuffTree object while void*s have not been released
+	// Disallow recreation of HuffTree object while void*s have not been released
 	ptrs_set_ = true;
 	_STD vector<IElement*> elements;
 	_NSTD_FOR_I(vals.size()) {
