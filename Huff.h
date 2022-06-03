@@ -4,7 +4,7 @@
 
 #include <unordered_map>
 #include <vector>
-#include <deque>
+#include "Deque.h"
 #include "Defines.h"
 
 _NSTD_BEGIN
@@ -16,10 +16,10 @@ class HuffTree {
 public:
 	struct IElement {
 		virtual ~IElement() = default;
-		virtual const void* GetP(_STD deque<bool>&) const = 0;
-		virtual const bool isNode()                 const = 0;
-		virtual const uint GetFreq()                const = 0;
-		virtual _STD vector<void*> vpArr()          const = 0;
+		virtual const void* GetP(_NSTD deque<bool>&) const = 0;
+		virtual const bool isNode()                  const = 0;
+		virtual const uint GetFreq()                 const = 0;
+		virtual _STD vector<void*> vpArr()           const = 0;
 	};
 
 	class vPtr : public IElement {
@@ -29,31 +29,22 @@ public:
 		vPtr(void* ptr, const uint freq) : ptr_(ptr), freq_(freq) {}
 		vPtr(_STD pair<void*, uint> val_pair) : ptr_(val_pair.first), freq_(val_pair.second) {}
 
-		_NODISCARD const void* GetP(_STD deque<bool>&) const override { return ptr_; }
-		_NODISCARD const bool isNode()                 const override { return false; }
-		_NODISCARD const uint GetFreq()                const override { return freq_; }
-		_NODISCARD _STD vector<void*> vpArr()          const override { return { ptr_ }; }
+		_NODISCARD const void* GetP(_NSTD deque<bool>&) const override { return ptr_; }
+		_NODISCARD const bool isNode()                  const override { return false; }
+		_NODISCARD const uint GetFreq()                 const override { return freq_; }
+		_NODISCARD _STD vector<void*> vpArr()           const override { return { ptr_ }; }
 	};
 
 	class Node : public IElement {
 		IElement* l_, * r_;
 	public:
 		Node(IElement* l, IElement* r) : l_(l), r_(r){}
-		~Node() override {
-			if (l_->isNode())
-				delete reinterpret_cast<Node*> (l_);
-			else
-				delete reinterpret_cast<vPtr*> (l_);
-			if (r_->isNode())
-				delete reinterpret_cast<Node*> (r_);
-			else
-				delete reinterpret_cast<vPtr*> (r_);
-		}
+		~Node() override { delete l_, r_; }
 
-		_NODISCARD const void* GetP(_STD deque<bool>&) const override;
-		_NODISCARD const bool isNode()                 const override { return true; }
-		_NODISCARD const uint GetFreq()                const override { return l_->GetFreq() + r_->GetFreq(); }
-		_NODISCARD _STD vector<void*> vpArr()          const override;
+		_NODISCARD const void* GetP(_NSTD deque<bool>& deque) const override { return deque.pop_front() ? r_->GetP(deque) : l_->GetP(deque); }
+		_NODISCARD const bool isNode()                        const override { return true; }
+		_NODISCARD const uint GetFreq()                       const override { return l_->GetFreq() + r_->GetFreq(); }
+		_NODISCARD _STD vector<void*> vpArr()                 const override;
 	};
 private:
 	bool ptrs_set_;
@@ -118,9 +109,9 @@ public:
 	}
 
 	template <class _Ty>
-	_NODISCARD _STD deque<bool> encode(_STD vector<_Ty> vals) {
+	_NODISCARD _NSTD deque<bool> encode(_STD vector<_Ty> vals) {
 		_STD unordered_map<_Ty, _STD vector<bool>> map = gen_val_map<_Ty>();
-		_STD deque<bool> out;
+		_NSTD deque<bool> out;
 		if (ptrs_set_) {
 			for (const _Ty& val : vals) {
 				for (bool b : map[val]) {
@@ -132,8 +123,8 @@ public:
 	}
 
 	template <>
-	_NODISCARD _STD deque<bool> encode<void*>(_STD vector<void*> ptrs) {
-		_STD deque<bool> out;
+	_NODISCARD _NSTD deque<bool> encode<void*>(_STD vector<void*> ptrs) {
+		_NSTD deque<bool> out;
 		if (ptrs_set_) {
 			for (void*& p : ptrs) {
 				for (const bool& b : map_[p]) {
@@ -145,7 +136,7 @@ public:
 	}
 
 	template <class _Ty>
-	_NODISCARD _STD vector<_Ty> decode(_STD deque<bool> bool_list) {
+	_NODISCARD _STD vector<_Ty> decode(_NSTD deque<bool> bool_list) {
 		_STD vector<_Ty> out;
 		if (ptrs_set_) {
 			while (!bool_list.empty())
@@ -155,7 +146,7 @@ public:
 	}
 
 	template <>
-	_NODISCARD _STD vector<void*> decode<void*>(_STD deque<bool> bool_list) {
+	_NODISCARD _STD vector<void*> decode<void*>(_NSTD deque<bool> bool_list) {
 		_STD vector<void*> out;
 		if (ptrs_set_) {
 			while (!bool_list.empty())

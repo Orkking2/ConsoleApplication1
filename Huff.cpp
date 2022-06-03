@@ -1,18 +1,10 @@
 #include "Huff.h"
 #ifdef _NSTD_HUFF_
 
+
 _NSTD_BEGIN
 
 // HuffTree::Node:: methods
-const void* HuffTree::Node::GetP(_STD deque<bool>& deque) const {
-	bool cashe = deque.front();
-	deque.pop_front();
-	switch (cashe) {
-	case false: return l_->GetP(deque);
-	case true:  return r_->GetP(deque);
-	}
-}
-
 _STD vector<void*> HuffTree::Node::vpArr() const {
 	_STD vector<void*> l(l_->vpArr());
 	_STD vector<void*> r(r_->vpArr());

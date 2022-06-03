@@ -55,11 +55,9 @@ int main()
 	//	test(num_tests, _STD function<char(void)>([]()->char { if (rand() % 100 > 40) return 'a'; return 'a' + rand() % 26; }));
 	//	std::cout << "\n\n\n";
 	//}
+	
 
-	nstd::deque<bool> d;
-	d.push_back(false).push_back(false).push_back(true);
-
-	std::cout << d.pop_front() << d.pop_back() << d.pop_front();
+	
 
 	std::cout << '\n';
 	std::system("pause");
