@@ -4,7 +4,7 @@
 
 #include <functional>
 template <class _Ty>
-void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generator, bool err_switch = false) {
+void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool err_switch = false) {
 	std::vector<_Ty> vals;
 	vals.resize(num_tests);
 	_NSTD_FOR_I(num_tests)
@@ -12,11 +12,11 @@ void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generato
 	nstd::HuffTree t1;
 
 	t1.create_tree(nstd::HuffTree::gen_freqs<_Ty>(vals));
-	_STD deque<bool> d(t1.encode(vals));
+	_NSTD deque<bool> d(t1.encode(vals));
 	if (err_switch) {
 		// Introduce error
 		unsigned int error_pos(rand() % d.size());
-		d[error_pos] = !d[error_pos];
+		d.set(error_pos, !d[error_pos]);
 		std::cout << "Error at pos " << error_pos << '\n';
 	}
 
@@ -50,11 +50,11 @@ void test(nstd::HuffTree::uint num_tests, _STD function<_Ty(void)> rand_generato
 
 int main()
 {
- //   unsigned int num_tests(100000);
-	//_NSTD_FOR_I(4) {
-	//	test(num_tests, _STD function<char(void)>([]()->char { if (rand() % 100 > 40) return 'a'; return 'a' + rand() % 26; }));
-	//	std::cout << "\n\n\n";
-	//}
+    unsigned int num_tests(100000);
+	_NSTD_FOR_I(4) {
+		test(num_tests, _STD function<char(void)>([]()->char { return (rand() % 100) >= 0 ? 'a' : 'a' + rand(); }));
+		std::cout << "\n\n\n";
+	}
 	
 
 	

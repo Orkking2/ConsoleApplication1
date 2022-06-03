@@ -25,6 +25,7 @@
 #define _NSTD ::nstd::
 #define _NSTD_BEGIN namespace nstd {
 #define _NSTD_END }
+_NSTD_BEGIN typedef unsigned int uint; _NSTD_END
 #define _MULTITHREAD_BEGIN namespace multithreaded {
 #define _MULTITHREAD_END }
 

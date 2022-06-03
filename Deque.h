@@ -17,7 +17,7 @@ class deque : _STD deque<_Ty> {};
 // See: Huff.h & Huff.cpp
 template <>
 class deque<bool> {
-	typedef unsigned int  uint;
+	typedef nstd::uint  uint;
 	typedef unsigned char uchar;
 
 	uchar* carr_, * bitX_;
@@ -27,21 +27,26 @@ public:
 		_NSTD_FOR_I(CHAR_BIT - 1)
 			bitX_[i + 1] = 2 * bitX_[i];
 	}
-	~deque() {
-		delete[] bitX_, carr_;
+	deque(_NSTD deque<bool>& other) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[other.arr_sz_]), arr_sz_(other.arr_sz_), Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
+		_NSTD_FOR_I(CHAR_BIT - 1)
+			bitX_[i + 1] = 2 * bitX_[i];
+		_NSTD_FOR_I(arr_sz_)
+			carr_[i] = other.carr_[i];
 	}
-	// Debugging 
+	~deque() { delete[] bitX_, carr_; }
+	
+	// Debugging
 /*
-	uchar*& get_ca() {
+	uchar*& get_carr_() {
 		return carr_;
 	}
-	const uint& arr_sz_() {
+	const uint& get_arr_sz_() {
 		return arr_sz_;
 	}
-	const uint& Hpos_() {
+	const uint& get_Hpos_() {
 		return Hpos_;
 	}
-	const uint& Tpos_() {
+	const uint& get_Tpos_() {
 		return Tpos_;
 	}
 */
@@ -54,7 +59,9 @@ public:
 	}
 	void resize(uint size, bool init = false) {
 		uchar* cashe(carr_);
-		init ? carr_ = new uchar[size](11111111) : carr_ = new uchar[size](00000000);
+		init ?
+			carr_ = new uchar[size](11111111): 
+			carr_ = new uchar[size](00000000);
 		if (size >= arr_sz_) {
 			_NSTD_FOR_I(arr_sz_)
 				carr_[i] = cashe[i];
@@ -83,6 +90,11 @@ public:
 		--Tpos_;
 		return out;
 	}
+	deque& shrink_front() {
+		if (static_cast<uint> (Hpos_ / CHAR_BIT)) {
+
+		}
+	}
 	deque& push_back(bool b) {
 		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= arr_sz_) {
 			uchar* cashe(carr_);
@@ -94,19 +106,31 @@ public:
 			delete[] cashe;
 		}
 		if (b)
-			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] |= bitX_[Tpos_ % CHAR_BIT];
+			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] |=  bitX_[Tpos_ % CHAR_BIT];
 		else
 			carr_[static_cast<uint> (Tpos_ / CHAR_BIT)] &= ~bitX_[Tpos_ % CHAR_BIT];
 		return *this;
 	}
+	// Missing deque& push_front(bool) because I'm lazy & it serves no purpose for Huff.h
 
+	// Note that this does not allow one to change the value of a bit at pos, it only retrieves the stored val at pos
 	bool operator[] (uint pos) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
 		return carr_[static_cast<uint> (real_pos / CHAR_BIT)] & bitX_[real_pos % CHAR_BIT];
 	}
 
-	// Missing deque& push_front(bool) because I'm lazy
+	// Flip syntax: d.set(pos, !d[pos]);
+	deque& set(uint pos, bool val = true) {
+		uint real_pos(pos + Hpos_);
+		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
+		if (val)
+			carr_[static_cast<uint> (real_pos / CHAR_BIT)] |=  bitX_[real_pos % CHAR_BIT];
+		else
+			carr_[static_cast<uint> (real_pos / CHAR_BIT)] &= ~bitX_[real_pos % CHAR_BIT];
+		return *this;
+	}
+
 };
 
 _NSTD_END

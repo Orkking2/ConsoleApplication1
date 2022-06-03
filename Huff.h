@@ -10,7 +10,7 @@
 _NSTD_BEGIN
 
 class HuffTree {
-	typedef unsigned int uint;
+	typedef nstd::uint uint;
 	typedef _STD pair<void*, int> vfp;
 
 public:
