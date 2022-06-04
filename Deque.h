@@ -2,7 +2,6 @@
 #ifndef _NSTD_DEQUE_
 #define _NSTD_DEQUE_
 
-#include <utility>
 #include <deque>
 #include "Defines.h"
 
@@ -17,31 +16,35 @@ class deque : _STD deque<_Ty> {};
 // See: Huff.h & Huff.cpp
 template <>
 class deque<bool> {
-	typedef nstd::uint  uint;
-	typedef unsigned char uchar;
+	typedef _NSTD uint  uint;
+	typedef _NSTD uchar uchar;
 
 	uchar* carr_, * bitX_;
 	uint arr_sz_, Hpos_, Tpos_;
 public:
-	deque(uint size = 10) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[size]), arr_sz_(size), Hpos_(1), Tpos_(0) {
-		_NSTD_FOR_I(CHAR_BIT - 1)
-			bitX_[i + 1] = 2 * bitX_[i];
-	}
-	deque(_NSTD deque<bool>& other) : bitX_(new uchar[CHAR_BIT](1)), carr_(new uchar[other.arr_sz_]), arr_sz_(other.arr_sz_), Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
-		_NSTD_FOR_I(CHAR_BIT - 1)
-			bitX_[i + 1] = 2 * bitX_[i];
+	deque(uint size = 10) : bitX_(gen_bitX(1)), carr_(new uchar[size]), arr_sz_(size), Hpos_(1), Tpos_(0) {}
+	deque(_NSTD deque<bool>& other) : bitX_(gen_bitX(1)), carr_(new uchar[other.arr_sz_]), arr_sz_(other.arr_sz_), Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
 		_NSTD_FOR_I(arr_sz_)
 			carr_[i] = other.carr_[i];
 	}
 	~deque() { delete[] bitX_, carr_; }
+
+	// This is a utility.
+	// Note: the caller must call delete[] on generated array themselves
+	_NODISCARD uchar*& gen_bitX(uint num_bytes) {
+		uchar* nbitX(new uchar[num_bytes * CHAR_BIT](1));
+		_NSTD_FOR_I(num_bytes * CHAR_BIT - 1) {
+			nbitX[i + 1] = 2 * nbitX[i];
+		}
+		return nbitX;
+	}
 	
 	// Debugging
-/*
 	uchar*& get_carr_() {
 		return carr_;
 	}
-	const uint& get_arr_sz_() {
-		return arr_sz_;
+	uchar*& get_bitX_() {
+		return bitX_;
 	}
 	const uint& get_Hpos_() {
 		return Hpos_;
@@ -49,28 +52,36 @@ public:
 	const uint& get_Tpos_() {
 		return Tpos_;
 	}
-*/
 
 	_NODISCARD uint size() {
 		return Tpos_ - Hpos_ + 1;
 	}
+	_NODISCARD uint real_size(){
+		return arr_sz_;
+	}
 	_NODISCARD bool empty() {
 		return size() == 0;
 	}
+	// Copies contents of old deque into new deque
 	void resize(uint size, bool init = false) {
 		uchar* cashe(carr_);
-		init ?
-			carr_ = new uchar[size](11111111): 
-			carr_ = new uchar[size](00000000);
 		if (size >= arr_sz_) {
 			_NSTD_FOR_I(arr_sz_)
 				carr_[i] = cashe[i];
-		}
-		else /* truncation */ {
+		} else /* truncation */ {
 			_NSTD_FOR_I(size)
 				carr_[i] = cashe[i];
+			Tpos_ = size * 8;
+			if (Hpos_ > Tpos_) {
+				Hpos_ = 1;
+				Tpos_ = 0;
+			}
 		}
 		delete[] cashe;
+	}
+	void resize_NOCOPY(uint size, bool init = false) {
+		delete[] carr_;
+		init ? carr_ = new uchar[size](11111111) : carr_ = new uchar[size](00000000);
 	}
 	_NODISCARD bool front() {
 		_NSTD_ASSERT(Tpos_ >= Hpos_, "attempting to pop val of empty deque");
@@ -90,10 +101,32 @@ public:
 		--Tpos_;
 		return out;
 	}
+	// Equivalent to -.shrink_front().shrink_back();
+	deque& shrink_fit() {
+		return shrink_front().shrink_back();
+	}
 	deque& shrink_front() {
 		if (static_cast<uint> (Hpos_ / CHAR_BIT)) {
-
+			uint high_pos(static_cast<uint> (Hpos_ / CHAR_BIT));
+			arr_sz_ -= high_pos;
+			uchar* narr(new uchar[arr_sz_]);
+			_NSTD_FOR_I(arr_sz_)
+				narr[i] = carr_[high_pos + i];
+			delete[] carr_;
+			carr_ = narr;
 		}
+		return *this;
+	}
+	deque& shrink_back() {
+		if (static_cast<uint> (Tpos_ / CHAR_BIT + 1) < arr_sz_) {
+			arr_sz_ = static_cast<uint> (Tpos_ / CHAR_BIT + 1);
+			uchar* narr(new uchar[arr_sz_]);
+			_NSTD_FOR_I(arr_sz_)
+				narr[i] = carr_[i];
+			delete[] carr_;
+			carr_ = narr;
+		}
+		return *this;
 	}
 	deque& push_back(bool b) {
 		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= arr_sz_) {
@@ -110,10 +143,11 @@ public:
 	}
 	// Missing deque& push_front(bool) because I'm lazy & it serves no purpose for Huff.h
 
-	// Note that this does not allow one to change the value of a bit at pos, it only retrieves the stored val at pos
+	// d[pos] is equivilent to d.at(pos)
 	bool operator[] (uint pos) {
 		return at(pos);
 	}
+	// d.at(pos) only retrieves the val at pos, it does not allow one to change pos (for that use d.set(pos, bool))
 	bool at(uint pos) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");

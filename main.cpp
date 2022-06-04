@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Deque.h"
 #include "Huff.h"
+#include "Timer.h"
 
 #include <functional>
 template <class _Ty>
@@ -9,9 +10,8 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 	vals.resize(num_tests);
 	_NSTD_FOR_I(num_tests)
 		vals[i] = rand_generator();
-	nstd::HuffTree t1;
 
-	t1.create_tree(nstd::HuffTree::gen_freqs<_Ty>(vals));
+	nstd::HuffTree t1(nstd::HuffTree::gen_freqs<_Ty>(vals));
 	_NSTD deque<bool> d(t1.encode(vals));
 	if (err_switch) {
 		unsigned int error_pos(rand() % d.size());
@@ -19,8 +19,8 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 		d.flip(error_pos);
 		std::cout << "Error at pos " << error_pos << '\n';
 	}
-
-	_STD vector<_Ty> v(t1.decode<_Ty>(d));
+	int d_sz_cashe(d.real_size());
+	_STD vector<_Ty> v(t1.decode<_Ty>(d.shrink_fit()));
 
 	if (vals.size() != v.size()) {
 		std::cout << "ERROR: vals.size() = " << vals.size() << " != v.size() = " << v.size();
@@ -33,9 +33,9 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 			indexi.push_back(i);
 		}
 	}
-	std::cout << "Errors:\n";
+	std::cout << "Errors: ";
 	if (!indexi.size())
-		std::cout << "None\n";
+		std::cout << "None";
 	_NSTD_FOR_I(indexi.size())
 		std::cout << indexi[i] << ", ";
 	if(!indexi.empty())
@@ -43,17 +43,21 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 	_NSTD_FOR_I(indexi.size())
 		std::cout << vals[indexi[i]] << "-" << v[indexi[i]] << ", ";
 
-	std::cout << "\nSize of original array:\n" << sizeof(vals.front()) * vals.size();
-	std::cout << "\nSize of encoded array:\n" << d.size() / 8;
-	std::cout << "\nPercent of original size:\n" << ((double)d.size() / 8) / (sizeof(vals.front()) * vals.size()) * 100 << "%\n";
+
+	std::cout << "\nSize of original array:\n" << sizeof(_Ty) * vals.size();
+	std::cout << "\nSize unshrunk:\n" << d_sz_cashe;
+	std::cout << "\nUnshrunk percent compression:\n" << (1 - static_cast<double> (d_sz_cashe) / (sizeof(_Ty) * vals.size())) * 100 << '%';
+	std::cout << "\nSize shrunk:\n" << d.real_size();
+	std::cout << "\nShrunk percent compression:\n" << (1 - static_cast<double> (d.real_size()) / (sizeof(_Ty) * vals.size())) * 100 << '%';
 }
 
 int main()
 {
     unsigned int num_tests(100000);
-	_NSTD_FOR_I(4) {
-		test(num_tests, _STD function<char(void)>([]()->char { return (rand() % 100) > 0 ? 'a' : 'a' + rand(); }));
-		std::cout << "\n\n\n";
+	_NSTD_FOR_I(10) {
+		std::cout << "\n\n";
+		nstd::Timer t;
+		test(num_tests * (i + 1), _STD function<char(void)>([]()->char { return (rand() % 100) > 100 ? 'a' : 'a' + rand() % 26; }));
 	}
 	
 

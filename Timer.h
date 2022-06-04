@@ -2,20 +2,23 @@
 #ifndef _NSTD_TIMER_
 #define _NSTD_TIMER_
 
-#include "Defines.h"
+#include <iostream>
 #include <chrono>
+#include "Defines.h"
 
 _NSTD_BEGIN
 
-class timer {
-	_STD chrono::time_point<_STD chrono::steady_clock> start_time_;
+class Timer {
+	_STD chrono::steady_clock::time_point start_;
 public:
-	timer() : start_time_(_STD chrono::steady_clock::now()) {}
-	_STD chrono::duration<_STD chrono::nanoseconds> get() {
-		//return _STD chrono::duration_cast<_STD chrono::nanoseconds>(_STD chrono::steady_clock::now() - start_time_);
+	Timer() : start_(_STD chrono::steady_clock::now()) {}
+	~Timer() {
+		_STD cout << "\nProcess took " << _STD chrono::duration<double, std::milli>(_STD chrono::steady_clock::now() - start_).count() << " milliseconds\n";
 	}
-
 };
 
+
+
+
 _NSTD_END
-#endif // !_NSTD_TIMER_
+#endif // _NSTD_TIMER_
