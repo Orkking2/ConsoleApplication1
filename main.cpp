@@ -54,10 +54,10 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 int main()
 {
     unsigned int num_tests(100000);
-	_NSTD_FOR_I(10) {
+	_NSTD_FOR_I(5) {
 		std::cout << "\n\n";
 		nstd::Timer t;
-		test(num_tests * (i + 1), _STD function<char(void)>([]()->char { return (rand() % 100) > 100 ? 'a' : 'a' + rand() % 26; }));
+		test(num_tests * (i + 1), _STD function<char(void)>([]()->char { return (rand() % 100) > 10 ? 'a' : 'a' + rand() % 26; }));
 	}
 	
 

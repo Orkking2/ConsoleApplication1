@@ -25,7 +25,6 @@ void HuffTree::create_tree(_STD vector<_STD pair<void*, uint>> vals) {
 }
 
 void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
-	_NSTD_ASSERT(vals.size() > 1, "HuffTree objects must be created with more than one val");
 	_NSTD_ASSERT(!ptrs_set_, "HuffTree pointers must be released before another tree is constructed using the same HuffTree object");
 	// Initialize val set
 	ptrs_.resize(vals.size(), NULL);
@@ -44,14 +43,20 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 		}
 	}
 
+	// If size is one, you should just sent the object and a count
+	// This is to handle exceptions, it is always suboptimal
+	if (elements.size() == 1) {
+		elements[0] = new Node(elements[0], NULL);
+		map_[vals[0].first].push_back(false);
+	}
+
 	while (elements.size() > 1) {
 		IElement* low_cashe, * high_cashe;
+		// Lowest freq
 		uint index = 0, freq = elements[index]->GetFreq();
 		_NSTD_FOR_I(elements.size()) {
-			if (elements[i]->GetFreq() < freq) {
-				freq = elements[i]->GetFreq();
-				index = i;
-			}
+			if (elements[i]->GetFreq() < freq) 
+				freq = elements[index = i]->GetFreq();
 		}
 		low_cashe = elements[index];
 		elements.erase(elements.begin() + index);
@@ -60,17 +65,15 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 			map_[p].push_back(false);
 
 
-		// Reset to find second lowest freq ptr
+		// Second lowest freq
 		index = 0, freq = elements[index]->GetFreq();
 		_NSTD_FOR_I(elements.size()) {
-			if (elements[i]->GetFreq() < freq) {
-				freq = elements[i]->GetFreq();
-				index = i;
-			}
+			if (elements[i]->GetFreq() < freq)
+				freq = elements[index = i]->GetFreq();
 		}
 		high_cashe = elements[index];
 		elements.erase(elements.begin() + index);
-
+		// Note that the map_[index] vectors are reversed
 		for (void* p : high_cashe->vpArr())
 			map_[p].push_back(true);
 

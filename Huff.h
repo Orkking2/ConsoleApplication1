@@ -11,7 +11,7 @@ _NSTD_BEGIN
 
 class HuffTree {
 	typedef nstd::uint uint;
-	typedef _STD pair<void*, uint> pvu;
+	typedef _STD pair<void*, uint> _Pair_vpu;
 
 public:
 	struct IElement {
@@ -27,7 +27,7 @@ public:
 		uint freq_;
 	public:
 		vPtr(void* ptr, const uint freq) : ptr_(ptr), freq_(freq) {}
-		vPtr(pvu val_pair) : ptr_(val_pair.first), freq_(val_pair.second) {}
+		vPtr(_Pair_vpu val_pair) : ptr_(val_pair.first), freq_(val_pair.second) {}
 
 		_NODISCARD const void* GetP(_NSTD deque<bool>&) const override { return ptr_; }
 		_NODISCARD const bool isNode()                  const override { return false; }
@@ -53,8 +53,8 @@ private:
 
 	IElement* Fin_node_;
 public:
-	HuffTree()                      : ptrs_set_(false), Fin_node_(NULL) {}
-	HuffTree(_STD vector<pvu> vals) : ptrs_set_(false), Fin_node_(NULL) { create_tree(vals); }
+	HuffTree()                            : ptrs_set_(false), Fin_node_(NULL) {}
+	HuffTree(_STD vector<_Pair_vpu> vals) : ptrs_set_(false), Fin_node_(NULL) { create_tree(vals); }
 	~HuffTree() {
 		release_ptrs();
 	}
@@ -72,11 +72,11 @@ public:
 
 	void release_ptrs_NODELETE();
 
-	void create_tree(_STD vector<pvu> vals);
-	void create_tree_NOREVERSE(_STD vector<pvu> vals);
+	void create_tree(_STD vector<_Pair_vpu> vals);
+	void create_tree_NOREVERSE(_STD vector<_Pair_vpu> vals);
 
 	template <class _Ty>
-	_NODISCARD static _STD vector<pvu> gen_freqs(_STD vector<_Ty> vals) {
+	_NODISCARD static _STD vector<_Pair_vpu> gen_freqs(_STD vector<_Ty> vals) {
 		_STD unordered_map<_Ty, uint> checker;
 		_STD vector<void*> unique_ptrs;
 		for (const _Ty& val : vals) {
@@ -90,9 +90,9 @@ public:
 			}
 		}
 
-		_STD vector<pvu> out;
+		_STD vector<_Pair_vpu> out;
 		for (void*& p : unique_ptrs) 
-			out.push_back(pvu(p, checker[*reinterpret_cast<_Ty*> (p)]));
+			out.push_back(_Pair_vpu(p, checker[*reinterpret_cast<_Ty*> (p)]));
 		
 		return out;
 	}
