@@ -60,8 +60,8 @@ int main()
 		test(num_tests * (i + 1), _STD function<char(void)>([]()->char { return (rand() % 100) > 10 ? 'a' : 'a' + rand() % 26; }));
 	}
 	
-
 	
+
 
 	std::cout << '\n';
 	std::system("pause");
