@@ -62,26 +62,32 @@ public:
 	_NODISCARD bool empty() {
 		return size() == 0;
 	}
-	// Copies contents of old deque into new deque
-	void resize(uint size, bool init = false) {
+	// Maintains size
+	void clear() {
+		Tpos_ = 0;
+		Hpos_ = 1;
+	}
+	// Copies contents of old deque into new deque (maintains position)
+	void resize(uint num_bools, bool init = false) {
+		uint real_sz = static_cast<uint> (num_bools / CHAR_BIT) + 1;
 		uchar* cashe(carr_);
-		if (size >= arr_sz_) {
+		init ? carr_ = new uchar[real_sz](0xff) : carr_ = new uchar[real_sz](0x00);
+		if (real_sz >= arr_sz_) {
 			_NSTD_FOR_I(arr_sz_)
 				carr_[i] = cashe[i];
 		} else /* truncation */ {
-			_NSTD_FOR_I(size)
+			_NSTD_FOR_I(real_sz)
 				carr_[i] = cashe[i];
-			Tpos_ = size * 8;
-			if (Hpos_ > Tpos_) {
-				Hpos_ = 1;
-				Tpos_ = 0;
-			}
+			Tpos_ = num_bools + 1;
+			if (Hpos_ > Tpos_) 
+				clear();
 		}
 		delete[] cashe;
 	}
-	void resize_NOCOPY(uint size, bool init = false) {
+	void resize_NOCOPY(uint num_bools, bool init = false) {
 		delete[] carr_;
-		init ? carr_ = new uchar[size](11111111) : carr_ = new uchar[size](00000000);
+		init ? carr_ = new uchar[num_bools](0xff) : carr_ = new uchar[num_bools](0x00);
+		clear();
 	}
 	_NODISCARD bool front() {
 		_NSTD_ASSERT(Tpos_ >= Hpos_, "attempting to pop val of empty deque");
@@ -101,7 +107,7 @@ public:
 		--Tpos_;
 		return out;
 	}
-	// Equivalent to -.shrink_front().shrink_back();
+	// Literally shrink_front().shrink_back();
 	deque& shrink_fit() {
 		return shrink_front().shrink_back();
 	}
@@ -143,17 +149,17 @@ public:
 	}
 	// Missing deque& push_front(bool) because I'm lazy & it serves no purpose for Huff.h
 
-	// d[pos] is equivilent to d.at(pos)
+	// at(pos)
 	bool operator[] (uint pos) {
 		return at(pos);
 	}
-	// d.at(pos) only retrieves the val at pos, it does not allow one to change pos (for that use d.set(pos, bool))
+	// at(pos) only retrieves the val at pos, it does not allow one to change pos (for that use set(pos, bool))
 	bool at(uint pos) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
 		return carr_[static_cast<uint> (real_pos / CHAR_BIT)] & bitX_[real_pos % CHAR_BIT];
 	}
-
+	// set(pos, !at(pos))
 	deque& flip(uint pos) {
 		return set(pos, !at(pos));
 	}

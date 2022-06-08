@@ -8,7 +8,7 @@ private:
 	char* str_;
 	int len_;
 public:
-	_ASS_STR_MAN(int len) {
+	_ASS_STR_MAN(int len) : len_(len) {
 		str_ = new char[len];
 		_NSTD_FOR_I(len)
 			str_[i] = '\0';

@@ -43,7 +43,7 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 		}
 	}
 
-	// If size is one, you should just sent the object and a count
+	// If size is one, you should just send the object and a count
 	// This is to handle exceptions, it is always suboptimal
 	if (elements.size() == 1) {
 		elements[0] = new Node(elements[0], NULL);
