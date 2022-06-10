@@ -30,7 +30,7 @@ void thread_pool::thread_loop() {
 	}
 }
 
-void thread_pool::add_task(const _STD function<void(void*)>& func, void* data = NULL) {
+void thread_pool::add_task(const _Func& func, void* data = NULL) {
 	{
 		_STD lock_guard<_STD mutex> lock(queue_mutex_);
 		task_queue_.emplace_back(_Pair_fvp(func, data));
