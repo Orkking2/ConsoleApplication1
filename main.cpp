@@ -1,11 +1,10 @@
 #include <iostream>
+#include "Deque.h"
 #include "Timer.h"
 
 
 int main()
 {
-    
-	
 	
 
 

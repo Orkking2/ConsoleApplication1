@@ -126,6 +126,7 @@ public:
 	}
 
 	template <>
+	// Heterogenous encode
 	_NODISCARD _NSTD deque<bool> encode<void*>(_STD vector<void*> ptrs) {
 		_NSTD deque<bool> out;
 		if (ptrs_set_) {
@@ -149,6 +150,7 @@ public:
 	}
 
 	template <>
+	// Heterogenous decode
 	_NODISCARD _STD vector<void*> decode<void*>(_NSTD deque<bool> bool_list) {
 		_STD vector<void*> out;
 		if (ptrs_set_) {

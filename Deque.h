@@ -137,17 +137,29 @@ public:
 	deque& push_back(bool b) {
 		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= arr_sz_) {
 			uchar* cashe(carr_);
-			uint nsz(static_cast<uint> (Tpos_ / CHAR_BIT) * 2);
-			carr_ = new uchar[nsz](0);
-			_NSTD_FOR_I(arr_sz_)
+			arr_sz_ *= 2;
+			carr_ = new uchar[arr_sz_](0);
+			_NSTD_FOR_I(arr_sz_ / 2)
 				carr_[i] = cashe[i];
-			arr_sz_ = nsz;
 			delete[] cashe;
 		}
 		set(Tpos_ - Hpos_, b);
 		return *this;
 	}
-	// Missing deque& push_front(bool) because I'm lazy & it serves no purpose for Huff.h
+	deque& push_front(bool b) {
+		if (!--Hpos_) {
+			uchar* cashe(carr_);
+			arr_sz_ *= 2;
+			carr_ = new uchar[arr_sz_](0);
+			_NSTD_FOR_I(arr_sz_ / 2)
+				carr_[i + arr_sz_ / 2 - 1] = cashe[i];
+			delete[] cashe;
+			Hpos_ += arr_sz_ / 2;
+			Tpos_ += arr_sz_ / 2;
+		}
+		set(0, b);
+		return *this;
+	}
 
 	// at(pos)
 	bool operator[] (uint pos) {
