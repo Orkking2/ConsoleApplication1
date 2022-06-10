@@ -42,7 +42,7 @@ public:
 	* within the function.
 	*
 	* If the void* parameter is not used, it is recomended to set the associated
-	* date element to NULL or nullptr and to simply ignore it within the function.
+	* data element to NULL or nullptr and to simply ignore it within the function.
 	*
 	* Functions passed into this thread pool should reinterpret the void*, e.g.
 	* reinterpret_vast<T*> (void* p), before use.
@@ -50,7 +50,7 @@ public:
 	* Object(s) pointed to by the void* pointer is/are NOT protected for
 	* multithreading by default.
 	*
-	* Functions passed into the pool should only ever read from the pointer
+	* Function(s) passed into the pool should only ever read from the pointer
 	* or use a custom system to protect its/their contents from curroption;
 	* see make_thread_safe function below.
 	*/
