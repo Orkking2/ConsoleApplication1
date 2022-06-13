@@ -61,7 +61,9 @@ public:
 	_NODISCARD uint real_size() {
 		return arr_sz_;
 	}
-	// size() == 0
+	_NODISCARD uint potential_size() {
+		return arr_sz_ * CHAR_BIT - 1;
+	}
 	_NODISCARD bool empty() {
 		return size() == 0;
 	}
@@ -74,7 +76,7 @@ public:
 	void resize(uint num_bools, bool init = false) {
 		uint real_sz = static_cast<uint> (num_bools / CHAR_BIT) + 1;
 		uchar* cashe(carr_);
-		init ? carr_ = new uchar[real_sz](0xff) : carr_ = new uchar[real_sz](0x00);
+		carr_ = init ? new uchar[real_sz](0xff) : new uchar[real_sz](0x00);
 		if (real_sz >= arr_sz_) {
 			_NSTD_FOR_I(arr_sz_)
 				carr_[i] = cashe[i];
@@ -89,7 +91,7 @@ public:
 	}
 	void resize_NOCOPY(uint num_bools, bool init = false) {
 		delete[] carr_;
-		init ? carr_ = new uchar[num_bools](0xff) : carr_ = new uchar[num_bools](0x00);
+		carr_ = init ? new uchar[num_bools](0xff) : new uchar[num_bools](0x00);
 		clear();
 	}
 	_NODISCARD bool front() {
@@ -110,7 +112,7 @@ public:
 		--Tpos_;
 		return out;
 	}
-	// Literally shrink_front().shrink_back();
+	// Sum of shrink_front & shrink_back
 	deque& shrink_fit() {
 		return shrink_front().shrink_back();
 	}
