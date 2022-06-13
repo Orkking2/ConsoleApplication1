@@ -10,7 +10,7 @@
 _NSTD_BEGIN
 
 class HuffTree {
-	typedef nstd::uint uint;
+	typedef _NSTD uint uint;
 	typedef _STD pair<void*, uint> _Pair_vpu;
 
 public:

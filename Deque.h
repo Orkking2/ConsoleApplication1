@@ -22,12 +22,12 @@ class deque<bool> {
 	uchar* carr_, * bitX_;
 	uint arr_sz_, Hpos_, Tpos_;
 public:
-	deque(uint size = 10) : bitX_(gen_bitX(1)), carr_(new uchar[size]), arr_sz_(size), Hpos_(1), Tpos_(0) {}
+	deque(uint size = 0xff)         : bitX_(gen_bitX(1)), carr_(new uchar[size]),          arr_sz_(size),          Hpos_(1),           Tpos_(0) {}
 	deque(_NSTD deque<bool>& other) : bitX_(gen_bitX(1)), carr_(new uchar[other.arr_sz_]), arr_sz_(other.arr_sz_), Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
 		_NSTD_FOR_I(arr_sz_)
 			carr_[i] = other.carr_[i];
 	}
-	~deque() { delete[] bitX_, carr_; }
+	~deque() { delete[] carr_, bitX_; }
 
 	// This is a utility.
 	// Note: the caller must call delete[] on generated array themselves
