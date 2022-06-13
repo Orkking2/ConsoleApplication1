@@ -20,11 +20,11 @@ class deque<bool> {
 	typedef _NSTD uchar uchar;
 
 	uchar* carr_, * bitX_;
-	uint arr_sz_, Hpos_, Tpos_;
+	uint carr_sz_, Hpos_, Tpos_;
 public:
-	deque(uint size = 0xff)         : bitX_(gen_bitX(1)), carr_(new uchar[size]),          arr_sz_(size),          Hpos_(1),           Tpos_(0) {}
-	deque(_NSTD deque<bool>& other) : bitX_(gen_bitX(1)), carr_(new uchar[other.arr_sz_]), arr_sz_(other.arr_sz_), Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
-		_NSTD_FOR_I(arr_sz_)
+	deque(uint size = 0xff)         : bitX_(gen_bitX(1)), carr_(new uchar[size / CHAR_BIT + 1]), carr_sz_(size / CHAR_BIT + 1), Hpos_(1),           Tpos_(0) {}
+	deque(_NSTD deque<bool>& other) : bitX_(gen_bitX(1)), carr_(new uchar[other.carr_sz_]),      carr_sz_(other.carr_sz_),      Hpos_(other.Hpos_), Tpos_(other.Tpos_) {
+		_NSTD_FOR_I(carr_sz_)
 			carr_[i] = other.carr_[i];
 	}
 	~deque() { delete[] carr_, bitX_; }
@@ -34,7 +34,7 @@ public:
 	_NODISCARD uchar*& gen_bitX(uint num_bytes) {
 		uchar* nbitX(new uchar[num_bytes * CHAR_BIT](1));
 		_NSTD_FOR_I(num_bytes * CHAR_BIT - 1) {
-			nbitX[i + 1] = 2 * nbitX[i];
+			nbitX[i + 1] = nbitX[i] << 2;
 		}
 		return nbitX;
 	}
@@ -59,10 +59,10 @@ public:
 		return Tpos_ - Hpos_ + 1;
 	}
 	_NODISCARD uint real_size() {
-		return arr_sz_;
+		return carr_sz_;
 	}
 	_NODISCARD uint potential_size() {
-		return arr_sz_ * CHAR_BIT - 1;
+		return carr_sz_ * CHAR_BIT - 1;
 	}
 	_NODISCARD bool empty() {
 		return size() == 0;
@@ -77,8 +77,8 @@ public:
 		uint real_sz = static_cast<uint> (num_bools / CHAR_BIT) + 1;
 		uchar* cashe(carr_);
 		carr_ = init ? new uchar[real_sz](0xff) : new uchar[real_sz](0x00);
-		if (real_sz >= arr_sz_) {
-			_NSTD_FOR_I(arr_sz_)
+		if (real_sz >= carr_sz_) {
+			_NSTD_FOR_I(carr_sz_)
 				carr_[i] = cashe[i];
 		} else /* truncation */ {
 			_NSTD_FOR_I(real_sz)
@@ -119,9 +119,9 @@ public:
 	deque& shrink_front() {
 		if (static_cast<uint> (Hpos_ / CHAR_BIT)) {
 			uint high_pos(static_cast<uint> (Hpos_ / CHAR_BIT));
-			arr_sz_ -= high_pos;
-			uchar* narr(new uchar[arr_sz_]);
-			_NSTD_FOR_I(arr_sz_)
+			carr_sz_ -= high_pos;
+			uchar* narr(new uchar[carr_sz_]);
+			_NSTD_FOR_I(carr_sz_)
 				narr[i] = carr_[high_pos + i];
 			delete[] carr_;
 			carr_ = narr;
@@ -129,10 +129,10 @@ public:
 		return *this;
 	}
 	deque& shrink_back() {
-		if (static_cast<uint> (Tpos_ / CHAR_BIT + 1) < arr_sz_) {
-			arr_sz_ = static_cast<uint> (Tpos_ / CHAR_BIT + 1);
-			uchar* narr(new uchar[arr_sz_]);
-			_NSTD_FOR_I(arr_sz_)
+		if (static_cast<uint> (Tpos_ / CHAR_BIT + 1) < carr_sz_) {
+			carr_sz_ = static_cast<uint> (Tpos_ / CHAR_BIT + 1);
+			uchar* narr(new uchar[carr_sz_]);
+			_NSTD_FOR_I(carr_sz_)
 				narr[i] = carr_[i];
 			delete[] carr_;
 			carr_ = narr;
@@ -140,27 +140,28 @@ public:
 		return *this;
 	}
 	deque& push_back(bool b) {
-		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= arr_sz_) {
+		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= carr_sz_) {
 			uchar* cashe(carr_);
-			arr_sz_ *= 2;
-			carr_ = new uchar[arr_sz_](0);
-			_NSTD_FOR_I(arr_sz_ / 2)
+			carr_sz_ *= 2;
+			carr_ = new uchar[carr_sz_](0);
+			_NSTD_FOR_I(carr_sz_ / 2)
 				carr_[i] = cashe[i];
 			delete[] cashe;
 		}
 		set(Tpos_ - Hpos_, b);
 		return *this;
 	}
+	// TODO: debug
 	deque& push_front(bool b) {
 		if (!--Hpos_) {
 			uchar* cashe(carr_);
-			arr_sz_ *= 2;
-			carr_ = new uchar[arr_sz_](0);
-			_NSTD_FOR_I(arr_sz_ / 2)
-				carr_[i + arr_sz_ / 2 - 1] = cashe[i];
+			carr_sz_ *= 2;
+			carr_ = new uchar[carr_sz_](0);
+			_NSTD_FOR_I(carr_sz_ / 2)
+				carr_[i + carr_sz_ / 2] = cashe[i];
 			delete[] cashe;
-			Hpos_ += arr_sz_ / 2;
-			Tpos_ += arr_sz_ / 2;
+			Hpos_ += carr_sz_ / 2;
+			Tpos_ += carr_sz_ / 2;
 		}
 		set(0, b);
 		return *this;
