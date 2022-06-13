@@ -39,7 +39,7 @@ public:
 		return nbitX;
 	}
 	
-	// Debugging
+/*  // Debugging
 	uchar*& get_carr_() {
 		return carr_;
 	}
@@ -52,13 +52,16 @@ public:
 	const uint& get_Tpos_() {
 		return Tpos_;
 	}
+*/
+
 
 	_NODISCARD uint size() {
 		return Tpos_ - Hpos_ + 1;
 	}
-	_NODISCARD uint real_size(){
+	_NODISCARD uint real_size() {
 		return arr_sz_;
 	}
+	// size() == 0
 	_NODISCARD bool empty() {
 		return size() == 0;
 	}
