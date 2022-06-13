@@ -31,7 +31,7 @@
 // NSTD UNIFORM STANDARDS
 _NSTD_BEGIN 
 
-// NSTD typedefs
+// typedefs
 typedef unsigned int  uint; 
 typedef unsigned char uchar;
 

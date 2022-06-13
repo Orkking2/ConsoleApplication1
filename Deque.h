@@ -168,7 +168,7 @@ public:
 	bool operator[] (uint pos) {
 		return at(pos);
 	}
-	// at(pos) only retrieves the val at pos, it does not allow one to change pos (for that use set(pos, bool))
+	// this method only retrieves the val at pos, it does not allow one to change pos (for that use set(pos, bool))
 	bool at(uint pos) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
@@ -178,13 +178,11 @@ public:
 	deque& flip(uint pos) {
 		return set(pos, !at(pos));
 	}
-	deque& set(uint pos, bool val = true) {
+	deque& set(uint pos, bool b = true) {
 		uint real_pos(pos + Hpos_);
 		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
-		if (val)
-			carr_[static_cast<uint> (real_pos / CHAR_BIT)] |=  bitX_[real_pos % CHAR_BIT];
-		else
-			carr_[static_cast<uint> (real_pos / CHAR_BIT)] &= ~bitX_[real_pos % CHAR_BIT];
+		b ? carr_[static_cast<uint> (real_pos / CHAR_BIT)] |=  bitX_[real_pos % CHAR_BIT] 
+		  : carr_[static_cast<uint> (real_pos / CHAR_BIT)] &= ~bitX_[real_pos % CHAR_BIT];
 		return *this;
 	}
 
