@@ -2,6 +2,7 @@
 #ifndef _NSTD_DEQUE_
 #define _NSTD_DEQUE_
 
+#include <iostream>
 #include <deque>
 #include "Defines.h"
 
@@ -33,9 +34,8 @@ public:
 	// Note: the caller must call delete[] on generated array themselves
 	_NODISCARD uchar*& gen_bitX(uint num_bytes) {
 		uchar* nbitX(new uchar[num_bytes * CHAR_BIT](1));
-		_NSTD_FOR_I(num_bytes * CHAR_BIT - 1) {
-			nbitX[i + 1] = nbitX[i] << 2;
-		}
+		_NSTD_FOR_I(num_bytes * CHAR_BIT - 1) 
+			nbitX[i + 1] = nbitX[i] << 1;
 		return nbitX;
 	}
 	
@@ -56,6 +56,7 @@ public:
 
 
 	_NODISCARD uint size() {
+		// inclusive
 		return Tpos_ - Hpos_ + 1;
 	}
 	_NODISCARD uint real_size() {
@@ -142,8 +143,7 @@ public:
 	deque& push_back(bool b) {
 		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= carr_sz_) {
 			uchar* cashe(carr_);
-			carr_sz_ *= 2;
-			carr_ = new uchar[carr_sz_](0);
+			carr_ = new uchar[carr_sz_ *= 2](0);
 			_NSTD_FOR_I(carr_sz_ / 2)
 				carr_[i] = cashe[i];
 			delete[] cashe;
@@ -151,17 +151,17 @@ public:
 		set(Tpos_ - Hpos_, b);
 		return *this;
 	}
-	// TODO: debug
+	// TODO: debug -- set(0,...) fails after several push fronts
 	deque& push_front(bool b) {
 		if (!--Hpos_) {
 			uchar* cashe(carr_);
-			carr_sz_ *= 2;
-			carr_ = new uchar[carr_sz_](0);
-			_NSTD_FOR_I(carr_sz_ / 2)
-				carr_[i + carr_sz_ / 2] = cashe[i];
+			carr_ = new uchar[carr_sz_ * 2](0);
+			_NSTD_FOR_I(carr_sz_)
+				carr_[i + carr_sz_] = cashe[i];
 			delete[] cashe;
-			Hpos_ += carr_sz_ / 2;
-			Tpos_ += carr_sz_ / 2;
+			Hpos_ += carr_sz_;
+			Tpos_ += carr_sz_;
+			carr_sz_ *= 2;
 		}
 		set(0, b);
 		return *this;
