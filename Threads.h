@@ -33,6 +33,8 @@ _NSTD_BEGIN
 
 class thread_pool {
 public:
+	typedef _NSTD uint uint;
+
 	typedef _STD function<void(void*)> _Func;
 	typedef _STD pair <_Func, void*> _Pair_fvp;
 	/* NOTE:
@@ -61,22 +63,20 @@ private:
 	_STD condition_variable mutex_condition_;
 	bool done_;
 public:
-	thread_pool(unsigned int count = _STD thread::hardware_concurrency() - 1) : done_(false) {
-		unsigned int hc = _STD thread::hardware_concurrency();
-		if (count > hc)
-			count = hc;
-		vThreads_.resize(count);
+	thread_pool(uint count = _STD thread::hardware_concurrency() - 1) : done_(false) {
+		uint hc = _STD thread::hardware_concurrency();
+		vThreads_.resize((count >= hc) ? hc - 1: count);
 		for (_STD thread& t : vThreads_)
 			t = _STD thread([this] { thread_loop(); });
 	}
 	void release();
 	~thread_pool() { release(); }
 
-	_NODISCARD unsigned int num_threads() { return vThreads_.size(); }
+	_NODISCARD uint num_threads() { return vThreads_.size(); }
 
 	void thread_loop();
 
-	void add_task(const _Func&, void*);
+	void add_task(const _Func&, void* = NULL);
 	void add_task(_Pair_fvp&);
 	void add_task(_STD vector<_Pair_fvp>);
 
@@ -84,7 +84,7 @@ public:
 	void add_task(const _STD function<R(Args...)>& func, _STD mutex& tup_mutex, _STD tuple<R*, Args...>& data) {
 		{
 			_STD lock_guard<_STD mutex> lock(queue_mutex_);
-			task_queue_.push_back(_STD make_pair(make_thread_safe_TUPLE(func, tup_mutex), reinterpret_cast<void*> (&data)));
+			task_queue_.push_back(_Pair_fvp(make_thread_safe_TUPLE(func, tup_mutex), reinterpret_cast<void*> (&data)));
 		}
 		mutex_condition_.notify_one();
 	}
