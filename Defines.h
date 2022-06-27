@@ -1,6 +1,6 @@
 #pragma once
 
-// Aquire STL defaults
+// Get STL defaults
 #include <vcruntime.h>
 
 #ifndef _NSTD_DEFINES_
@@ -38,11 +38,24 @@ typedef unsigned char uchar;
 
 _NSTD_END
 
-#define _NSTD_FOR(variable_name, length) for (_NSTD uint variable_name = 0; variable_name < length; variable_name++)
-#define _NSTD_FOR_I(len) _NSTD_FOR(i, len)
-#define _NSTD_FOR_J(len) _NSTD_FOR(j, len)
+#define _NSTD_UNSIGNED		  \
+	typedef _NSTD uint uint;  \
+	typedef _NSTD uchar uchar;
 
-#define _BITX(index) (uchar(1) << (index))
+
+
+// Vars
+#define _I i_love_u_mom
+#define _J jeepers_steeve
+
+#define _NSTD_FOR(var_name, length) for (_NSTD uint var_name = 0; var_name < length; var_name++)
+#define _NSTD_FOR_I(len) _NSTD_FOR(_I, len)
+#define _NSTD_FOR_J(len) _NSTD_FOR(_J, len)
+
+// type must have a default constructor
+#define _GET_BIT(type, index) (((type() & char(0)) | char(1)) << (index))
+#define _BITX(index)    _GET_BIT(_NSTD uchar, index)
+#define _HIGH_BIT(type) _GET_BIT(type, sizeof(type) * CHAR_BIT - 1)
 
 
 #endif // ifndef _NSTD_DEFINES_

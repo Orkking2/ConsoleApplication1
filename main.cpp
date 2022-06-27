@@ -18,6 +18,7 @@ int main()
 			std::cout << "Err: " << i << ", ";
 	}*/
 
+	std::cout << _HIGH_BIT(nstd::uint);
 	
 
 	std::cout << '\n';

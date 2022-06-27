@@ -172,7 +172,7 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 	std::vector<_Ty> vals;
 	vals.resize(num_tests);
 	_NSTD_FOR_I(num_tests)
-		vals[i] = rand_generator();
+		vals[_I] = rand_generator();
 
 	nstd::HuffTree t1(nstd::HuffTree::gen_freqs<_Ty>(vals));
 	_NSTD deque<bool> d(t1.encode(vals));
@@ -192,19 +192,19 @@ void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool er
 
 	_STD vector<unsigned int> indexi;
 	_NSTD_FOR_I(vals.size()) {
-		if (vals[i] != v[i]) {
-			indexi.push_back(i);
+		if (vals[_I] != v[_I]) {
+			indexi.push_back(_I);
 		}
 	}
 	std::cout << "Errors: ";
 	if (!indexi.size())
 		std::cout << "None";
 	_NSTD_FOR_I(indexi.size())
-		std::cout << indexi[i] << ", ";
+		std::cout << indexi[_I] << ", ";
 	if (!indexi.empty())
 		std::cout << "\nFrom ____ to ____:\n";
 	_NSTD_FOR_I(indexi.size())
-		std::cout << vals[indexi[i]] << "-" << v[indexi[i]] << ", ";
+		std::cout << vals[indexi[_I]] << "-" << v[indexi[_I]] << ", ";
 
 
 	std::cout << "\nSize of original array:\n" << sizeof(_Ty) * vals.size();

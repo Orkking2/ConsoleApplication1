@@ -32,14 +32,14 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 	ptrs_set_ = true;
 	_STD vector<IElement*> elements;
 	_NSTD_FOR_I(vals.size()) {
-		if (vals[i].second == 0) {
+		if (vals[_I].second == 0) {
 			// No void* should have freq 0 -> any with freq 0 are pruned
-			vals.erase(vals.begin() + i);
-			ptrs_.erase(ptrs_.begin() + i);
-			i--;
+			vals.erase(vals.begin() + _I);
+			ptrs_.erase(ptrs_.begin() + _I);
+			_I--;
 		} else {
-			ptrs_[i] = vals[i].first;
-			elements.push_back(new vPtr(vals[i]));
+			ptrs_[_I] = vals[_I].first;
+			elements.push_back(new vPtr(vals[_I]));
 		}
 	}
 
@@ -55,8 +55,8 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 		// Lowest freq
 		uint index = 0, freq = elements[index]->GetFreq();
 		_NSTD_FOR_I(elements.size()) {
-			if (elements[i]->GetFreq() < freq) 
-				freq = elements[index = i]->GetFreq();
+			if (elements[_I]->GetFreq() < freq) 
+				freq = elements[index = _I]->GetFreq();
 		}
 		low_cashe = elements[index];
 		elements.erase(elements.begin() + index);
@@ -68,8 +68,8 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 		// Second lowest freq
 		index = 0, freq = elements[index]->GetFreq();
 		_NSTD_FOR_I(elements.size()) {
-			if (elements[i]->GetFreq() < freq)
-				freq = elements[index = i]->GetFreq();
+			if (elements[_I]->GetFreq() < freq)
+				freq = elements[index = _I]->GetFreq();
 		}
 		high_cashe = elements[index];
 		elements.erase(elements.begin() + index);
@@ -91,6 +91,6 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 //}
 
 _NSTD_END
-#else // ^^^^ _NSTD_HUFF_ / !_NSTD_HUFF_ vvvv
+#else // ^^^ _NSTD_HUFF_ / !_NSTD_HUFF_ vvv
 #pragma once(message, "Huff.h not found")
 #endif 
