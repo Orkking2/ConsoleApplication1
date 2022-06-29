@@ -30,7 +30,7 @@ public:
 	}
 	_NODISCARD bool is_id(uint id) {
 		_NSTD_FOR_I(ids_.size())
-			if (ids_[i] == id)
+			if (ids_[_I] == id)
 				return true;
 		return false;
 	}

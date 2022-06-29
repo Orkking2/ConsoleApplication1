@@ -67,7 +67,7 @@ public:
 	_NODISCARD reference operator*() const noexcept {
 		_Size_type _Block = _Mycont->_Getblock(_Myoff);
 		_Size_type _Off   = _Myoff % _Block_size;
-		return reference(_Mycont->_Map[_Block][_Off], _Off);
+		return reference(_Mycont->_Map[_Block][_Off / CHAR_BIT], _Off % CHAR_BIT);
 	}
 	// Booleans have no op-> functionality
 	// Note: same is true for _Bool_proxy
@@ -251,7 +251,7 @@ public:
 
 		_Size_type _Block = _Mycont->_Getblock(_Myoff);
 		_Size_type _Off   = _Myoff % _Block_size;
-		return reference(_Mycont->_Map[_Block][_Off], _Off);
+		return reference(_Mycont->_Map[_Block][_Off / CHAR_BIT], _Off % CHAR_BIR);
 	}
 
 	pointer operator->() const = delete;
@@ -390,16 +390,16 @@ template <class _Mydeque>
 class _Db_iterator : public _Db_const_iterator<_Mydeque> {
 private:
 	using _Size_type = typename _Mydeque::size_type;
-	using _Mybase = _Db_const_iterator<_Mydeque>;
+	using _Mybase    = _Db_const_iterator<_Mydeque>;
 
 public:
 	using _Deque_unchecked_type = _Db_unchecked_iterator<_Mydeque>;
 	using iterator_category     = _STD random_access_iterator_tag;
 
-	using value_type = typename _Mydeque::value_type;
+	using value_type      = typename _Mydeque::value_type;
 	using difference_type = typename _Mydeque::difference_type;
-	using pointer = typename _Mydeque::pointer;
-	using reference = value_type&;
+	using pointer         = typename _Mydeque::pointer;
+	using reference       = typename _Mydeque::reference;
 
 	using _Mybase::_Mybase;
 
@@ -407,9 +407,7 @@ public:
 		return const_cast<reference>(_Mybase::operator*());
 	}
 
-	_NODISCARD pointer operator->() const noexcept {
-		return pointer_traits<pointer>::pointer_to(**this);
-	}
+	pointer operator->() = delete;
 
 	_Db_iterator& operator++() noexcept {
 		_Mybase::operator++();
@@ -463,12 +461,54 @@ public:
 
 	using _Prevent_inheriting_unwrap = _Db_iterator;
 
-	_NODISCARD _Deque_unchecked_iterator<_Mydeque> _Unwrapped() const noexcept {
+	_NODISCARD _Db_unchecked_iterator<_Mydeque> _Unwrapped() const noexcept {
 		return { this->_Myoff, this->_Getcont() };
 	}
 };
 
+template <class _Value_type, class _Size_type, class _Difference_type, class _Pointer, class _Const_pointer,
+	class _Reference, class _Const_reference, class _Mapptr_type>
+struct _Db_iter_types {
+	using value_type      = _Value_type;
+	using size_type       = _Size_type;
+	using difference_type = _Difference_type;
+	using pointer         = _Pointer;
+	using const_pointer   = _Const_pointer;
+	using reference       = _Reference;
+	using const_reference = _Const_reference;
+	using _Mapptr         = _Mapptr_type;
+};
 
+template <class _Val_types>
+class _Db_val : public _STD _Container_base12 {
+public:
+	using value_type      = typename _Val_types::value_type;
+	using size_type       = typename _Val_types::size_type;
+	using difference_type = typename _Val_types::difference_type;
+	using pointer         = typename _Val_types::pointer;
+	using const_pointer   = typename _Val_types::const_pointer;
+	using reference       = typename _Val_types::reference;
+	using const_reference = typename _Val_types::const_reference;
+	using _Mapptr         = typename _Val_types::_Mapptr;
+
+private:
+	static constexpr size_t _Bytes = sizeof(value_type);
+
+public:
+	static constexpr int _Block_size = 16;
+
+	_Db_val() noexcept : _Map(), _Mapsize(0), _Myoff(0), _Mysize(0) {}
+
+	size_type _Getblock(size_type _Off) const noexcept {
+		// NB: _Mapsize and _Block_size are guaranteed to be powers of 2
+		return (_Off / _Block_size) & (_Mapsize - 1);
+	}
+
+	_Mapptr _Map; // pointer to array of pointers to blocks
+	size_type _Mapsize; // size of map array, zero or 2^N
+	size_type _Myoff; // offset of initial element
+	size_type _Mysize; // current length of sequence
+};
 
 
 // This is a class optimized specifically for use in huffman encoding
@@ -490,8 +530,8 @@ private:
 	using _Alproxy_ty     = _STD _Rebind_alloc_t<_Alty, _STD _Container_proxy>;
 	using _Alproxy_traits = _STD allocator_traits<_Alproxy_ty>;
 
-	using _Scary_val = _STD _Deque_val<
-		_STD _Deque_iter_types<
+	using _Scary_val = _Db_val<
+		_Db_iter_types<
 			bool, typename _Alty_traits::size_type, typename _Alty_traits::difference_type, 
 				typename _Alty_traits::pointer, typename _Alty_traits::const_pointer, _Bproxy, const _Bproxy, _Mapptr>>;
 
@@ -706,6 +746,67 @@ public:
 
 public:
 	~deque() { delete[] carr_; }
+private:
+
+
+
+	size_type _Getblock(size_type _Off) const noexcept {
+		return _Get_data()._Getblock(_Off);
+	}
+
+	void _Orphan_all() noexcept {
+		_Get_data()._Orphan_all();
+	}
+
+	_Alty& _Getal() noexcept {
+		return _Mypair._Get_first();
+	}
+
+	const _Alty& _Getal() const noexcept {
+		return _Mypair._Get_first();
+	}
+
+	_Scary_val& _Get_data() noexcept {
+		return _Mypair._Myval2;
+	}
+
+	const _Scary_val& _Get_data() const noexcept {
+		return _Mypair._Myval2;
+	}
+
+	_Mapptr& _Map() noexcept {
+		return _Get_data()._Map;
+	}
+
+	const _Mapptr& _Map() const noexcept {
+		return _Get_data()._Map;
+	}
+
+	size_type& _Mapsize() noexcept {
+		return _Get_data()._Mapsize;
+	}
+
+	const size_type& _Mapsize() const noexcept {
+		return _Get_data()._Mapsize;
+	}
+
+	size_type& _Myoff() noexcept {
+		return _Get_data()._Myoff;
+	}
+
+	const size_type& _Myoff() const noexcept {
+		return _Get_data()._Myoff;
+	}
+
+	size_type& _Mysize() noexcept {
+		return _Get_data()._Mysize;
+	}
+
+	const size_type& _Mysize() const noexcept {
+		return _Get_data()._Mysize;
+	}
+
+	_Compressed_pair<_Alty, _Scary_val> _Mypair;
 };
 
 _NSTD_END
