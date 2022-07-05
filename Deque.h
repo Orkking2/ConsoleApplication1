@@ -13,24 +13,30 @@ class deque : _STD deque<_Ty, _Alloc> {};
 class _Bproxy {
 	_NSTD_UNSIGNED
 
-	uint relative_pos_;
+	uint rp_;
 	uchar* char_;
 public:
-	_Bproxy(uchar* c, uint rp) : relative_pos_(rp), char_(c) {}
-	_Bproxy(uchar& c, uint rp) : relative_pos_(rp), char_(&c) {}
-	_Bproxy(_Bproxy& other) : relative_pos_(other.relative_pos_), char_(other.char_) {}
+	_Bproxy(uchar* c, uint rp) : rp_(rp), char_(c) {}
+	_Bproxy(uchar& c, uint rp) : rp_(rp), char_(&c) {}
+	_Bproxy(_Bproxy& other) : rp_(other.rp_), char_(other.char_) {}
 	// funcs
 	_Bproxy& set(bool b) {
-		b ? *char_ |=  _BITX(relative_pos_)
-		  : *char_ &= ~_BITX(relative_pos_);
+		b ? *char_ |=  _BITX(rp_)
+		  : *char_ &= ~_BITX(rp_);
 		return *this;
 	}
 	// ops
-	operator bool() const {
-		return *char_ & _BITX(relative_pos_);
+	operator bool() {
+		return *char_ & _BITX(rp_);
 	}
-	bool operator* () const {
+	operator const bool() const {
+		return *char_ & _BITX(rp_);
+	}
+	bool operator* () {
 		return static_cast<bool>(*this);
+	}
+	const bool operator* () const {
+		return static_cast<const bool>(*this);
 	}
 	// One cannot access internal bools via classic pointers
 	// This class should in itself be used as a pointer
@@ -39,8 +45,9 @@ public:
 		return set(b);
 	}
 	_Bproxy& operator= (const _Bproxy& other) {
-		relative_pos_ = other.relative_pos_;
+		rp_ = other.rp_;
 		char_ = other.char_;
+		return *this;
 	}
 };
 
@@ -69,8 +76,8 @@ public:
 		_Size_type _Off   = _Myoff % _Block_size;
 		return reference(_Mycont->_Map[_Block][_Off / CHAR_BIT], _Off % CHAR_BIT);
 	}
-	// Booleans have no op-> functionality
-	// Note: same is true for _Bool_proxy
+	// Booleans have no -> op functionality
+	// Note: same is true for _Bproxy
 	pointer operator->() const = delete;
 	
 	_Db_unchecked_const_iterator& operator++() noexcept {
@@ -245,13 +252,13 @@ public:
 		const auto _Mycont = static_cast<const _Mydeque*>(this->_Getcont());
 #if _ITERATOR_DEBUG_LEVEL != 0
 		_STL_VERIFY(_Mycont, "cannot dereference value-initialized deque iterator");
-		_STL_VERIFY(_Mycont->_Myoff <= this->_Myoff && this->_Myoff < _Mycont->_Myoff + _Mycont->_Mysize,
+		_STL_VERIFY(_Mycont->_Myhead <= this->_Myoff && this->_Myoff < _Mycont->_Mytail,
 			"cannot deference out of range deque iterator");
 #endif // _ITERATOR_DEBUG_LEVEL != 0
 
 		_Size_type _Block = _Mycont->_Getblock(_Myoff);
 		_Size_type _Off   = _Myoff % _Block_size;
-		return reference(_Mycont->_Map[_Block][_Off / CHAR_BIT], _Off % CHAR_BIR);
+		return reference(_Mycont->_Map[_Block][_Off / CHAR_BIT], _Off % CHAR_BIT);
 	}
 
 	pointer operator->() const = delete;
@@ -296,7 +303,7 @@ public:
 			const auto _Mycont = static_cast<const _Mydeque*>(this->_Getcont());
 			_STL_VERIFY(_Mycont, "cannot seek value-initialized deque iterator");
 			_STL_VERIFY(
-				_Mycont->_Myoff <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Myoff + _Mycont->_Mysize,
+				_Mycont->_Myhead <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Mytail,
 				"cannot seek deque iterator out of range");
 		}
 #endif // _ITERATOR_DEBUG_LEVEL != 0
@@ -403,9 +410,9 @@ public:
 
 	using _Mybase::_Mybase;
 
-	_NODISCARD reference operator*() const noexcept {
+	/*_NODISCARD reference operator*() const noexcept {
 		return const_cast<reference>(_Mybase::operator*());
-	}
+	}*/
 
 	pointer operator->() = delete;
 
@@ -480,8 +487,7 @@ struct _Db_iter_types {
 };
 
 template <class _Val_types>
-class _Db_val : public _STD _Container_base12 {
-public:
+struct _Db_val : _STD _Container_base12 {
 	using value_type      = typename _Val_types::value_type;
 	using size_type       = typename _Val_types::size_type;
 	using difference_type = typename _Val_types::difference_type;
@@ -491,23 +497,19 @@ public:
 	using const_reference = typename _Val_types::const_reference;
 	using _Mapptr         = typename _Val_types::_Mapptr;
 
-private:
-	static constexpr size_t _Bytes = sizeof(value_type);
+	static constexpr int _Block_size_RAW = 16;                         // 16 bytes per block
+	static constexpr int _Block_size     = _Block_size_RAW * CHAR_BIT; // 128 bits per block
 
-public:
-	static constexpr int _Block_size = 16;
-
-	_Db_val() noexcept : _Map(), _Mapsize(0), _Myoff(0), _Mysize(0) {}
+	_Db_val() noexcept : _Map(), _Mapsize(0), _Myhead(1), _Mytail(0) {}
 
 	size_type _Getblock(size_type _Off) const noexcept {
-		// NB: _Mapsize and _Block_size are guaranteed to be powers of 2
-		return (_Off / _Block_size) & (_Mapsize - 1);
+		return (_Off / _Block_size) % _Mapsize;
 	}
 
 	_Mapptr _Map; // pointer to array of pointers to blocks
-	size_type _Mapsize; // size of map array, zero or 2^N
-	size_type _Myoff; // offset of initial element
-	size_type _Mysize; // current length of sequence
+	size_type _Mapsize; // size of map array
+	size_type _Myhead; // offset of initial element
+	size_type _Mytail; // current length of sequence
 };
 
 
@@ -516,11 +518,10 @@ public:
 template <typename _Alloc>
 class deque<bool, _Alloc> {
 	_NSTD_UNSIGNED
-	
-private:
-	uchar* carr_;
-	uint carr_sz_, Hpos_, Tpos_;
+	friend _STD _Tidy_guard<deque>;
+	using _Ty = bool;
 
+private:
 // ripped
 	using _Alty           = _STD _Rebind_alloc_t<_Alloc, uchar>;
 	using _Alty_traits    = _STD allocator_traits<_Alty>;
@@ -535,11 +536,18 @@ private:
 			bool, typename _Alty_traits::size_type, typename _Alty_traits::difference_type, 
 				typename _Alty_traits::pointer, typename _Alty_traits::const_pointer, _Bproxy, const _Bproxy, _Mapptr>>;
 
-	static constexpr int _Block_size = _Scary_val::_Block_size;
+	static constexpr int _Block_size_RAW = _Scary_val::_Block_size_RAW;
+	static constexpr int _Block_size     = _Scary_val::_Block_size;
+
+	enum SELECTOR {
+		FORWARD = 0,
+		BACKWARD,
+	};
 
 public:
 	using allocator_type  = _Alloc;
-	using value_type      = bool;
+	using value_type      = _Ty;
+	using storage_type    = typename _Alty_traits::value_type;
 	using size_type       = typename _Alty_traits::size_type;
 	using difference_type = typename _Alty_traits::difference_type;
 	using pointer         = typename _Alty_traits::pointer;
@@ -557,21 +565,27 @@ public:
 
 
 public:
-	deque(uint size = 0xff)   : carr_(new uchar[size / CHAR_BIT + 1]), carr_sz_(size / CHAR_BIT + 1), Hpos_(carr_sz_ / 2), Tpos_(Hpos_ - 1) {}
+	deque() : _Mypair(_STD _Zero_then_variadic_args_t{}) {
+		_Get_data()._Alloc_proxy(static_cast<_Alproxy_ty>(_Getal()));
+	}
+
+	explicit deque(const _Alloc& _Al) : _Mypair(_STD _One_then_variadic_args_t{}, _Al) {
+		_Get_data()._Alloc_proxy(static_cast<_Alproxy_ty>(_Getal()));
+	}
+	
+	deque(const deque& _Right)
+		: _Mypair(_STD _One_then_variadic_args_t{}, _Alty_traits::select_on_container_copy_construction(_Right._Getal())) {
+		_Alproxy_ty _Alproxy(_Getal());
+		_STD _Container_proxy_ptr12<_Alproxy_ty> _Proxy(_Alproxy, _Get_data());
+		_Construct(_Right._Unchecked_begin(), _Right._Unchecked_end());
+		_Proxy._Release();
+	}
+	
+/*	deque(uint size = 0xff) : carr_(new uchar[size / CHAR_BIT + 1]), carr_sz_(size / CHAR_BIT + 1), Hpos_(carr_sz_* CHAR_BIT / 2), Tpos_(Hpos_ - 1) {}
 	deque(const deque& other) : carr_(new uchar[other.carr_sz_]),      carr_sz_(other.carr_sz_),      Hpos_(other.Hpos_),  Tpos_(other.Tpos_) {
 		_NSTD_FOR_I(carr_sz_)
 			carr_[_I] = other.carr_[_I];
-	}
-
-
-	// This is a utility.
-	// Note: the caller must call delete[] on generated array themselves
-	_NODISCARD static uchar* gen_bitX() {
-		uchar* nbitX(new uchar[CHAR_BIT]);
-		_NSTD_FOR_I(CHAR_BIT)
-			nbitX[_I] = _BITX(_I);
-		return nbitX;
-	}
+	}*/
 	
 /*  // Debugging
 	uchar*& get_carr_() {
@@ -589,166 +603,283 @@ public:
 */
 
 
-	_NODISCARD uint size() {
-		// inclusive
-		return Tpos_ - Hpos_ + 1;
+	// Inclusive
+	_NODISCARD size_type size() {
+		return _Mysize();
 	}
-	_NODISCARD uint real_size() {
-		return carr_sz_;
+	_NODISCARD size_type real_size() {
+		return _Mapsize() * _Block_size;
 	}
-	_NODISCARD uint potential_size() {
-		return carr_sz_ * CHAR_BIT - 1;
-	}
+
 	_NODISCARD bool empty() {
 		return size() == 0;
 	}
 	// Maintains size
-	void clear() {
-		Tpos_ = 0;
-		Hpos_ = 1;
-	}
+	void clear() = delete;
 	// Copies contents of old deque into new deque (maintains position)
 	// Note: expands backwards
-	void resize(uint num_bools, bool init = false) {
-		uint real_sz = static_cast<uint> (num_bools / CHAR_BIT) + 1;
-		uchar* cashe(carr_);
-		carr_ = init ? new uchar[real_sz](0xff) : new uchar[real_sz](0x00);
-		if (real_sz >= carr_sz_) {
-			_NSTD_FOR_I(carr_sz_)
-				carr_[_I] = cashe[_I];
-		} else /* truncation */ {
-			_NSTD_FOR_I(real_sz)
-				carr_[_I] = cashe[_I];
-			Tpos_ = num_bools + 1;
-		}
-		delete[] cashe;
-	}
+	void resize(uint, bool) = delete;
 	void resize_NOCOPY(uint num_bools, bool init = false) {
-		delete[] carr_;
-		carr_ = init ? new uchar[num_bools](0xff) : new uchar[num_bools](0x00);
-		clear();
+		
 	}
 	_NODISCARD reference front() {
 		_NSTD_ASSERT(!empty(), "called front() on empty deque");
-		return _Bproxy(carr_[static_cast<uint> (Hpos_ / CHAR_BIT)], Hpos_ % CHAR_BIT);
+		return *begin();
 	}
 	_NODISCARD const_reference front() const {
-		return front();
+		_NSTD_ASSERT(!empty(), "called front() on empty deque");
+		return *begin();
 	}
 	reference pop_front() {
-		_Bproxy out(front());
-		++Hpos_;
+		reference out(front());
+		++_Myhead();
 		return out;
 	}
 	_NODISCARD reference back() {
 		_NSTD_ASSERT(!empty(), "called back() on empty deque");
-		return _Bproxy(carr_[static_cast<uint> (Tpos_ / CHAR_BIT)], Tpos_ % CHAR_BIT);
+		return *end();
 	}
 	_NODISCARD const_reference back() const {
-		return back();
+		_NSTD_ASSERT(!empty(), "called back() on empty deque");
+		return *end();
 	}
 	reference pop_back() {
-		_Bproxy out(back());
-		--Tpos_;
+		reference out(back());
+		--_Mytail();
 		return out;
 	}
-	// Sum of shrink_front & shrink_back
+	// Combination of shrink_front & shrink_back
 	deque& shrink_fit() {
 		return shrink_front().shrink_back();
 	}
 	deque& shrink_front() {
-		if (static_cast<uint> (Hpos_ / CHAR_BIT)) {
-			uint high_pos(static_cast<uint> (Hpos_ / CHAR_BIT));
-			carr_sz_ -= high_pos;
-			uchar* narr(new uchar[carr_sz_]);
-			_NSTD_FOR_I(carr_sz_)
-				narr[_I] = carr_[high_pos + _I];
-			delete[] carr_;
-			carr_ = narr;
-		}
-		return *this;
+		
 	}
 	deque& shrink_back() {
-		if (static_cast<uint> (Tpos_ / CHAR_BIT + 1) < carr_sz_) {
-			carr_sz_ = static_cast<uint> (Tpos_ / CHAR_BIT + 1);
-			uchar* narr(new uchar[carr_sz_]);
-			_NSTD_FOR_I(carr_sz_)
-				narr[_I] = carr_[_I];
-			delete[] carr_;
-			carr_ = narr;
-		}
-		return *this;
+		
 	}
 	deque& push_back(bool b) {
-		if (static_cast<uint> (++Tpos_ / CHAR_BIT) >= carr_sz_) {
-			uchar* cashe(carr_);
-			carr_ = new uchar[carr_sz_ *= 2](0);
-			_NSTD_FOR_I(carr_sz_ / 2)
-				carr_[_I] = cashe[_I];
-			delete[] cashe;
+		if (!(++_Mytail() % _Block_size) && !(real_size() - _Mytail())) {
+			_Growmap(BACKWARD, 1);
 		}
-		set(Tpos_ - Hpos_, b);
-		return *this;
+		set(_Mytail() - _Myhead(), b);
 	}
-	// TODO: debug -- set(0,...) fails after several push fronts
-	deque& push_front(bool b) {
-		if (!--Hpos_) {
-			uchar* cashe(carr_);
-			carr_ = new uchar[carr_sz_ * 2](0);
-			_NSTD_FOR_I(carr_sz_)
-				carr_[_I + carr_sz_] = cashe[_I];
-			delete[] cashe;
-			Hpos_ += carr_sz_;
-			Tpos_ += carr_sz_;
-			carr_sz_ *= 2;
-		}
-		set(0, b);
-		return *this;
+	deque& emplace_back(bool&& b) {
+		push_back(b);
+	}
+	deque& emplace_back(bool& b) {
+		push_back(b);
 	}
 
-	// at(pos)
-	_Bproxy operator[] (uint pos) {
+	deque& push_front(bool b) {
+		if (!--_Myhead()) {
+			_Growmap(FORWARD, 1);
+		}
+		set(0, b);
+	}
+	deque& emplace_front(bool&& b) {
+		return push_front(b);
+	}
+	deque& emplace_front(bool& b) {
+		return push_front(b);
+	}
+		
+	_NODISCARD size_type size() const noexcept {
+		return _Mysize();
+	}
+
+	_NODISCARD size_type max_size() const noexcept {
+		return (_STD min) (static_cast<size_type>((numeric_limits<difference_type>::max) ()),
+			_Alty_traits::max_size(_Getal()));
+	}
+
+	_NODISCARD bool empty() const noexcept {
+		return _Mysize() == 0;
+	}
+
+	_NODISCARD allocator_type get_allocator() const noexcept {
+		return static_cast<allocator_type>(_Getal());
+	}
+
+	_NODISCARD const_reference at(size_type _Pos) const {
+		if (_Mysize() <= _Pos) {
+			_Xran();
+		}
+
+		return *(begin() + static_cast<difference_type>(_Pos));
+	}
+	_NODISCARD const_reference operator[] (size_type pos) const {
 		return at(pos);
 	}
-	_Bproxy at(uint pos) {
-		uint real_pos(pos + Hpos_);
-		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
-		return _Bproxy(carr_[static_cast<uint> (real_pos / CHAR_BIT)], real_pos % CHAR_BIT);
+
+	_NODISCARD reference at(size_type _Pos) {
+		if (_Mysize() <= _Pos) {
+			_Xran();
+		}
+
+		return *(begin() + static_cast<difference_type>(_Pos));
 	}
+	_NODISCARD reference operator[] (size_type pos) {
+		return at(pos);
+	}
+
 	// set(pos, !at(pos))
 	deque& flip(uint pos) {
 		return set(pos, !at(pos));
 	}
 	deque& set(uint pos, bool b = true) {
-		uint real_pos(pos + Hpos_);
-		_NSTD_ASSERT(real_pos <= Tpos_, "tried to access deque element outside deque bounds");
-		b ? carr_[static_cast<uint> (real_pos / CHAR_BIT)] |=  _BITX(real_pos % CHAR_BIT) 
-		  : carr_[static_cast<uint> (real_pos / CHAR_BIT)] &= ~_BITX(real_pos % CHAR_BIT);
+		_NSTD_ASSERT(_Myhead() + pos <= _Mytail(), "tried to access deque element outside deque bounds");
+		at(pos) = b;
 		return *this;
 	}
 
-	// vvv Methods to match std::deque vvv
-	deque& operator=(const deque& other) {
+	
 
+
+
+
+
+	_NODISCARD iterator begin() noexcept {
+		return iterator(_Myhead(), _STD addressof(_Get_data()));
 	}
-	deque& operator=(deque&& other) noexcept {
 
-	}
-	deque& operator=(std::initializer_list<bool> ilist) {
-
+	_NODISCARD const_iterator begin() const noexcept {
+		return const_iterator(_Myhead(), _STD addressof(_Get_data()));
 	}
 
+	_NODISCARD iterator end() noexcept {
+		return iterator(_Mytail(), _STD addressof(_Get_data()));
+	}
 
+	_NODISCARD const_iterator end() const noexcept {
+		return const_iterator(_Mytail(), _STD addressof(_Get_data()));
+	}
 
+	_Unchecked_iterator _Unchecked_begin() noexcept {
+		return _Unchecked_iterator(_Myhead(), _STD addressof(_Get_data()));
+	}
 
+	_Unchecked_const_iterator _Unchecked_begin() const noexcept {
+		return _Unchecked_const_iterator(_Myhead(), _STD addressof(_Get_data()));
+	}
 
+	_Unchecked_iterator _Unchecked_end() noexcept {
+		return _Unchecked_iterator(_Mytail(), _STD addressof(_Get_data()));
+	}
 
+	_Unchecked_const_iterator _Unchecked_end() const noexcept {
+		return _Unchecked_const_iterator(_Mytail(), _STD addressof(_Get_data()));
+	}
+
+	iterator _Make_iter(const_iterator _Where) const noexcept {
+		return iterator(_Where._Myoff, _STD addressof(_Get_data()));
+	}
+
+	_NODISCARD reverse_iterator rbegin() noexcept {
+		return reverse_iterator(end());
+	}
+
+	_NODISCARD const_reverse_iterator rbegin() const noexcept {
+		return const_reverse_iterator(end());
+	}
+
+	_NODISCARD reverse_iterator rend() noexcept {
+		return reverse_iterator(begin());
+	}
+
+	_NODISCARD const_reverse_iterator rend() const noexcept {
+		return const_reverse_iterator(begin());
+	}
+
+	_NODISCARD const_iterator cbegin() const noexcept {
+		return begin();
+	}
+
+	_NODISCARD const_iterator cend() const noexcept {
+		return end();
+	}
+
+	_NODISCARD const_reverse_iterator crbegin() const noexcept {
+		return rbegin();
+	}
+
+	_NODISCARD const_reverse_iterator crend() const noexcept {
+		return rend();
+	}
 
 public:
-	~deque() { delete[] carr_; }
+	~deque() { _Tidy(); }
 private:
 
+	void _Tidy() noexcept { // free all storage
+		_Orphan_all();
 
+		_Alpty _Almap(_Getal());
+		while (!empty()) {
+			pop_back();
+		}
+
+		for (size_type _Block = _Mapsize(); 0 < _Block;) { // free storage for a block and destroy pointer
+			if (_Map()[--_Block]) { // free block and destroy its pointer
+				_Getal().deallocate(_Map()[_Block], _Block_size);
+				_STD _Destroy_in_place(_Map()[_Block]);
+			}
+		}
+
+		if (_Map() != _Mapptr()) {
+			_Almap.deallocate(_Map(), _Mapsize()); // free storage for map
+		}
+
+		_Mapsize() = 0;
+		_Map()     = _Mapptr();
+	}
+
+	template <class _Iter>
+	void _Construct(_Iter _First, _Iter _Last) { // initialize from [_First, _Last), input iterators
+		_STD _Tidy_guard<deque> _Guard{ this };
+		for (; _First != _Last; ++_First) {
+			emplace_back(*_First);
+		}
+
+		_Guard._Target = nullptr;
+	}
+
+	void _Take_contents(deque& _Right) noexcept {
+		// move from _Right, stealing its contents
+		// pre: _Getal() == _Right._Getal()
+		auto& _My_data = _Get_data();
+		auto& _Right_data = _Right._Get_data();
+		_My_data._Swap_proxy_and_iterators(_Right_data);
+		_My_data._Map = _Right_data._Map;
+		_My_data._Mapsize = _Right_data._Mapsize;
+		_My_data._Myhead = _Right_data._Myhead;
+		_My_data._Mytail = _Right_data._Mytail;
+
+		_Right_data._Map = nullptr;
+		_Right_data._Mapsize = 0;
+		_Right_data._Myhead = 1;
+		_Right_data._Mytail = 0;
+	}
+
+	void _Growmap(SELECTOR s, size_type num) {
+		switch (s) {
+		case FORWARD:
+
+			break;
+		case BACKWARD:
+
+			break;
+		default:
+			exit(-1);
+		}
+	}
+
+	[[noreturn]] void _Xlen() const {
+		_STD _Xlength_error("deque<T> too long");
+	}
+	[[noreturn]] void _Xran() const {
+		_STD _Xout_of_range("invalid deque<T> subscript");
+	}
 
 	size_type _Getblock(size_type _Off) const noexcept {
 		return _Get_data()._Getblock(_Off);
@@ -790,23 +921,31 @@ private:
 		return _Get_data()._Mapsize;
 	}
 
-	size_type& _Myoff() noexcept {
-		return _Get_data()._Myoff;
+	size_type& _Myhead() noexcept {
+		return _Get_data()._Myhead;
 	}
 
-	const size_type& _Myoff() const noexcept {
-		return _Get_data()._Myoff;
+	const size_type& _Myhead() const noexcept {
+		return _Get_data()._Myhead;
 	}
 
-	size_type& _Mysize() noexcept {
-		return _Get_data()._Mysize;
+	size_type& _Mytail() noexcept {
+		return _Get_data()._Mytail;
+	}
+
+	const size_type& _Mytail() const noexcept {
+		return _Get_data()._Mytail;
+	}
+
+	const size_type _Mysize() noexcept {
+		return _Get_data()._Mytail - _Get_data()._Myhead + 1;
 	}
 
 	const size_type& _Mysize() const noexcept {
-		return _Get_data()._Mysize;
+		return _Get_data()._Mytail - _Get_data()._Myhead + 1;
 	}
 
-	_Compressed_pair<_Alty, _Scary_val> _Mypair;
+	_STD _Compressed_pair<_Alty, _Scary_val> _Mypair;
 };
 
 _NSTD_END
