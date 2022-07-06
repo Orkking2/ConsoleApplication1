@@ -111,8 +111,11 @@ public:
 		return LongInt(*this).multiply(count);
 	}
 
+	template <typename size_type>
+	LongInt& shift(size_type count) {
+		_Grow_if(count + _Myhighest());
 
-
+	}
 
 private:
 	void _Grow_if(const uint& new_size) {
@@ -123,10 +126,17 @@ private:
 		uchar* cashe = _Myarr();
 		uint nsz(new_size);
 		_Myarr() = new uchar[nsz](0);
-		_NSTD_FOR_I(_Mysize())
+		_NSTD_FOR_I(_Mysize() < nsz ? _Mysize() : nsz)
 			_Myarr()[_I] = cashe[_I];
 		_Mysize() = nsz;
 		delete[] cashe;
+	}
+
+	const uint _Myhighest() {
+		for(uint _I = _Mysize() * CHAR_BIT - 1; _I; _I--)
+			if (_Myarr()[_I / CHAR_BIT] & _GET_BIT(uchar, _I % CHAR_BIT))
+				return _I;
+		return 0;
 	}
 
 	void _Set_to(const LongInt& other) {
