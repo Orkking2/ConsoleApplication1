@@ -838,7 +838,7 @@ private:
 	void _Construct(_Iter _First, _Iter _Last) { // initialize from [_First, _Last), input iterators
 		_STD _Tidy_guard<deque> _Guard{ this };
 		for (; _First != _Last; ++_First) {
-			emplace_back(*_First);
+			emplace_back(bool(*_First));
 		}
 
 		_Guard._Target = nullptr;
