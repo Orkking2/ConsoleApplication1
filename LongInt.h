@@ -11,6 +11,9 @@ _NSTD_BEGIN
 class LongInt {
 	typedef unsigned long long uint;
 	typedef unsigned char      uchar;
+
+	static constexpr uint _Maxsize = 256Ui64;
+
 	_NSTD pair<uint, uchar*> _Mycont;
 
 public:
@@ -113,16 +116,31 @@ public:
 
 	template <typename size_type>
 	LongInt& shift(size_type count) {
-		_Grow_if(count + _Myhighest());
-
+		if (count == 0)
+			return *this;
+		_Grow_if(int((count + _Myhighest()) / CHAR_BIT + 1));
+		
 	}
 
+	template <typename size_type> friend size_type& operator+= (size_type&, const LongInt&);
+	template <typename size_type> friend size_type  operator+  (size_type,  const LongInt&);
+/*	template <typename size_type> friend size_type& operator*= (size_type&, const LongInt&);
+	template <typename size_type> friend size_type  operator*  (size_type,  const LongInt&);
+*/
+
 private:
-	void _Grow_if(const uint& new_size) {
+	template <typename size_type>
+	void _Grow_if(size_type&& new_size) {
+		_Grow_if(new_size);
+	}
+	template <typename size_type>
+	void _Grow_if(const size_type& new_size) {
 		if (_Mysize() < new_size)
 			_Grow_to(new_size);
 	}
-	void _Grow_to(const uint& new_size) {
+	template <typename size_type>
+	void _Grow_to(const size_type& new_size) {
+		_NSTD_ASSERT(new_size < _Maxsize, "LongInt grown to size above _Maxsize");
 		uchar* cashe = _Myarr();
 		uint nsz(new_size);
 		_Myarr() = new uchar[nsz](0);
@@ -133,9 +151,11 @@ private:
 	}
 
 	const uint _Myhighest() {
-		for(uint _I = _Mysize() * CHAR_BIT - 1; _I; _I--)
-			if (_Myarr()[_I / CHAR_BIT] & _GET_BIT(uchar, _I % CHAR_BIT))
-				return _I;
+		for (uint _I = _Mysize(); _I; _I--)
+			if (_Myarr()[_I - 1])
+				for (uint _J = CHAR_BIT; _J; _J--)
+					if (_Myarr()[_I - 1] & _GET_BIT(uchar, _J - 1))
+						return (_I - 1) * CHAR_BIT + (_J - 1);
 		return 0;
 	}
 
@@ -162,6 +182,21 @@ private:
 		return _Mycont.second;
 	}
 };
+
+template <typename size_type>
+size_type& operator+= (size_type& l, const LongInt& r) {
+	_NSTD_FOR_I(r._Mysize()) {
+		l += r._Myarr()[r._Mysize() - (_I + 1)];
+		if (r._Mysize() - (_I + 1))
+			l <<= CHAR_BIT;
+	}
+	return l;
+}
+template <typename size_type>
+size_type operator+ (size_type l, const LongInt& r) {
+	return size_type(l) += r;
+}
+
 
 
 _NSTD_END
