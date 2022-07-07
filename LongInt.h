@@ -33,10 +33,13 @@ public:
 
 	template <typename size_type>
 	operator size_type() {
-		_NSTD_ASSERT(_STD is_integral_v<size_type>, "Converting LongInt type to non-arithmetic type");
+		_NSTD_ASSERT(_STD is_integral_v<size_type>, "Converting LongInt type to non-integral type");
 		size_type out(0);
-		_NSTD_FOR_I(_Mysize())
-			(out += _Myarr()[_Mysize() - (_I + 1)]) <<= CHAR_BIT;
+		_NSTD_FOR_I(_Mysize()) {
+			out += _Myarr()[_Mysize() - (_I + 1)];
+			if (_Mysize() - (_I + 1))
+				out <<= CHAR_BIT;
+		}
 		return out;
 	}
 	explicit operator bool() {
@@ -118,15 +121,12 @@ public:
 	LongInt& shift(size_type count) {
 		if (count == 0)
 			return *this;
-		_Grow_if(int((count + _Myhighest()) / CHAR_BIT + 1));
+		_Grow_if((count + _Myhighest()) / CHAR_BIT + 1);
+		const LongInt num_cashes((count < 0 ? -count : count) / CHAR_BIT + 1);
+		uchar cashes[num_cashes](0);
 		
+		//
 	}
-
-	template <typename size_type> friend size_type& operator+= (size_type&, const LongInt&);
-	template <typename size_type> friend size_type  operator+  (size_type,  const LongInt&);
-/*	template <typename size_type> friend size_type& operator*= (size_type&, const LongInt&);
-	template <typename size_type> friend size_type  operator*  (size_type,  const LongInt&);
-*/
 
 private:
 	template <typename size_type>
@@ -182,22 +182,6 @@ private:
 		return _Mycont.second;
 	}
 };
-
-template <typename size_type>
-size_type& operator+= (size_type& l, const LongInt& r) {
-	_NSTD_FOR_I(r._Mysize()) {
-		l += r._Myarr()[r._Mysize() - (_I + 1)];
-		if (r._Mysize() - (_I + 1))
-			l <<= CHAR_BIT;
-	}
-	return l;
-}
-template <typename size_type>
-size_type operator+ (size_type l, const LongInt& r) {
-	return size_type(l) += r;
-}
-
-
 
 _NSTD_END
 #endif
