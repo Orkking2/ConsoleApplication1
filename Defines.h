@@ -53,6 +53,11 @@ _NSTD_END
 #define _NSTD_FOR_I(len) _NSTD_FOR(_I, len)
 #define _NSTD_FOR_J(len) _NSTD_FOR(_J, len)
 #define _NSTD_FOR_K(len) _NSTD_FOR(_K, len)
+#define _NSTD_FOR_REVERSE(var_name, length) for(_NSTD uint var_name = length - 1; ~var_name; var_name--)
+#define _NSTD_FOR_I_REVERSE(len) _NSTD_FOR_REVERSE(_I, len)
+#define _NSTD_FOR_J_REVERSE(len) _NSTD_FOR_REVERSE(_J, len)
+#define _NSTD_FOR_K_REVERSE(len) _NSTD_FOR_REVERSE(_K, len)
+
 
 // type must have a default constructor
 #define _GET_BIT(type, index) ((type() & char(0) | char(1)) << (index))

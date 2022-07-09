@@ -119,13 +119,18 @@ public:
 
 	template <typename size_type>
 	LongInt& shift(size_type count) {
-		if (count == 0)
+		if (!count)
 			return *this;
 		_Grow_if((count + _Myhighest()) / CHAR_BIT + 1);
-		const LongInt num_cashes((count < 0 ? -count : count) / CHAR_BIT + 1);
-		uchar cashes[num_cashes](0);
-		
+		LongInt cashe(*this);
+		_NSTD_FOR_I(_Mysize()) {
+
+		}
 		//
+	}
+	template <typename size_type>
+	LongInt& operator<<= (size_type count) {
+		
 	}
 
 private:
