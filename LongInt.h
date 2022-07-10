@@ -124,7 +124,11 @@ public:
 		_Grow_if((count + _Myhighest()) / CHAR_BIT + 1);
 		LongInt cashe(*this);
 		_NSTD_FOR_I(_Mysize()) {
+			if (count > 0) {
 
+			} else {
+
+			}
 		}
 		//
 	}
