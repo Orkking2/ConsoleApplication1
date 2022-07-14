@@ -5,8 +5,12 @@
 #include "Deque.h"
 #include "Timer.h"
 
+_NSTD_UNSIGNED
+
 int main()
 {
+	
+
 	
 
 	std::cout << '\n';
