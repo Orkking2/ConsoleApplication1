@@ -155,6 +155,11 @@ public:
 		return LongInt(*this).multiply(count);
 	}
 
+	template <typename size_type>
+	LongInt& divide(size_type count) {
+		count = count < 0 ? count - (count << 1) : count;
+
+	}
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename size_type>
@@ -240,7 +245,61 @@ public:
 		return LongInt(*this).operator&= (count);
 	}
 
+	template <typename size_type>
+	LongInt& operator|= (size_type count) {
+		_NSTD_FOR_I(_Mysize())
+			_Myarr()[_I] |= count << _I * CHAR_BIT;
+		return *this;
+	}
+	template <typename size_type>
+	LongInt operator| (size_type count) {
+		return LongInt(*this).operator|= (count);
+	}
 
+	// Comparisons
+	template <typename size_type>
+	bool operator!= (size_type count) {
+		_NSTD_FOR_I_REVERSE(_Mysize())
+			if (_Myarr()[_I] != count << _I * CHAR_BIT)
+				return true;
+		return false;
+	}
+	template <typename size_type>
+	bool operator== (size_type count) {
+		return !(this->operator!= (count));
+	}
+
+	template <typename size_type>
+	bool operator> (size_type count) {
+		_NSTD_FOR_I_REVERSE(_Mysize())
+			if (_Myarr()[_I] > count << _I * CHAR_BIT)
+				return true;
+		return false;
+	}
+	template <typename size_type>
+	bool operator>= (size_type count) {
+		return this->operator> (count) || this->operator== (count);
+	}
+	template <typename size_type>
+	bool operator< (size_type count) {
+		return !this->operator>= (count);
+	}
+	template <typename size_type>
+	bool operator<= (size_type count) {
+		return !this->operator> (count);
+	}
+
+#ifdef _COMPARE_
+	template <typename size_type>
+	_STD strong_ordering operator<=> (size_type count) {
+		if (this->operator> (count))
+			return _STD strong_ordering::greater;
+		else if (this->operator== (count))
+			return _STD strong_ordering::equal;
+		else
+			return _STD strong_ordering::less;
+	}
+#endif
 
 private:
 	template <typename size_type>
