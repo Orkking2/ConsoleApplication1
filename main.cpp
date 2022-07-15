@@ -22,7 +22,7 @@ int divide(int dividend, int divisor, int origdiv) {
         quotient <<= 1;
     }
 
-    if (dividend < divisor) {
+    if (divisor > dividend) {
         divisor >>= 1;
         quotient >>= 1;
     }

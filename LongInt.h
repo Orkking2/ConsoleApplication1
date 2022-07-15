@@ -156,9 +156,40 @@ public:
 	}
 
 	template <typename size_type>
-	LongInt& divide(size_type count) {
-		count = count < 0 ? count - (count << 1) : count;
+	LongInt& divide(size_type divisor, const size_type& persistent_divisor) {
+		// LongInt is unsigned
+		divisor = divisor < 0 ? divisor - (divisor << 1) : divisor;
+		LongInt quotient(1Ui64), &dividend(*this);
 
+		if (dividend == divisor) {
+			return 1;
+		} else if (dividend < divisor) {
+			return 0;
+		}
+
+		while (divisor <= dividend) {
+			divisor <<= 1;
+			quotient <<= 1;
+		}
+
+		if (divisor > dividend) {
+			divisor >>= 1;
+			quotient >>= 1;
+		}
+
+		quotient += divide(dividend - divisor, persistent_divisor);
+
+		this->_Set_to(quotient);
+
+		return *this;
+	}
+	template <typename size_type>
+	LongInt& operator/= (size_type divisor) {
+		return divide(divisor, divisor);
+	}
+	template <typename size_type>
+	LongInt operator/ (size_type divisor) {
+		return LongInt(*this).operator/=(divisor);
 	}
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
