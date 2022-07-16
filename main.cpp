@@ -8,8 +8,9 @@
 
 _NSTD_UNSIGNED
 
-int divide(int dividend, int divisor, int origdiv) {
-    int quotient(1);
+int division(int dividend, int divisor, int origdiv)
+{
+    int quotient = 1;
 
     if (dividend == divisor) {
         return 1;
@@ -17,24 +18,34 @@ int divide(int dividend, int divisor, int origdiv) {
         return 0;
     }
 
-    while (divisor <= dividend) {
+    while (divisor <= dividend){
         divisor <<= 1;
         quotient <<= 1;
     }
 
-    if (divisor > dividend) {
+    if (dividend < divisor){
         divisor >>= 1;
         quotient >>= 1;
     }
 
-    quotient += divide(dividend - divisor, origdiv, origdiv);
+    return quotient += division(dividend - divisor, origdiv, origdiv);
+}
 
-    return quotient;
+void _Gen(nstd::LongInt l) {
+    if (!l)
+        return;
+    --l;
+    _Gen(l);
 }
 
 int main()
 {
-    
+	nstd::LongInt li(256Ui64);
+	uint ui(li);
+	uint divisor(5);
+	_STD cout << "Dividend: " << ui << "\nDivisor: " << divisor << "\nQuotient: " << static_cast<uint>(li / divisor) << "\nRealQ: " << ui / divisor;
+
+    //_STD cout << division(ui, divisor, divisor) << " v " << ui/divisor;
 
 	std::cout << '\n';
 	std::system("pause");

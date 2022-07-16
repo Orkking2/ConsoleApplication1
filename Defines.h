@@ -60,7 +60,7 @@ _NSTD_END
 
 
 // type must have a default constructor
-#define _GET_BIT(type, index) ((type() & char(0) | char(1)) << (index))
+#define _GET_BIT(type, index) ((type(0) | char(1)) << (index))
 #define _BITX(index)    _GET_BIT(_NSTD uchar, index)
 #define _HIGH_BIT(type) _GET_BIT(type, sizeof(type) * CHAR_BIT - 1)
 

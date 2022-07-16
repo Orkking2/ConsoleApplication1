@@ -17,14 +17,14 @@ class LongInt {
 	_NSTD pair<uint, uchar*> _Mycont;
 
 public:
-	LongInt() : _Mycont(0, 0) {}
+	LongInt() : _Mycont(_Gen_basic()) {}
 
-	LongInt(const LongInt& other) : _Mycont(0, 0) {
+	LongInt(const LongInt& other) : _Mycont(_Gen_basic()) {
 		_Set_to(other);
 	}
 
 	template <typename size_type>
-	LongInt(size_type count) : _Mycont(0, 0) {
+	LongInt(size_type count) : _Mycont(_Gen_basic()) {
 		add(count);
 	}
 
@@ -89,19 +89,15 @@ public:
 	}
 
 	template <typename size_type>
-	LongInt& add(size_type count) {
-		return add(count, deduce_size(count));
-	}
-	template <typename size_type>
-	LongInt& add(size_type num, const uint num_bytes) {
-		_Grow_if(num_bytes);
+	LongInt& add(size_type num) {
+		_Grow_if(_Myhighest() / CHAR_BIT + _Highest(num) / CHAR_BIT + 1);
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
-			uchar& cashe_arr(_Myarr()[_I]);
 			uchar  cashe_num(uchar(0) | (num += overflow));
-			uint sum(uint(0) + cashe_arr + cashe_num);
-			cashe_arr = static_cast<uchar>(sum);
+			uint sum(uint(0) + _Myarr()[_I] + cashe_num);
+			_Myarr()[_I] = static_cast<uchar>(sum);
 			overflow = sum & _GET_BIT(uint, CHAR_BIT);
+			_Grow_if(_I + 1 /* _I inclusive */ + overflow);
 			num >>= CHAR_BIT;
 		}
 		return *this;
@@ -156,7 +152,8 @@ public:
 	}
 
 	template <typename size_type>
-	LongInt& divide(size_type divisor, const size_type& persistent_divisor) {
+	LongInt divide(size_type divisor, const size_type& persistent_divisor) {
+		_STD cout << static_cast<uint>(*this) << '\n';
 		// LongInt is unsigned
 		divisor = divisor < 0 ? divisor - (divisor << 1) : divisor;
 		LongInt quotient(1Ui64), &dividend(*this);
@@ -167,29 +164,26 @@ public:
 			return 0;
 		}
 
-		while (divisor <= dividend) {
+		while (dividend >= divisor) {
 			divisor <<= 1;
 			quotient <<= 1;
 		}
 
-		if (divisor > dividend) {
+		if (dividend < divisor) {
 			divisor >>= 1;
 			quotient >>= 1;
 		}
-
-		quotient += divide(dividend - divisor, persistent_divisor);
-
-		this->_Set_to(quotient);
-
-		return *this;
+		dividend -= divisor;
+		return quotient + divide(persistent_divisor, persistent_divisor);
 	}
 	template <typename size_type>
 	LongInt& operator/= (size_type divisor) {
-		return divide(divisor, divisor);
+		_Set_to(divide(divisor, divisor));
+		return *this;
 	}
 	template <typename size_type>
 	LongInt operator/ (size_type divisor) {
-		return LongInt(*this).operator/=(divisor);
+		return divide(divisor, divisor);
 	}
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
@@ -243,7 +237,7 @@ public:
 	
 	LongInt operator~ () {
 		LongInt cashe(*this);
-		_NSTD_FOR_I(_Mysize())
+		_NSTD_FOR_I(cashe._Mysize())
 			cashe._Myarr()[_I] = ~_Myarr()[_I];
 		return cashe;
 	}
@@ -297,13 +291,15 @@ public:
 	}
 	template <typename size_type>
 	bool operator== (size_type count) {
-		return !(this->operator!= (count));
+		return !this->operator!= (count);
 	}
 
 	template <typename size_type>
 	bool operator> (size_type count) {
-		_NSTD_FOR_I_REVERSE(_Mysize())
-			if (_Myarr()[_I] > count << _I * CHAR_BIT)
+		if (count >> _Mysize() * CHAR_BIT)
+			return false;
+		_NSTD_FOR_I_REVERSE(_Mysize()) 
+			if (_Myarr()[_I] > (count >> _I * CHAR_BIT)) 
 				return true;
 		return false;
 	}
@@ -333,6 +329,10 @@ public:
 #endif
 
 private:
+	_NSTD pair<uint, uchar*> _Gen_basic() {
+		return _NSTD pair<uint, uchar*>(1, new uchar(0));
+	}
+
 	template <typename size_type>
 	void _Grow_if(const size_type& new_size) {
 		if (_Mysize() < new_size)
@@ -349,18 +349,33 @@ private:
 		_Mysize() = nsz;
 		delete[] cashe;
 	}
+	
 	void _Set_zero() {
 		_NSTD_FOR_I(_Mysize())
 			_Myarr()[_I] = uchar(0);
 	}
-
+	public:
+	template <typename size_type>
+	static const uint _Highest(size_type count) {
+		const size_type cashe(count < 0 ? count -= count << 1 : count);
+		_NSTD_FOR_I(cashe) {
+			if (count >> CHAR_BIT) {
+				count >>= CHAR_BIT;
+				continue;
+			}
+			_NSTD_FOR_J_REVERSE(CHAR_BIT)
+				if (_GET_BIT(uchar, _J) & count)
+					return _I * CHAR_BIT + _J;
+		}
+		return 0Ui64;
+	}
 	const uint _Myhighest() {
-		for (uint _I = _Mysize(); _I; _I--)
-			if (_Myarr()[_I - 1])
-				for (uint _J = CHAR_BIT; _J; _J--)
-					if (_Myarr()[_I - 1] & _GET_BIT(uchar, _J - 1))
-						return (_I - 1) * CHAR_BIT + (_J - 1);
-		return 0;
+		_NSTD_FOR_I_REVERSE(_Mysize())
+			if (_Myarr()[_I])
+				_NSTD_FOR_J_REVERSE(CHAR_BIT)
+					if (_Myarr()[_I] & _GET_BIT(uchar, _J))
+						return _I * CHAR_BIT + _J;
+		return 0Ui64;
 	}
 
 	void _Set_to(const LongInt& other) {
