@@ -80,7 +80,7 @@ public:
 	}
 
 	template <typename size_type>
-	uint deduce_size(size_type num) {
+	static uint deduce_size(size_type num) {
 		if constexpr (_STD is_integral_v<size_type>) {
 			return sizeof(size_type);
 		} else {
@@ -113,6 +113,7 @@ public:
 
 	template <typename size_type>
 	LongInt& subtract(size_type count) {
+		_NSTD_ASSERT(*this >= count, "LongInt is unsigned -- subtracting number larger than LongInt");
 		while (count) {
 			size_type b(this->operator~() & count);
 			this->operator^= (count);
@@ -153,7 +154,6 @@ public:
 
 	template <typename size_type>
 	LongInt divide(size_type divisor, const size_type& persistent_divisor) {
-		_STD cout << static_cast<uint>(*this) << '\n';
 		// LongInt is unsigned
 		divisor = divisor < 0 ? divisor - (divisor << 1) : divisor;
 		LongInt quotient(1Ui64), &dividend(*this);
@@ -173,7 +173,7 @@ public:
 			divisor >>= 1;
 			quotient >>= 1;
 		}
-		dividend -= divisor;
+		this->operator-= (divisor);
 		return quotient + divide(persistent_divisor, persistent_divisor);
 	}
 	template <typename size_type>
@@ -234,7 +234,12 @@ public:
 	}
 
 	// Logical operators vvv
-	
+	template <typename size_type>
+	LongInt& operator= (const size_type& other) {
+		_Set_zero();
+		return add(other);
+	}
+
 	LongInt operator~ () {
 		LongInt cashe(*this);
 		_NSTD_FOR_I(cashe._Mysize())
@@ -250,8 +255,8 @@ public:
 
 	template <typename size_type>
 	LongInt& operator^= (size_type count) {
-		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] ^= count << _I * CHAR_BIT;
+		_NSTD_FOR_I(_Mysize()) 
+			_Myarr()[_I] ^= count >> _I * CHAR_BIT;
 		return *this;
 	}
 	template <typename size_type>
@@ -262,7 +267,7 @@ public:
 	template <typename size_type>
 	LongInt& operator&= (size_type count) {
 		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] &= count << _I * CHAR_BIT;
+			_Myarr()[_I] &= count >> _I * CHAR_BIT;
 		return *this;
 	}
 	template <typename size_type>
@@ -273,7 +278,7 @@ public:
 	template <typename size_type>
 	LongInt& operator|= (size_type count) {
 		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] |= count << _I * CHAR_BIT;
+			_Myarr()[_I] |= count >> _I * CHAR_BIT;
 		return *this;
 	}
 	template <typename size_type>
@@ -285,7 +290,7 @@ public:
 	template <typename size_type>
 	bool operator!= (size_type count) {
 		_NSTD_FOR_I_REVERSE(_Mysize())
-			if (_Myarr()[_I] != count << _I * CHAR_BIT)
+			if (_Myarr()[_I] != count >> _I * CHAR_BIT)
 				return true;
 		return false;
 	}
@@ -299,7 +304,7 @@ public:
 		if (count >> _Mysize() * CHAR_BIT)
 			return false;
 		_NSTD_FOR_I_REVERSE(_Mysize()) 
-			if (_Myarr()[_I] > (count >> _I * CHAR_BIT)) 
+			if (_Myarr()[_I] > count >> _I * CHAR_BIT) 
 				return true;
 		return false;
 	}
@@ -329,6 +334,9 @@ public:
 #endif
 
 private:
+#ifdef _NSTD_LONGINT_DEBUGGING_
+public:
+#endif
 	_NSTD pair<uint, uchar*> _Gen_basic() {
 		return _NSTD pair<uint, uchar*>(1, new uchar(0));
 	}
@@ -354,7 +362,6 @@ private:
 		_NSTD_FOR_I(_Mysize())
 			_Myarr()[_I] = uchar(0);
 	}
-	public:
 	template <typename size_type>
 	static const uint _Highest(size_type count) {
 		const size_type cashe(count < 0 ? count -= count << 1 : count);
