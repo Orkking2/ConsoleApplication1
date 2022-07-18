@@ -8,27 +8,35 @@
 
 _NSTD_BEGIN
 
+template <typename _Alloc = _STD allocator<uchar>>
 class LongInt {
 	typedef unsigned long long uint;
 	typedef unsigned char      uchar;
 
-	static constexpr uint _Maxsize = 256Ui64;
+	using _Alty        = _STD _Rebind_alloc_t<_Alloc, uchar>;
+	using _Alty_traits = _STD allocator_traits<_Alty>;
+	using _Mysize_t    = typename _Alty::size_type;
 
-	_NSTD pair<uint, uchar*> _Mycont;
+	using _Mypair_t    = _NSTD pair<_Mysize_t, typename _Alty_traits::pointer>;
+
+	static constexpr _Mysize_t _Maxsize = 256;
+
+	_Mypair_t _Mypair;
+
 
 public:
-	LongInt() : _Mycont(_Gen_basic()) {}
+	using allocator_type = _Alloc;
+	using storage_type   = typename _Alty_traits::value_type;
+	using my_size_type   = _Mysize_t;
+	using pointer_type   = _Mypair_t::second_type;
 
-	LongInt(const LongInt& other) : _Mycont(_Gen_basic()) {
-		_Set_to(other);
-	}
-
+public:
+	LongInt()                     : _Mypair(0, nullptr) { _Gen_basic();   }
+	LongInt(const LongInt& other) : _Mypair(0, nullptr) { _Set_to(other); }
 	template <typename size_type>
-	LongInt(size_type count) : _Mycont(_Gen_basic()) {
-		add(count);
-	}
+	LongInt(size_type count)      : _Mypair(0, nullptr) { add(count);     }
 
-	~LongInt() { delete[] _Myarr(); }
+	~LongInt() { _Tidy(); }
 
 	template <typename size_type>
 	LongInt& grow(size_type new_size) {
@@ -72,10 +80,10 @@ public:
 		return false;
 	}
 
-	uint size() {
+	_Mysize_t size() {
 		return _Mysize();
 	}
-	const uint size() const {
+	const _Mysize_t size() const {
 		return _Mysize();
 	}
 
@@ -93,8 +101,8 @@ public:
 		_Grow_if(_Myhighest() / CHAR_BIT + _Highest(num) / CHAR_BIT + 1);
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
-			uchar  cashe_num(uchar(0) | (num += overflow));
-			uint sum(uint(0) + _Myarr()[_I] + cashe_num);
+			uchar cashe_num(num += overflow);
+			uint  sum(static_cast<uint>(_Myarr()[_I]) + cashe_num);
 			_Myarr()[_I] = static_cast<uchar>(sum);
 			overflow = sum & _GET_BIT(uint, CHAR_BIT);
 			_Grow_if(_I + 1 /* _I inclusive */ + overflow);
@@ -337,8 +345,8 @@ private:
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	_NSTD pair<uint, uchar*> _Gen_basic() {
-		return _NSTD pair<uint, uchar*>(1, new uchar(0));
+	void _Gen_basic() {
+		_Grow_if(1);
 	}
 
 	template <typename size_type>
@@ -348,22 +356,30 @@ public:
 	}
 	template <typename size_type>
 	void _Grow_to(const size_type& new_size) {
-		_NSTD_ASSERT(new_size < _Maxsize, "LongInt grown to size above _Maxsize");
-		uchar* cashe = _Myarr();
-		uint nsz(new_size);
-		_Myarr() = new uchar[nsz](0);
-		_NSTD_FOR_I((_Mysize() < nsz ? _Mysize() : nsz))
-			_Myarr()[_I] = cashe[_I];
-		_Mysize() = nsz;
-		delete[] cashe;
+		_NSTD_ASSERT(new_size > 0, "Cannot set LongInt size to or below 0");
+		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
+		
+		_Alty alloc;
+		_Myarr() = alloc.allocate(new_size);
+		_NSTD_ASSERT(_Myarr(), "Failed to allocate memory");
+		_NSTD_FOR_I(new_size)
+			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
+		if (_Mysize()) {
+			LongInt cashe(*this);
+			_NSTD_FOR_I((_Mysize() < new_size ? _Mysize() : new_size))
+				_Myarr()[_I] = cashe._Myarr()[_I];
+		}
+		_Mysize() = new_size;
 	}
 	
 	void _Set_zero() {
 		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] = uchar(0);
+			_Myarr()[_I] = storage_type(0);
 	}
 	template <typename size_type>
 	static const uint _Highest(size_type count) {
+		if (!count)
+			return 0;
 		const size_type cashe(count < 0 ? count -= count << 1 : count);
 		_NSTD_FOR_I(cashe) {
 			if (count >> CHAR_BIT) {
@@ -371,52 +387,50 @@ public:
 				continue;
 			}
 			_NSTD_FOR_J_REVERSE(CHAR_BIT)
-				if (_GET_BIT(uchar, _J) & count)
+				if (_GET_BIT(storage_type, _J) & count)
 					return _I * CHAR_BIT + _J;
 		}
 		return 0Ui64;
 	}
-	const uint _Myhighest() {
+	const _Mysize_t _Myhighest() {
 		_NSTD_FOR_I_REVERSE(_Mysize())
 			if (_Myarr()[_I])
 				_NSTD_FOR_J_REVERSE(CHAR_BIT)
-					if (_Myarr()[_I] & _GET_BIT(uchar, _J))
+					if (_Myarr()[_I] & _GET_BIT(storage_type, _J))
 						return _I * CHAR_BIT + _J;
-		return 0Ui64;
+		return 0;
 	}
 
-	void _Set_to(const LongInt& other) {
+	void _Set_to(LongInt other) {
 		_Grow_if(other._Mysize());
 		_NSTD_FOR_I(other._Mysize())
 			_Myarr()[_I] = other._Myarr()[_I];
 		if (_Mysize() > other._Mysize())
 			_NSTD_FOR_I(_Mysize() - other._Mysize())
-				_Myarr()[_I + other._Mysize()] = uchar(0);
+				_Myarr()[_I + other._Mysize()] = storage_type(0);
 	}
 
-	//friend _STD iostream& operator<< (_STD iostream&, const LongInt&);
-
-	uint& _Mysize() {
-		return _Mycont.first;
-	}
-	const uint& _Mysize() const {
-		return _Mycont.first;
+	void _Tidy() {
+		if (_Mysize()) {
+			_Alty alloc;
+			alloc.deallocate(_Myarr(), _Mysize());
+		}
 	}
 
-	uchar*& _Myarr() {
-		return _Mycont.second;
+	_Mysize_t& _Mysize() {
+		return _Mypair.first;
 	}
-	const uchar* _Myarr() const {
-		return _Mycont.second;
+	const _Mysize_t& _Mysize() const {
+		return _Mypair.first;
+	}
+
+	pointer_type& _Myarr() {
+		return _Mypair.second;
+	}
+	const pointer_type* _Myarr() const {
+		return _Mypair.second;
 	}
 };
-
-/*
-_STD iostream& operator<< (_STD iostream& os, const LongInt& li) {
-	if (li._Mysize() < sizeof(uint)) {
-		return os << static_cast<uint>(li);
-	}
-}*/
 
 _NSTD_END
 #endif

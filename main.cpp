@@ -2,7 +2,7 @@
 #include <bitset>
 #include <compare>
 
-#define _NSTD_LONGINT_DEBUGGING_
+//#define _NSTD_LONGINT_DEBUGGING_
 
 #include "LongInt.h"
 #include "Deque.h"
@@ -12,7 +12,8 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	
+	nstd::LongInt li(256);
+	_STD cout << static_cast<uint>(li);
 
 
 	std::cout << '\n';
