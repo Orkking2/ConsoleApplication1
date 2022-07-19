@@ -8,7 +8,7 @@
 
 _NSTD_BEGIN
 
-template <typename _Sty = uchar, typename _Alloc = _STD allocator<_Sty>>
+template <typename _Size_type = uchar, typename _Alloc = _STD allocator<_Size_type>>
 class LongInt {
 	typedef unsigned long long uint;
 	typedef unsigned char      uchar;
@@ -16,7 +16,7 @@ class LongInt {
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Sty>;
+	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Size_type>;
 	using _Alty_traits = _STD allocator_traits<_Alty>;
 	using _Mysize_t    = typename _Alty::size_type;
 	using _Mystorage_t = typename _Alty_traits::value_type;
