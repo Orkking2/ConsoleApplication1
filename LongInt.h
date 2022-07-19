@@ -17,12 +17,10 @@ class LongInt {
 	using _Alty_traits = _STD allocator_traits<_Alty>;
 	using _Mysize_t    = typename _Alty::size_type;
 
+public:
 	using _Mypair_t    = _NSTD pair<_Mysize_t, typename _Alty_traits::pointer>;
 
 	static constexpr _Mysize_t _Maxsize = 256;
-
-	_Mypair_t _Mypair;
-
 
 public:
 	using allocator_type = _Alloc;
@@ -31,10 +29,10 @@ public:
 	using pointer_type   = _Mypair_t::second_type;
 
 public:
-	LongInt()                     : _Mypair(0, nullptr) { _Gen_basic();   }
-	LongInt(const LongInt& other) : _Mypair(0, nullptr) { _Set_to(other); }
+	LongInt()                : _Mypair(_Gen_basic()) {}
+	LongInt(LongInt& other)  : _Mypair(_Gen_basic()) { _Set_to(other); }
 	template <typename size_type>
-	LongInt(size_type count)      : _Mypair(0, nullptr) { add(count);     }
+	LongInt(size_type count) : _Mypair(_Gen_basic()) { add(count);     }
 
 	~LongInt() { _Tidy(); }
 
@@ -345,8 +343,11 @@ private:
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	void _Gen_basic() {
-		_Grow_if(1);
+	_NODISCARD static _Mypair_t _Gen_basic() {
+		_Alty alloc;
+		pointer_type p(alloc.allocate(1));
+		_Alty_traits::construct(alloc, p, 0);
+		return _Mypair_t(1, p);
 	}
 
 	template <typename size_type>
@@ -360,15 +361,13 @@ public:
 		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
 		
 		_Alty alloc;
+		LongInt cashe(*this);
 		_Myarr() = alloc.allocate(new_size);
 		_NSTD_ASSERT(_Myarr(), "Failed to allocate memory");
 		_NSTD_FOR_I(new_size)
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
-		if (_Mysize()) {
-			LongInt cashe(*this);
-			_NSTD_FOR_I((_Mysize() < new_size ? _Mysize() : new_size))
-				_Myarr()[_I] = cashe._Myarr()[_I];
-		}
+		_NSTD_FOR_I((_Mysize() < new_size ? _Mysize() : new_size))
+			_Myarr()[_I] = cashe._Myarr()[_I];
 		_Mysize() = new_size;
 	}
 	
@@ -401,20 +400,18 @@ public:
 		return 0;
 	}
 
-	void _Set_to(LongInt other) {
+	void _Set_to(LongInt& other) {
 		_Grow_if(other._Mysize());
 		_NSTD_FOR_I(other._Mysize())
 			_Myarr()[_I] = other._Myarr()[_I];
 		if (_Mysize() > other._Mysize())
 			_NSTD_FOR_I(_Mysize() - other._Mysize())
-				_Myarr()[_I + other._Mysize()] = storage_type(0);
+				_Myarr()[_I + (other._Mysize() - 1)] = storage_type(0);
 	}
 
 	void _Tidy() {
-		if (_Mysize()) {
-			_Alty alloc;
-			alloc.deallocate(_Myarr(), _Mysize());
-		}
+		_Alty alloc;
+		alloc.deallocate(_Myarr(), _Mysize());
 	}
 
 	_Mysize_t& _Mysize() {
@@ -430,6 +427,8 @@ public:
 	const pointer_type* _Myarr() const {
 		return _Mypair.second;
 	}
+
+	_Mypair_t _Mypair;
 };
 
 _NSTD_END
