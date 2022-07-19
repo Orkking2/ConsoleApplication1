@@ -12,8 +12,9 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	nstd::LongInt<uchar> li(256);
-	_STD cout << static_cast<uint>(++li);
+	nstd::LongInt<uint> li(256);
+	//_STD cout << (li > 1);
+	_STD cout << static_cast<uint>(--li);
 
 
 	std::cout << '\n';

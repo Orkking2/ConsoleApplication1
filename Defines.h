@@ -63,6 +63,7 @@ _NSTD_END
 #define _GET_BIT(type, index) ((type(0) | char(1)) << (index))
 #define _BITX(index)    _GET_BIT(_NSTD uchar, index)
 #define _HIGH_BIT(type) _GET_BIT(type, sizeof(type) * CHAR_BIT - 1)
+#define _LOW_BIT(type)  _GET_BIT(type, 0)
 
 
 #endif // ifndef _NSTD_DEFINES_

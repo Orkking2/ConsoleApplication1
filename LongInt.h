@@ -106,10 +106,9 @@ public:
 		_Grow_if(_Myhighest() / _Mybitsize + _Highest(num) / _Mybitsize + 1);
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
-			uchar cashe_num(num += overflow);
-			uint  sum(static_cast<uint>(_Myarr()[_I]) + cashe_num);
-			_Myarr()[_I] = static_cast<uchar>(sum);
-			overflow = sum & _GET_BIT(uint, _Mybitsize);
+			_Mystorage_t cashe_num(num += overflow);
+			overflow = _Overflows(num, *this);
+			_Myarr()[_I] += cashe_num;
 			_Grow_if(_I + 1 /* _I inclusive */ + overflow);
 			num >>= _Mybitsize;
 		}
@@ -125,7 +124,7 @@ public:
 	}
 
 	template <typename size_type>
-	LongInt& subtract(const size_type& count) {
+	LongInt& subtract(size_type count) {
 		_NSTD_ASSERT(*this >= count, "LongInt is unsigned -- subtracting number larger than LongInt");
 		while (count) {
 			size_type b(this->operator~() & count);
@@ -149,7 +148,7 @@ public:
 	LongInt& multiply(size_type count) {
 		LongInt cashe(*this);
 		while (count) {
-			if (count & uchar(1))
+			if (count & 1)
 				this->operator+=(cashe);
 			cashe <<= 1;
 			count >>= 1;
@@ -212,7 +211,7 @@ public:
 		}
 		LongInt cashe(*this);
 		_NSTD_FOR_I(_Mysize()) {
-			uchar lOrderP(count % _Mybitsize);
+			_Mystorage_t lOrderP(count % _Mybitsize);
 			if (dir == RIGHT) {
 				uint hOrderP(_I + count / _Mybitsize);
 				_Myarr()[_I] = 
@@ -314,8 +313,17 @@ public:
 
 	template <typename size_type>
 	bool operator> (const size_type& count) {
-		if (count >> _Mysize() * _Mybitsize)
+		if (_Mysize() * _Mybitsize % 64 /* word size */ != _Mysize() * _Mybitsize) {
+			// int >> count == int >> (count % word size) <- avoid
+			size_type ccashe(count);
+			_NSTD_FOR_I(_Mysize() * _Mybitsize / 64)
+				(ccashe >>= 63) >>= 1;
+			ccashe >>= _Mysize() * _Mybitsize % 64;
+			if (ccashe)
+				return false;
+		} else if (count >> _Mysize() * _Mybitsize) {
 			return false;
+		}
 		_NSTD_FOR_I_REVERSE(_Mysize()) 
 			if (_Myarr()[_I] > count >> _I * _Mybitsize) 
 				return true;
@@ -381,6 +389,14 @@ public:
 	void _Set_zero() {
 		_NSTD_FOR_I(_Mysize())
 			_Myarr()[_I] = storage_type(0);
+	}
+	template <typename size_type>
+	static const bool _Overflows(const size_type& count, const LongInt& li) {
+		if (_HIGH_BIT(_Mystorage_t) & count & li)
+			return true;
+		else if (_HIGH_BIT(_Mystorage_t) & (count | li))
+			return _Overflows(count << 1, li << 1);
+		return false;
 	}
 	template <typename size_type>
 	static const uint _Highest(size_type count) {
