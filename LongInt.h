@@ -10,9 +10,6 @@ _NSTD_BEGIN
 
 template <typename _Size_type = uchar, typename _Alloc = _STD allocator<_Size_type>>
 class LongInt {
-	typedef unsigned long long uint;
-	typedef unsigned char      uchar;
-
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
@@ -107,11 +104,11 @@ public:
 	}
 
 	template <typename size_type>
-	static uint deduce_size(const size_type& num) {
+	static _Mysize_t deduce_size(const size_type& num) {
 		return sizeof(size_type);
 	}
 	template <>
-	static uint deduce_size(const LongInt& other) {
+	static _Mysize_t deduce_size(const LongInt& other) {
 		return other.size();
 	}
 
@@ -227,12 +224,12 @@ public:
 		_NSTD_FOR_I(_Mysize()) {
 			_Mystorage_t lOrderP(count % _Mybitsize);
 			if (dir == RIGHT) {
-				uint hOrderP(_I + count / _Mybitsize);
+				_Mysize_t hOrderP(_I + count / _Mybitsize);
 				_Myarr()[_I] = 
 					(hOrderP     < _Mysize() ? cashe._Myarr()[hOrderP]     >> lOrderP              : 0) /* right */ |
 					(hOrderP + 1 < _Mysize() ? cashe._Myarr()[hOrderP + 1] << (_Mybitsize - lOrderP) : 0) /* left  */;
 			} else if(count / _Mybitsize <= _I) {
-				uint hOrderP(_I - count / _Mybitsize);
+				_Mysize_t hOrderP(_I - count / _Mybitsize);
 				_Myarr()[_I] = 
 					(          cashe._Myarr()[hOrderP]     << lOrderP)                  /* left  */ |
 					(hOrderP ? cashe._Myarr()[hOrderP - 1] >> (_Mybitsize - lOrderP) : 0) /* right */;
@@ -428,7 +425,7 @@ public:
 		return false;
 	}
 	template <typename size_type>
-	static const uint _Highest(size_type count) {
+	static const _Mysize_t _Highest(size_type count) {
 		if (!count)
 			return 0;
 		const size_type cashe(count < 0 ? count -= count << 1 : count);
@@ -441,7 +438,7 @@ public:
 				if (_GET_BIT(storage_type, _J) & count)
 					return _I * _Mybitsize + _J;
 		}
-		return 0Ui64;
+		return 0;
 	}
 	const _Mysize_t _Myhighest() {
 		_NSTD_FOR_I_REVERSE(_Mysize())
