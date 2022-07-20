@@ -22,12 +22,28 @@ public:
 	using _Mystorage_t = typename _Alty_traits::value_type;
 	using _Myptr_t     = typename _Alty_traits::pointer;
 
-	static constexpr _Mysize_t _Mybitsize = sizeof(_Mystorage_t) * CHAR_BIT;
+	static constexpr _Mysize_t _Mybytesize = sizeof(_Mystorage_t);
+	static constexpr _Mysize_t _Mybitsize  = _Mybytesize * CHAR_BIT;
 
 public:
 	using _Mypair_t = _NSTD pair<_Mysize_t, _Myptr_t>;
 
-	static constexpr _Mysize_t _Maxsize = 256;
+	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
+
+	template <typename _Size_type, typename _Alloc>
+	static constexpr auto _MAX_OF = []() -> LongInt<_Size_type, _Alloc> {
+		using LongInt_t = LongInt<_Size_type, _Alloc>;
+
+		LongInt_t out;
+		//out.grow(LongInt_t::_Maxsize - 1);
+		_NSTD_FOR_I(LongInt_t::_Maxsize) {
+			out += _ALL_BIT(_Size_type);
+				if(_I != LongInt_t::_Maxsize - 1)
+					out <<= LongInt_t::_Mybitsize;
+		}
+		return out;
+	};
+
 
 public:
 	using allocator_type = _Alloc;
@@ -51,7 +67,6 @@ public:
 
 	template <typename size_type>
 	operator size_type() {
-		_NSTD_ASSERT(_STD is_integral_v<size_type>, "Converting LongInt type to non-integral type");
 		size_type out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
@@ -62,7 +77,6 @@ public:
 	}
 	template <typename size_type>
 	operator const size_type() const {
-		_NSTD_ASSERT(_STD is_integral_v<size_type>, "Converting LongInt type to non-integral type");
 		size_type out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
@@ -94,11 +108,11 @@ public:
 
 	template <typename size_type>
 	static uint deduce_size(const size_type& num) {
-		if constexpr (_STD is_integral_v<size_type>) {
-			return sizeof(size_type);
-		} else {
-			return num.size();
-		}
+		return sizeof(size_type);
+	}
+	template <>
+	static uint deduce_size(const LongInt& other) {
+		return other.size();
 	}
 
 	template <typename size_type>
