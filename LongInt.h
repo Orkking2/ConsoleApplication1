@@ -60,7 +60,7 @@ public:
 	~LongInt() { _Tidy(); }
 
 	template <typename size_type>
-	LongInt& grow(size_type new_size) {
+	LongInt& grow(const size_type& new_size) {
 		_Grow_if(new_size);
 		return *this;
 	}
@@ -372,7 +372,22 @@ private:
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	_NODISCARD static _Mypair_t _Gen_basic() {
+	// Lightweight wrapper
+	class _Mypair_wrapper_t {
+	public:
+		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
+		~_Mypair_wrapper_t() {
+			_Alty alloc;
+			alloc.deallocate(_Mypair.second, _Mypair.first);
+		}
+		operator _Mypair_t() {
+			return _Mypair;
+		}
+	private:
+		_Mypair_t _Mypair;
+	};
+
+	_NODISCARD static _Mypair_wrapper_t _Gen_basic() {
 		_Alty alloc;
 		_Myptr_t p(alloc.allocate(1));
 		_Alty_traits::construct(alloc, p, 0);
