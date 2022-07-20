@@ -218,7 +218,7 @@ public:
 			count -= count << 1;
 			dir = dir == RIGHT ? LEFT : RIGHT;
 		} else {
-			_Grow_if((count + _Myhighest()) / _Mybitsize + 1);
+			_Grow_if((_Myhighest() + count) / _Mybitsize + 1);
 		}
 		LongInt cashe(*this);
 		_NSTD_FOR_I(_Mysize()) {
@@ -226,12 +226,12 @@ public:
 			if (dir == RIGHT) {
 				_Mysize_t hOrderP(_I + count / _Mybitsize);
 				_Myarr()[_I] = 
-					(hOrderP     < _Mysize() ? cashe._Myarr()[hOrderP]     >> lOrderP              : 0) /* right */ |
+					(hOrderP     < _Mysize() ? cashe._Myarr()[hOrderP]     >> lOrderP                : 0) /* right */ |
 					(hOrderP + 1 < _Mysize() ? cashe._Myarr()[hOrderP + 1] << (_Mybitsize - lOrderP) : 0) /* left  */;
 			} else if(count / _Mybitsize <= _I) {
 				_Mysize_t hOrderP(_I - count / _Mybitsize);
 				_Myarr()[_I] = 
-					(          cashe._Myarr()[hOrderP]     << lOrderP)                  /* left  */ |
+					(          cashe._Myarr()[hOrderP]     << lOrderP)                    /* left  */ |
 					(hOrderP ? cashe._Myarr()[hOrderP - 1] >> (_Mybitsize - lOrderP) : 0) /* right */;
 			} else {
 				_Myarr()[_I] = 0;
@@ -244,7 +244,7 @@ public:
 		return shift(count, LEFT);
 	}
 	template <typename size_type>
-	LongInt& operator<< (const size_type& count) {
+	LongInt operator<< (const size_type& count) {
 		return LongInt(*this).shift(count, LEFT);
 	}
 	template <typename size_type>
@@ -252,7 +252,7 @@ public:
 		return shift(count, RIGHT);
 	}
 	template <typename size_type>
-	LongInt& operator>> (const size_type& count) {
+	LongInt operator>> (const size_type& count) {
 		return LongInt(*this).shift(count, RIGHT);
 	}
 
@@ -384,7 +384,7 @@ public:
 		_Mypair_t _Mypair;
 	};
 
-	_NODISCARD static _Mypair_wrapper_t _Gen_basic() {
+	_NODISCARD static _Mypair_t _Gen_basic() {
 		_Alty alloc;
 		_Myptr_t p(alloc.allocate(1));
 		_Alty_traits::construct(alloc, p, 0);
@@ -414,14 +414,14 @@ public:
 	
 	void _Set_zero() {
 		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] = storage_type(0);
+			_Myarr()[_I] = _Mystorage_t(0);
 	}
 	template <typename size_type>
-	static const bool _Overflows(const size_type& count, const LongInt& li) {
-		if (_HIGH_BIT(_Mystorage_t) & count & li)
+	static const bool _Overflows(size_type count, LongInt li) {
+		if (_HIGH_BIT(_Mystorage_t) & count & li) 
 			return true;
-		else if (_HIGH_BIT(_Mystorage_t) & (count | li))
-			return _Overflows(count << 1, li << 1);
+		else if (_HIGH_BIT(_Mystorage_t) & (count | li)) 
+			return _Overflows(count <<= 1, li <<= 1);
 		return false;
 	}
 	template <typename size_type>
@@ -435,7 +435,7 @@ public:
 				continue;
 			}
 			_NSTD_FOR_J_REVERSE(_Mybitsize)
-				if (_GET_BIT(storage_type, _J) & count)
+				if (_GET_BIT(_Mystorage_t, _J) & count)
 					return _I * _Mybitsize + _J;
 		}
 		return 0;
@@ -444,7 +444,7 @@ public:
 		_NSTD_FOR_I_REVERSE(_Mysize())
 			if (_Myarr()[_I])
 				_NSTD_FOR_J_REVERSE(_Mybitsize)
-					if (_Myarr()[_I] & _GET_BIT(storage_type, _J))
+					if (_Myarr()[_I] & _GET_BIT(_Mystorage_t, _J))
 						return _I * _Mybitsize + _J;
 		return 0;
 	}
@@ -455,7 +455,7 @@ public:
 			_Myarr()[_I] = other._Myarr()[_I];
 		if (_Mysize() > other._Mysize())
 			_NSTD_FOR_I(_Mysize() - other._Mysize())
-				_Myarr()[_I + (other._Mysize() - 1)] = storage_type(0);
+				_Myarr()[_I + (other._Mysize() - 1)] = _Mystorage_t(0);
 	}
 
 	void _Tidy() {
