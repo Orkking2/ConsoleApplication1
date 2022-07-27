@@ -431,13 +431,7 @@ public:
 
 		_Alty alloc;
 		LongInt cashe(*this);
-
-		_STD cout << "LongInt: " << _STD hex << reinterpret_cast<uint>(_Myarr());
-
 		_Myarr() = alloc.allocate(new_size);
-
-		_STD cout << " -> " << _STD hex << reinterpret_cast<uint>(_Myarr()) << " (" << _Mysize() << " -> " << new_size << ")\n";
-
 		_NSTD_ASSERT(_Myarr(), "Failed to allocate memory");
 		_NSTD_FOR_I(new_size)
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
