@@ -12,11 +12,17 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	uchar c(0xff);
-	nstd::LongInt<> l(1);
-	_STD cout << _STD bitset<sizeof(decltype(l)::storage_type) * CHAR_BIT>(static_cast<uint>(l >> 1));
-	//_STD cout << nstd::LongInt<>::_Overflows(c, l);
+	nstd::LongInt<> li(0b1000000000000000);
+	nstd::LongInt<> li2(li);
+	uint ui(0b00001010110101);
 
+	
+
+	_STD cout << "Li + Ui: " << static_cast<uint>(li + ui) << " v " << (ui + li) << " (" << static_cast<uint>(li + ui) - (ui + li) << ")\n";
+	_STD cout << "Li + Ui - Ui: " << static_cast<uint>(li + ui - ui) << " v " << (ui + li - ui) << " (" << static_cast<uint>(li + ui - ui) - (ui + li - ui) << ")\n";
+	_STD cout << "Li * Ui: " << static_cast<uint>(li * ui) << " v " << (ui * li) << " (" << static_cast<uint>(li * ui) - (ui * li) << ")\n";
+	_STD cout << "Li / Ui: " << static_cast<uint>(li / ui) << " v " << (static_cast<uint>(li) / ui) << " (" << (-static_cast<int>(li / ui) + static_cast<int>(li) / ui) << ")\n";
+	
 	std::cout << '\n';
 	std::system("pause");
 }
