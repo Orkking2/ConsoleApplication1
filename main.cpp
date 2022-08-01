@@ -12,9 +12,9 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	nstd::LongInt<> li(0b1000000000000000);
-	nstd::LongInt<> li2(li);
-	uint ui(0b00001010110101);
+	nstd::LongInt li(0b1000000000000000);
+	nstd::LongInt li2(li);
+	nstd::LongInt ui(0b00001010110101);
 
 	
 
