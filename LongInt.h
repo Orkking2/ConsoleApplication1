@@ -2,7 +2,6 @@
 #ifndef _NSTD_LONGINT_
 #define _NSTD_LONGINT_
 
-#include <type_traits>
 #include "Defines.h"
 #include "Pair.h"
 
