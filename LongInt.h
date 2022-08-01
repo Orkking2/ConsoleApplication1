@@ -234,8 +234,13 @@ public:
 
 	template <typename size_type>
 	LongInt& mod(const size_type& count) {
-		while (this->operator> (count)) 
-			this->operator-=(count);
+		if (_Highest(count) > _Myhighest())
+			return *this;
+
+		_NSTD_FOR_I_REVERSE(_Myhighest() + 1)
+			if(this->operator> (count << _I))
+				this->operator-= (count << _I);
+
 		return *this;
 	}
 	template <typename size_type>

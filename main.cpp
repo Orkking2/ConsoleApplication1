@@ -21,8 +21,9 @@ int main()
 	_STD cout << "Li + Ui: " << static_cast<uint>(li + ui) << " v " << (ui + li) << " (" << static_cast<uint>(li + ui) - (ui + li) << ")\n";
 	_STD cout << "Li + Ui - Ui: " << static_cast<uint>(li + ui - ui) << " v " << (ui + li - ui) << " (" << static_cast<uint>(li + ui - ui) - (ui + li - ui) << ")\n";
 	_STD cout << "Li * Ui: " << static_cast<uint>(li * ui) << " v " << (ui * li) << " (" << static_cast<uint>(li * ui) - (ui * li) << ")\n";
-	_STD cout << "Li / Ui: " << static_cast<uint>(li / ui) << " v " << (static_cast<uint>(li) / ui) << " (" << (-static_cast<int>(li / ui) + static_cast<int>(li) / ui) << ")\n";
-	
+	_STD cout << "Li / Ui: " << static_cast<uint>(li / ui) << " v " << (static_cast<uint>(li) / ui) << " (" << (static_cast<uint>(li / ui) - static_cast<uint>(li) / ui) << ")\n";
+	_STD cout << "Li % Ui: " << static_cast<uint>(li % ui) << " v " << (static_cast<uint>(li) % ui) << " (" << (static_cast<uint>(li % ui) - static_cast<uint>(li) % ui) << ")\n";
+
 	std::cout << '\n';
 	std::system("pause");
 }
