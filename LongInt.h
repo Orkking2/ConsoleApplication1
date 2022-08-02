@@ -2,17 +2,18 @@
 #ifndef _NSTD_LONGINT_
 #define _NSTD_LONGINT_
 
+#include <xmemory>
 #include "Defines.h"
 #include "Pair.h"
 
 _NSTD_BEGIN
 
-template <typename _Size_type = uchar, typename _Alloc = _STD allocator<_Size_type>>
+template <typename _Storage_type = uchar, typename _Alloc = _STD allocator<_Storage_type>>
 class LongInt {
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Size_type>;
+	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Storage_type>;
 	using _Alty_traits = _STD allocator_traits<_Alty>;
 	using _Mysize_t    = typename _Alty::size_type;
 	using _Mystorage_t = typename _Alty_traits::value_type;
@@ -27,14 +28,14 @@ public:
 	// Max 256 bytes (exclusive)
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
-	template <typename _Size_type, typename _Alloc>
-	static constexpr auto _MAX_OF = []() -> LongInt<_Size_type, _Alloc> {
-		using LongInt_t = LongInt<_Size_type, _Alloc>;
+	template <typename _Storage_type, typename _Alloc>
+	static constexpr auto _MAX_OF = []() -> LongInt<_Storage_type, _Alloc> {
+		using LongInt_t = LongInt<_Storage_type, _Alloc>;
 
 		LongInt_t out;
-		//out.grow(LongInt_t::_Maxsize - 1);
+		//out._Grow_to(LongInt_t::_Maxsize - 1);
 		_NSTD_FOR_I(LongInt_t::_Maxsize) {
-			out += _ALL_BIT(_Size_type);
+			out += _ALL_BIT(_Storage_type);
 				if(_I != LongInt_t::_Maxsize - 1)
 					out <<= LongInt_t::_Mybitsize;
 		}
@@ -80,6 +81,7 @@ public:
 
 	~LongInt() { _Tidy(); }
 
+	// Grow by (in bytes)
 	template <typename size_type>
 	LongInt& grow(const size_type& size) {
 		_Grow_by(size);
@@ -124,6 +126,15 @@ public:
 			if (_Myarr()[_I])
 				return true;
 		return false;
+	}
+
+	template <typename other_storage_t, typename other_alloc_t>
+	operator LongInt<other_storage_t, other_alloc_t>() {
+		return LongInt<other_storage_t, other_alloc_t>(*this);
+	}
+	template <typename other_storage_t, typename other_alloc_t>
+	operator const LongInt<other_storage_t, other_alloc_t>() const {
+		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 
 	_Mysize_t size() {
