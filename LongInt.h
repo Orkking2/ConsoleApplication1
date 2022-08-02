@@ -129,11 +129,11 @@ public:
 	}
 
 	template <typename other_storage_t, typename other_alloc_t>
-	operator LongInt<other_storage_t, other_alloc_t>() {
+	explicit operator LongInt<other_storage_t, other_alloc_t>() {
 		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 	template <typename other_storage_t, typename other_alloc_t>
-	operator const LongInt<other_storage_t, other_alloc_t>() const {
+	explicit operator const LongInt<other_storage_t, other_alloc_t>() const {
 		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 
