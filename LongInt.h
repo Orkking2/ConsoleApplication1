@@ -77,7 +77,10 @@ public:
 	LongInt(const LongInt<other_storage_t, other_alloc_t>& other) : _Mypair(_Gen_basic()) { _Set_to(other); }
 	
 	template <typename size_type>
-	LongInt(size_type count)                                      : _Mypair(_Gen_basic()) { add(count); }
+	LongInt(const size_type& count)                               : _Mypair(_Gen_basic()) { add(count); }
+
+	template <typename size_type>
+	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
 
 	~LongInt() { _Tidy(); }
 
