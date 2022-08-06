@@ -12,7 +12,7 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	nstd::LongInt(nstd::LongInt(1))
+	
 
 	std::cout << '\n';
 	std::system("pause");
