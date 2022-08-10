@@ -32,14 +32,7 @@ public:
 	static constexpr auto _MAX_OF = []() -> LongInt<_Storage_type, _Alloc> {
 		using LongInt_t = LongInt<_Storage_type, _Alloc>;
 
-		LongInt_t out;
-		//out._Grow_to(LongInt_t::_Maxsize - 1);
-		_NSTD_FOR_I(LongInt_t::_Maxsize) {
-			out += _ALL_BIT(_Storage_type);
-				if(_I != LongInt_t::_Maxsize - 1)
-					out <<= LongInt_t::_Mybitsize;
-		}
-		return out;
+		return ~LongInt_t().grow(LongInt_t::_Maxsize - 1);
 	};
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
