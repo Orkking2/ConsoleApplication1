@@ -28,11 +28,8 @@ public:
 	// Max 256 bytes (exclusive)
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
-	template <typename _Storage_type, typename _Alloc>
-	static constexpr auto _MAX_OF = []() -> LongInt<_Storage_type, _Alloc> {
-		using LongInt_t = LongInt<_Storage_type, _Alloc>;
-
-		return ~LongInt_t().grow(LongInt_t::_Maxsize - 1);
+	static constexpr auto _MAX_OF = []() -> LongInt {
+		return ~LongInt().grow(LongInt::_Maxsize - 1);
 	};
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
