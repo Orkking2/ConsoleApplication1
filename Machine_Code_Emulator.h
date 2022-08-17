@@ -49,7 +49,9 @@ public:
 			case 6: t = Token::Type::JMP;		break;
 			case 7: t = Token::Type::JMP_0;		break;
 			case 8: t = Token::Type::JMP_POS;	break;
-			case 9: if (input[_I] == 901) t = Token::Type::IN; else if (input[_I] == 902) t = Token::Type::OUT; break;
+			case 9: if (input[_I] == 901) 
+					t = Token::Type::IN; else if (input[_I] == 902) 
+					t = Token::Type::OUT;		break;
 			}
 			out.push_back(Token(t, data));
 		}
