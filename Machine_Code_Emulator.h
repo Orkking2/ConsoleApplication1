@@ -17,7 +17,7 @@ class emulator {
 			SUB,
 			STORE,
 
-			LD = 5,
+			LOAD = 5,
 			JMP,
 			JMP_0,
 			JMP_POS,
@@ -45,7 +45,7 @@ public:
 			case 1: t = Token::Type::ADD;		break;
 			case 2: t = Token::Type::SUB;		break;
 			case 3: t = Token::Type::STORE;		break;
-			case 5: t = Token::Type::LD;		break;
+			case 5: t = Token::Type::LOAD;		break;
 			case 6: t = Token::Type::JMP;		break;
 			case 7: t = Token::Type::JMP_0;		break;
 			case 8: t = Token::Type::JMP_POS;	break;
@@ -76,7 +76,7 @@ public:
 			case Token::Type::STORE:
 				tokens[tokens[_I].data_].data_ = reg;
 				break;
-			case Token::Type::LD:
+			case Token::Type::LOAD:
 				reg = tokens[_I].data_;
 				break;
 			case Token::Type::JMP:
