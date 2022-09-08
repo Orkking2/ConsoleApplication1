@@ -15,7 +15,6 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	nstd::emulator::run(_STD vector<uint> {901, 705, 111, 311, 600, 511, 902});
 	
 
 	std::cout << '\n';
