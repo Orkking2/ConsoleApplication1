@@ -32,9 +32,7 @@ public:
             const token& t = pv[i];
             switch (t.t_) {
             case token::Type::STRING:
-                if (s.length() < t.s_.length())
-                    return false;
-                if (!is_eq(s.substr(0, t.s_.length()), t.s_))
+                if (s.length() < t.s_.length() || !is_eq(s.substr(0, t.s_.length()), t.s_))
                     return false;
                 s = s.substr(t.s_.length());
                 break;
