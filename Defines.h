@@ -49,7 +49,7 @@ _NSTD_END
 #define _J jeepers_steeve
 #define _K keepers_steeve
 
-#define _NSTD_FOR(var_name, length) for (_NSTD uint var_name = 0; var_name < length; var_name++)
+#define _NSTD_FOR(var_name, length) for (_NSTD uint var_name = 0; var_name < (length); var_name++)
 #define _NSTD_FOR_I(len) _NSTD_FOR(_I, len)
 #define _NSTD_FOR_J(len) _NSTD_FOR(_J, len)
 #define _NSTD_FOR_K(len) _NSTD_FOR(_K, len)
