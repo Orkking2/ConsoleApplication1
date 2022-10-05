@@ -13,6 +13,7 @@
 _NSTD_UNSIGNED
 using namespace std;
 #include <algorithm>
+/*
 class Solution {
 public:
     static bool isMatch(string s, string p) {
@@ -100,11 +101,55 @@ public:
         return true;
     }
 };
+*/
+class Solution {
+public:
+    static vector<int> findSubstring(string s, vector<string>& words) {
+        vector<int> out;
+        for (int i = 0; words.size() * words[0].length() <= s.length(); s = s.substr(1), i++)
+            if (test(s, words))
+                out.push_back(i);
+        return out;
+    }
+    static bool test(string a, vector<string> vs) {
+        if (!vs.size())
+            return true;
+        else if (!a.length())
+            return false;
+        for (int i = 0; i < vs.size(); i++)
+            if (comp_str(a, vs[i])) {
+                a = a.substr(vs[i].length());
+                vs.erase(vs.begin() + i);
+                i = 0;
+            }
+        return !vs.size();
+    }
+    static bool comp_str(const string& a, const string& b) {
+        cout << '\n' << a << " v " << b;
+        for (int i = 0; i < b.length(); i++)
+            if (a[i] != b[i]) {
+                cout << "\tf";
+                return false;
+            }
+        cout << "\tt\n";
+        return true;
+    }
+};
+
+void psvec(vector<string> vs) {
+    for (string s : vs)
+        cout << '\"' << s << '\"' << ' ';
+}
 
 int main()
 {
-    cout << "\n\n" << Solution::isMatch("mississippi", "mis*is*ip*i");
-//    cout << '\n' << (Solution::splitRec("mis*is*ip*i")[6].s_);
+    vector<string> s({ "word", "good", "best", "good" });
+    auto v = Solution::findSubstring("wordgoodgoodgoodbestword", s);
+    if (!v.size())
+        cout << "\nn";
+    for (int i : v)
+        cout << i << '\t';
+
 	std::cout << '\n';
 	std::system("pause");
 }
