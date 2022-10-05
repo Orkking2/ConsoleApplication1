@@ -28,12 +28,14 @@ public:
 	// Max 256 bytes (exclusive)
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
+	// Utility(?)
 	static constexpr auto _MAX_OF = []() -> LongInt {
 		return ~LongInt().grow(LongInt::_Maxsize - 1);
 	};
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename size_type1, typename size_type2>
+	// Explicitly doesn't shift by reference
 	static size_type1 _Real_shift(size_type1 num, const size_type2& shift, const SHIFT_DIRECTION& dir) {
 		if (dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
@@ -136,19 +138,21 @@ public:
 		return _Mysize();
 	}
 
-	template <typename size_type>
-	static _Mysize_t deduce_size(const size_type& num) {
-		return sizeof(size_type);
-	}
-	template <typename other_storage_t, typename other_alloc_t>
-	static _Mysize_t deduce_size(const LongInt<other_storage_t, other_alloc_t>& other) {
-		return other.size();
-	}
+/*	Legacy
+*	template <typename size_type>
+*	static _Mysize_t deduce_size(const size_type& num) {
+*		return sizeof(size_type);
+*	}
+*	template <typename other_storage_t, typename other_alloc_t>
+*	static _Mysize_t deduce_size(const LongInt<other_storage_t, other_alloc_t>& other) {
+*		return other.size();
+*	}
+*/
 
 	template <typename size_type>
 	LongInt& add(size_type num) {
-		if (!num) return *this;
-		
+		if (!num) 
+			return *this;
 		_Grow_if((_Myhighest() + _Highest(num)) / _Mybitsize + 1);
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
