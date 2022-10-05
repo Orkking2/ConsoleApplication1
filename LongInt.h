@@ -52,7 +52,6 @@ public:
 		return first > second ? second : first;
 	}
 
-
 public:
 	using allocator_type = _Alloc;
 	using storage_type   = _Mystorage_t;
