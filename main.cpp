@@ -143,13 +143,18 @@ void psvec(vector<string> vs) {
 
 int main()
 {
-    vector<string> s({ "word", "good", "best", "good" });
+    nstd::LongInt li(100);
+    nstd::LongInt li2 = li + 60093;
+    _STD cout << "addition succeeded";
+//    _STD cout << static_cast<uint>(li % 10); << " " << (static_cast<uint>(li) % 10);
+
+/*  vector<string> s({"word", "good", "best", "good"});
     auto v = Solution::findSubstring("wordgoodgoodgoodbestword", s);
     if (!v.size())
         cout << "\nn";
     for (int i : v)
         cout << i << '\t';
-
+*/
 	std::cout << '\n';
 	std::system("pause");
 }
