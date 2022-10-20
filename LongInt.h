@@ -475,7 +475,7 @@ public:
 		_NSTD_FOR_I(_Min(cache.first, new_size))
 			_Myarr()[_I] = cache.second[_I];
 		_Alty_traits::deallocate(alloc, cache.second, cache.first);
-		cache.set(0, nullptr);
+		cache.second = nullptr;
 		_Mysize() = new_size;
 	}
 	
