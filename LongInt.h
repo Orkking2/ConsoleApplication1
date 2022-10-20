@@ -29,9 +29,10 @@ public:
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
 	// Utility(?)
-	static constexpr auto _MAX_OF = []() -> LongInt {
-		return ~LongInt().grow(LongInt::_Maxsize - 1);
-	};
+/*	static constexpr auto _MAX_OF = []() -> LongInt {
+*		return ~LongInt().grow(LongInt::_Maxsize - 1);
+*	};
+*/
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename size_type1, typename size_type2>
@@ -55,7 +56,7 @@ public:
 	}
 
 public:
-	using allocator_type = _Alloc;
+	using allocator_type = _Alty;
 	using storage_type   = _Mystorage_t;
 	using size_type      = _Mysize_t;
 	using pointer_type   = _Myptr_t;
@@ -70,9 +71,10 @@ public:
 	template <typename size_type>
 	LongInt(const size_type& count)                               : _Mypair(_Gen_basic()) { add(count); }
 
-	template <typename size_type>
-	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
-
+/*	DEPRECATED - infinite production of LongInt objects
+*	template <typename size_type>
+*	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
+*/
 	~LongInt() { _Tidy(); }
 
 	// Grow by (in bytes)
@@ -220,7 +222,7 @@ public:
 	LongInt& divide(size_type divisor) {
 		_Make_abs(divisor);
 		LongInt dividend(*this);
-		_Set_zero(); // *this is output
+		_Set_zero();
 		_NSTD_FOR_I_REVERSE(dividend._Myhighest() + 1) {
 			if (dividend >= divisor << _I) {
 				dividend -= divisor << _I;
@@ -466,13 +468,14 @@ public:
 		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
 
 		_Alty alloc;
-		LongInt cache(*this);
+		_Mypair_t cache(_Mypair);
 		_Myarr() = alloc.allocate(new_size);
-		_NSTD_ASSERT(_Myarr(), "Failed to allocate memory");
 		_NSTD_FOR_I(new_size)
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
-		_NSTD_FOR_I(_Min(cache._Mysize(), new_size))
-			_Myarr()[_I] = cache._Myarr()[_I];
+		_NSTD_FOR_I(_Min(cache.first, new_size))
+			_Myarr()[_I] = cache.second[_I];
+		_Alty_traits::deallocate(alloc, cache.second, cache.first);
+		cache.set(0, nullptr);
 		_Mysize() = new_size;
 	}
 	
@@ -538,7 +541,7 @@ public:
 	void _Set_to(const LongInt& other) {
 		_Set_zero();
 		_Grow_if(other._Myhighest() / _Mybitsize + 1);
-		_NSTD_FOR_I(_Min(_Mysize(), other._Mysize()))
+		_NSTD_FOR_I(other._Mysize())
 			_Myarr()[_I] = other._Myarr()[_I];
 	}
 
