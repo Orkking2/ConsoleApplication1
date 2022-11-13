@@ -179,7 +179,7 @@ public:
 	LongInt& subtract(size_type count) {
 		_NSTD_ASSERT(*this >= count, "LongInt is unsigned -- subtracting number larger than LongInt");
 		while (count) {
-			size_type b(this->operator~() & count);
+			size_type b(~this->operator size_type() & count);
 			this->operator^= (count);
 			count = b << 1;
 		}
@@ -431,20 +431,21 @@ private:
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	// Lightweight wrapper
-	class _Mypair_wrapper_t {
-	public:
-		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
-		~_Mypair_wrapper_t() {
-			_Alty alloc;
-			alloc.deallocate(_Mypair.second, _Mypair.first);
-		}
-		operator _Mypair_t() {
-			return _Mypair;
-		}
-	private:
-		_Mypair_t _Mypair;
-	};
+/*	Lightweight wrapper -- DEPRECATED
+*	class _Mypair_wrapper_t {
+*	public:
+*		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
+*		~_Mypair_wrapper_t() {
+*			_Alty alloc;
+*			alloc.deallocate(_Mypair.second, _Mypair.first);
+*		}
+*		operator _Mypair_t() {
+*			return _Mypair;
+*		}
+*	private:
+*		_Mypair_t _Mypair;
+*	};
+*/
 
 	_NODISCARD static _Mypair_t _Gen_basic() {
 		_Alty alloc;
@@ -497,6 +498,7 @@ public:
 	static void _Make_abs(size_type& n) {
 		n = n < 0 ? n - (n << 1) : n;
 	}
+
 	template <typename size_type>
 	static const _Mysize_t _Highest(size_type count) {
 		_Make_abs(count);
@@ -523,6 +525,7 @@ public:
 						return _I * other._Mybitsize + _J;
 		return 0;
 	}
+
 	const _Mysize_t _Myhighest() const {
 		return _Highest(*this);
 	}
