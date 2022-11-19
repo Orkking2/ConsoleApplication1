@@ -306,7 +306,6 @@ public:
 		return LongInt(*this).shift(count, RIGHT);
 	}
 
-	// Logical operators vvv
 	template <typename size_type>
 	LongInt& operator= (const size_type& other) {
 		_Set_zero();
@@ -323,6 +322,7 @@ public:
 		return *this;
 	}
 
+	// Logical operators vvv
 	LongInt operator~ () const {
 		LongInt cache(*this);
 		cache._Grow_if(_Mysize());
