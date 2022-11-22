@@ -28,15 +28,15 @@ public:
 	// Max 256 bytes (exclusive)
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
-	// Utility(?)
-/*	static constexpr auto _MAX_OF = []() -> LongInt {
-*		return ~LongInt().grow(LongInt::_Maxsize - 1);
-*	};
-*/
+	/*	Utility(?)
+	*	static constexpr auto _MAX_OF = []() -> LongInt {
+	*		return ~LongInt().grow(LongInt::_Maxsize - 1);
+	*	};
+	*/
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
-	template <typename size_type>
-	static size_type _Real_shift(size_type num, const size_type& shift, const SHIFT_DIRECTION& dir) {
+	template <typename st1, typename st2>
+	static st1 _Real_shift(st1 num, const st2& shift, const SHIFT_DIRECTION& dir) {
 		if (dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
 				(num >>= 63) >>= 1;
@@ -49,8 +49,9 @@ public:
 		return num;
 	}
 
-	template <typename size_type1, typename size_type2>
-	static constexpr auto const& _Min(const size_type1& first, const size_type2& second) {
+	// Utility(?)
+	template <typename st1, typename st2>
+	static constexpr auto const& _Min(const st1& first, const st2& second) {
 		return first > second ? second : first;
 	}
 
