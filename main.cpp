@@ -3,7 +3,7 @@
 #include <compare>
 #include <vector>
 
-//#define _NSTD_LONGINT_DEBUGGING_
+#define _NSTD_LONGINT_TESTER_
 
 #include "LongInt.h"
 #include "Machine_Code_Emulator.h"
@@ -21,10 +21,7 @@ int main()
 //  _STD cout << static_cast<uint>(li -= 100) << '\n';
 //  _STD cout << static_cast<uint>(li % 10); //<< " " << (static_cast<uint>(li) % 10);
 
-    std::stoi(std::string("hello"))
-    0x1b;
-    0b11011;
-    0xFF;
+    
 
 /*  vector<string> s({"word", "good", "best", "good"});
     auto v = Solution::findSubstring("wordgoodgoodgoodbestword", s);
