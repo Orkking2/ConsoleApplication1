@@ -582,5 +582,148 @@ _STD ostream& operator<< (_STD ostream& os, const LongInt<storage_t, alloc_t>& l
 }
 #endif
 
+#ifdef _NSTD_LONGINT_TESTER_
+#define _CATCHBLOCK(msg) catch(...) { _STD cout << "LongInt FAILED: " << msg << '\n'; }
+
+class _NSTD_LONGINT_TESTER {
+
+	static void fail(const char* failmsg) {
+		_STD cout << "LongInt FAILED: " << failmsg << '\n';
+	}
+
+public:
+	static void test1() {
+		try {
+			LongInt<> li;
+		} _CATCHBLOCK("nullary constructor");
+
+		try {
+			LongInt<> li(0);
+		} _CATCHBLOCK("zero constructor");
+
+		try {
+			LongInt<> li(982);
+		} _CATCHBLOCK("nonzero constructor");
+
+		try {
+			LongInt<> li1;
+			LongInt<> li2(li1);
+		} _CATCHBLOCK("nullary other constructor");
+
+		try {
+			LongInt<> li1(0);
+			LongInt<> li2(li1);
+		} _CATCHBLOCK("zero other constructor");
+
+		try {
+			LongInt<> li1(982);
+			LongInt<> li2(li1);
+		} _CATCHBLOCK("nonzero other constructor");
+
+		try {
+			LongInt<> li1(982);
+			LongInt<int> li2(li1);
+		} _CATCHBLOCK("different storage other constructor");
+	}
+
+	static void test2() {
+		try {
+			LongInt<> li(2435298);
+			if (!(li == 2435298))
+				throw;
+		} _CATCHBLOCK("==");
+
+		try {
+			LongInt<> li(2435298);
+			if (!(li != 2435298 - 1))
+				throw;
+		} _CATCHBLOCK("!=");
+
+		try {
+			LongInt<> li(2435298);
+			if (!(li > 2435298 - 1))
+				throw;
+		} _CATCHBLOCK(">");
+
+		try {
+			LongInt<> li(2435298);
+			if (!(li >= 2435298 - 1) || !(li >= 2435298))
+				throw;
+		} _CATCHBLOCK(">=");
+
+		try {
+			LongInt<> li(2435298);
+			if (!(li < 2435298 + 1))
+				throw;
+		} _CATCHBLOCK("<");
+
+		try {
+			LongInt<> li(2435298);
+			if (!(li <= 2435298 + 1) || !(li <= 2435298))
+				throw;
+		} _CATCHBLOCK("<=");
+
+		
+	}
+
+	static void test3() {
+		try {
+			LongInt<> li(2435298);
+			li += 2341298;
+			if (li != 2435298 + 2341298)
+				throw;
+		} _CATCHBLOCK("+=");
+
+		try {
+			LongInt<> li(2435298);
+			if(li + 2341298 != 2435298 + 2341298)
+				throw;
+		} _CATCHBLOCK("+");
+
+		try {
+			LongInt<> li(2435298);
+			li -= 2341298;
+			if (li != 2435298 - 2341298)
+				throw;
+		} _CATCHBLOCK("-=");
+
+		try {
+			LongInt<> li(2435298);
+			if (li - 2341298 != 2435298 - 2341298)
+				throw;
+		} _CATCHBLOCK("-");
+
+		try {
+			LongInt<> li(2435298);
+			li /= 34;
+			if (li != 2435298Ui64 / 34)
+				throw;
+		} _CATCHBLOCK("/=");
+
+		try {
+			LongInt<> li(2435298);
+			if (li / 34 != 2435298Ui64 / 34)
+				throw;
+		} _CATCHBLOCK("/");
+
+		try {
+			LongInt<> li(2435298);
+			li %= 34;
+			if (li != 2435298 % 34)
+				throw;
+		} _CATCHBLOCK("%=");
+
+		try {
+			LongInt<> li(2435298);
+			if (li % 34 != 2435298 % 34)
+				throw;
+		} _CATCHBLOCK("%");
+
+
+	}
+};
+
+#endif // _NSTD_LONGINT_TESTER_
+
 _NSTD_END
 #endif
