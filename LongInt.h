@@ -33,8 +33,8 @@ public:
 	};
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
-	template <typename size_type1, typename size_type2>
-	static size_type1 _Real_shift(size_type1 num, const size_type2& shift, const SHIFT_DIRECTION& dir) {
+	template <typename size_type>
+	static size_type _Real_shift(size_type num, const size_type& shift, const SHIFT_DIRECTION& dir) {
 		if (dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
 				(num >>= 63) >>= 1;
