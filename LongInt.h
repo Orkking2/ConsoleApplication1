@@ -28,9 +28,11 @@ public:
 	// Max 256 bytes (exclusive)
 	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
 
-	static constexpr auto _MAX_OF = []() -> LongInt {
-		return ~LongInt().grow(LongInt::_Maxsize - 1);
-	};
+	// Utility(?)
+/*	static constexpr auto _MAX_OF = []() -> LongInt {
+*		return ~LongInt().grow(LongInt::_Maxsize - 1);
+*	};
+*/
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename size_type>
@@ -52,9 +54,8 @@ public:
 		return first > second ? second : first;
 	}
 
-
 public:
-	using allocator_type = _Alloc;
+	using allocator_type = _Alty;
 	using storage_type   = _Mystorage_t;
 	using size_type      = _Mysize_t;
 	using pointer_type   = _Myptr_t;
@@ -69,9 +70,10 @@ public:
 	template <typename size_type>
 	LongInt(const size_type& count)                               : _Mypair(_Gen_basic()) { add(count); }
 
-	template <typename size_type>
-	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
-
+/*	DEPRECATED - infinite production of LongInt objects
+*	template <typename size_type>
+*	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
+*/
 	~LongInt() { _Tidy(); }
 
 	// Grow by (in bytes)
@@ -137,19 +139,21 @@ public:
 		return _Mysize();
 	}
 
-	template <typename size_type>
-	static _Mysize_t deduce_size(const size_type& num) {
-		return sizeof(size_type);
-	}
-	template <typename other_storage_t, typename other_alloc_t>
-	static _Mysize_t deduce_size(const LongInt<other_storage_t, other_alloc_t>& other) {
-		return other.size();
-	}
+/*	Legacy
+*	template <typename size_type>
+*	static _Mysize_t deduce_size(const size_type& num) {
+*		return sizeof(size_type);
+*	}
+*	template <typename other_storage_t, typename other_alloc_t>
+*	static _Mysize_t deduce_size(const LongInt<other_storage_t, other_alloc_t>& other) {
+*		return other.size();
+*	}
+*/
 
 	template <typename size_type>
 	LongInt& add(size_type num) {
-		if (!num) return *this;
-		
+		if (!num) 
+			return *this;
 		_Grow_if((_Myhighest() + _Highest(num)) / _Mybitsize + 1);
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
@@ -174,7 +178,7 @@ public:
 	LongInt& subtract(size_type count) {
 		_NSTD_ASSERT(*this >= count, "LongInt is unsigned -- subtracting number larger than LongInt");
 		while (count) {
-			size_type b(this->operator~() & count);
+			size_type b(~this->operator size_type() & count);
 			this->operator^= (count);
 			count = b << 1;
 		}
@@ -217,7 +221,7 @@ public:
 	LongInt& divide(size_type divisor) {
 		_Make_abs(divisor);
 		LongInt dividend(*this);
-		_Set_zero(); // *this is output
+		_Set_zero();
 		_NSTD_FOR_I_REVERSE(dividend._Myhighest() + 1) {
 			if (dividend >= divisor << _I) {
 				dividend -= divisor << _I;
@@ -426,20 +430,21 @@ private:
 #ifdef _NSTD_LONGINT_DEBUGGING_
 public:
 #endif
-	// Lightweight wrapper
-	class _Mypair_wrapper_t {
-	public:
-		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
-		~_Mypair_wrapper_t() {
-			_Alty alloc;
-			alloc.deallocate(_Mypair.second, _Mypair.first);
-		}
-		operator _Mypair_t() {
-			return _Mypair;
-		}
-	private:
-		_Mypair_t _Mypair;
-	};
+/*	Lightweight wrapper -- DEPRECATED
+*	class _Mypair_wrapper_t {
+*	public:
+*		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
+*		~_Mypair_wrapper_t() {
+*			_Alty alloc;
+*			alloc.deallocate(_Mypair.second, _Mypair.first);
+*		}
+*		operator _Mypair_t() {
+*			return _Mypair;
+*		}
+*	private:
+*		_Mypair_t _Mypair;
+*	};
+*/
 
 	_NODISCARD static _Mypair_t _Gen_basic() {
 		_Alty alloc;
@@ -463,13 +468,14 @@ public:
 		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
 
 		_Alty alloc;
-		LongInt cache(*this);
+		_Mypair_t cache(_Mypair);
 		_Myarr() = alloc.allocate(new_size);
-		_NSTD_ASSERT(_Myarr(), "Failed to allocate memory");
 		_NSTD_FOR_I(new_size)
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
-		_NSTD_FOR_I(_Min(cache._Mysize(), new_size))
-			_Myarr()[_I] = cache._Myarr()[_I];
+		_NSTD_FOR_I(_Min(cache.first, new_size))
+			_Myarr()[_I] = cache.second[_I];
+		_Alty_traits::deallocate(alloc, cache.second, cache.first);
+		cache.second = nullptr;
 		_Mysize() = new_size;
 	}
 	
@@ -491,6 +497,7 @@ public:
 	static void _Make_abs(size_type& n) {
 		n = n < 0 ? n - (n << 1) : n;
 	}
+
 	template <typename size_type>
 	static const _Mysize_t _Highest(size_type count) {
 		_Make_abs(count);
@@ -517,6 +524,7 @@ public:
 						return _I * other._Mybitsize + _J;
 		return 0;
 	}
+
 	const _Mysize_t _Myhighest() const {
 		return _Highest(*this);
 	}
@@ -535,7 +543,7 @@ public:
 	void _Set_to(const LongInt& other) {
 		_Set_zero();
 		_Grow_if(other._Myhighest() / _Mybitsize + 1);
-		_NSTD_FOR_I(_Min(_Mysize(), other._Mysize()))
+		_NSTD_FOR_I(other._Mysize())
 			_Myarr()[_I] = other._Myarr()[_I];
 	}
 
