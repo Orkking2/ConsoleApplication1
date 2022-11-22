@@ -592,7 +592,7 @@ class _NSTD_LONGINT_TESTER {
 	}
 
 public:
-	static void test1() {
+	static void test1() { // Constructors
 		try {
 			LongInt<> li;
 		} _CATCHBLOCK("nullary constructor");
@@ -626,7 +626,7 @@ public:
 		} _CATCHBLOCK("different storage other constructor");
 	}
 
-	static void test2() {
+	static void test2() { // Comparitors
 		try {
 			LongInt<> li(2435298);
 			if (!(li == 2435298))
@@ -666,7 +666,7 @@ public:
 		
 	}
 
-	static void test3() {
+	static void test3() { // Operators
 		try {
 			LongInt<> li(2435298);
 			li += 2341298;
