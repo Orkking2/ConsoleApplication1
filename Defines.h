@@ -49,6 +49,7 @@ _NSTD_END
 #define _J jeepers_steeve
 #define _K keepers_steeve
 
+// _NSTD_FOR(...)
 #define _NSTD_FOR(var_name, length) for (_NSTD uint var_name = 0; var_name < (length); var_name++)
 #define _NSTD_FOR_I(len) _NSTD_FOR(_I, len)
 #define _NSTD_FOR_J(len) _NSTD_FOR(_J, len)
@@ -58,7 +59,7 @@ _NSTD_END
 #define _NSTD_FOR_J_REVERSE(len) _NSTD_FOR_REVERSE(_J, len)
 #define _NSTD_FOR_K_REVERSE(len) _NSTD_FOR_REVERSE(_K, len)
 
-
+// BIT eXtraction
 #define _GET_BIT(type, index) ((type(0) | char(1)) << (index))
 #define _BITX(index)    _GET_BIT(_NSTD uchar, index)
 #define _HIGH_BIT(type) _GET_BIT(type, sizeof(type) * CHAR_BIT - 1)
