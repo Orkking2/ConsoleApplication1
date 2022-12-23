@@ -6,7 +6,7 @@
 #ifndef _NSTD_DEFINES_
 #define _NSTD_DEFINES_
 
-#define elif(expr) else if (expr)
+#define elif(expr) else if(expr)
 
 #ifndef NULL
 #define NULL 0
