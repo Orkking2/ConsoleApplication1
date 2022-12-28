@@ -10,9 +10,6 @@ _NSTD_BEGIN
 
 template <typename _Storage_type = uchar, typename _Alloc = _STD allocator<_Storage_type>>
 class LongInt {
-#ifdef _NSTD_LONGINT_DEBUGGING_
-public:
-#endif
 	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Storage_type>;
 	using _Alty_traits = _STD allocator_traits<_Alty>;
 	using _Mysize_t    = typename _Alty::size_type;
@@ -22,6 +19,7 @@ public:
 	static constexpr _Mysize_t _Mybytesize = sizeof(_Mystorage_t);
 	static constexpr _Mysize_t _Mybitsize  = _Mybytesize * CHAR_BIT;
 
+	// C2248
 	template <typename S, typename A>
 	friend class LongInt;
 
@@ -39,7 +37,7 @@ public:
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename st1, typename st2>
-	static st1 _Real_shift(st1 num, const st2& shift, const SHIFT_DIRECTION& dir) {
+	_NODISCARD static st1 _Real_shift(st1 num, const st2& shift, const SHIFT_DIRECTION& dir) {
 		if(dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
 				(num >>= 63) >>= 1;
@@ -54,7 +52,7 @@ public:
 
 	// Utility(?)
 	template <typename st1, typename st2>
-	static constexpr auto const& _Min(const st1& first, const st2& second) {
+	_NODISCARD static constexpr auto const& _Min(const st1& first, const st2& second) {
 		return first > second ? second : first;
 	}
 
@@ -94,7 +92,7 @@ public:
 	}
 
 	template <typename size_type>
-	operator size_type() {
+	_NODISCARD operator size_type() {
 		size_type out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
@@ -104,7 +102,7 @@ public:
 		return out;
 	}
 	template <typename size_type>
-	operator const size_type() const {
+	_NODISCARD operator const size_type() const {
 		size_type out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
@@ -114,13 +112,13 @@ public:
 		return out;
 	}
 
-	explicit operator bool() {
+	_NODISCARD explicit operator bool() {
 		_NSTD_FOR_I(_Mysize())
 			if(_Myarr()[_I])
 				return true;
 		return false;
 	}
-	explicit operator const bool() const {
+	_NODISCARD explicit operator const bool() const {
 		_NSTD_FOR_I(_Mysize())
 			if(_Myarr()[_I])
 				return true;
@@ -136,10 +134,10 @@ public:
 		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 
-	_Mysize_t size() {
+	_NODISCARD _Mysize_t size() {
 		return _Mysize();
 	}
-	const _Mysize_t size() const {
+	_NODISCARD const _Mysize_t size() const {
 		return _Mysize();
 	}
 
@@ -174,7 +172,7 @@ public:
 		return add(count);
 	}
 	template <typename size_type>
-	LongInt operator+ (const size_type& count) const {
+	_NODISCARD LongInt operator+ (const size_type& count) const {
 		return LongInt(*this).add(count);
 	}
 
@@ -193,7 +191,7 @@ public:
 		return subtract(count);
 	}
 	template <typename size_type>
-	LongInt operator- (const size_type& count) const {
+	_NODISCARD LongInt operator- (const size_type& count) const {
 		return LongInt(*this).subtract(count);
 	}
 	// LongInt is unsigned
@@ -217,7 +215,7 @@ public:
 		return multiply(count);
 	}
 	template <typename size_type>
-	LongInt operator* (const size_type& count) const {
+	_NODISCARD LongInt operator* (const size_type& count) const {
 		return LongInt(*this).multiply(count);
 	}
 
@@ -239,7 +237,7 @@ public:
 		return divide(divisor);
 	}
 	template <typename size_type>
-	LongInt operator/ (const size_type& divisor) const {
+	_NODISCARD LongInt operator/ (const size_type& divisor) const {
 		return LongInt(*this).divide(divisor);
 	}
 
@@ -259,7 +257,7 @@ public:
 		return mod(count);
 	}
 	template <typename size_type>
-	LongInt operator% (const size_type& count) const {
+	_NODISCARD LongInt operator% (const size_type& count) const {
 		return LongInt(*this).mod(count);
 	}
 
@@ -297,7 +295,7 @@ public:
 		return shift(count, LEFT);
 	}
 	template <typename size_type>
-	LongInt operator<< (const size_type& count) const {
+	_NODISCARD LongInt operator<< (const size_type& count) const {
 		return LongInt(*this).shift(count, LEFT);
 	}
 	template <typename size_type>
@@ -305,7 +303,7 @@ public:
 		return shift(count, RIGHT);
 	}
 	template <typename size_type>
-	LongInt operator>> (const size_type& count) const {
+	_NODISCARD LongInt operator>> (const size_type& count) const {
 		return LongInt(*this).shift(count, RIGHT);
 	}
 
@@ -321,23 +319,24 @@ public:
 		return *this;
 	}
 	LongInt& operator= (const LongInt& other) {
-		if(this != &other)
+		if(this != _STD addressof(other))
 			_Set_to(other);
 		return *this;
 	}
 
-	LongInt operator~ () const {
+	_NODISCARD LongInt operator~ () const {
 		LongInt cache(*this);
 		cache._Grow_if(_Mysize());
 		_NSTD_FOR_I(cache._Mysize())
 			cache._Myarr()[_I] = ~_Myarr()[_I];
 		return cache;
 	}
+
 	LongInt& operator-- () {
-		return subtract(1Ui64);
+		return subtract(1);
 	}
 	LongInt& operator++ () {
-		return add(1Ui64);
+		return add(1);
 	}
 
 	template <typename size_type>
@@ -347,7 +346,7 @@ public:
 		return *this;
 	}
 	template <typename size_type>
-	LongInt operator^ (const size_type& count) const {
+	_NODISCARD LongInt operator^ (const size_type& count) const {
 		return LongInt(*this).operator^= (count);
 	}
 
@@ -358,7 +357,7 @@ public:
 		return *this;
 	}
 	template <typename size_type>
-	LongInt operator& (const size_type& count) const {
+	_NODISCARD LongInt operator& (const size_type& count) const {
 		return LongInt(*this).operator&= (count);
 	}
 
@@ -369,13 +368,13 @@ public:
 		return *this;
 	}
 	template <typename size_type>
-	LongInt operator| (const size_type& count) const {
+	_NODISCARD LongInt operator| (const size_type& count) const {
 		return LongInt(*this).operator|= (count);
 	}
 
 	// Comparisons
 	template <typename size_type>
-	bool operator!= (const size_type& count) const {
+	_NODISCARD bool operator!= (const size_type& count) const {
 		if(_Highest(count) != _Myhighest())
 			return true;
 		_NSTD_FOR_I_REVERSE(_Mysize())
@@ -384,12 +383,12 @@ public:
 		return false;
 	}
 	template <typename size_type>
-	bool operator== (const size_type& count) const {
+	_NODISCARD bool operator== (const size_type& count) const {
 		return !this->operator!= (count);
 	}
 
 	template <typename size_type>
-	bool operator> (const size_type& count) const {
+	_NODISCARD bool operator> (const size_type& count) const {
 		if(_Highest(count) != _Myhighest())
 			return _Myhighest() > _Highest(count);
 		
@@ -401,21 +400,21 @@ public:
 		return false;
 	}
 	template <typename size_type>
-	bool operator>= (const size_type& count) const {
+	_NODISCARD bool operator>= (const size_type& count) const {
 		return this->operator> (count) || this->operator== (count);
 	}
 	template <typename size_type>
-	bool operator< (const size_type& count) const {
+	_NODISCARD bool operator< (const size_type& count) const {
 		return !this->operator>= (count);
 	}
 	template <typename size_type>
-	bool operator<= (const size_type& count) const {
+	_NODISCARD bool operator<= (const size_type& count) const {
 		return !this->operator> (count);
 	}
 
 #ifdef _COMPARE_
 	template <typename size_type>
-	_STD strong_ordering operator<=> (const size_type& count) const {
+	_NODISCARD _STD strong_ordering operator<=> (const size_type& count) const {
 		if(this->operator> (count))
 			return _STD strong_ordering::greater;
 		else if(this->operator== (count))
@@ -431,24 +430,6 @@ public:
 #endif
 
 private:
-#ifdef _NSTD_LONGINT_DEBUGGING_
-public:
-#endif
-/*	Lightweight wrapper -- DEPRECATED
-*	class _Mypair_wrapper_t {
-*	public:
-*		_Mypair_wrapper_t(_Mypair_t p) : _Mypair(p) {}
-*		~_Mypair_wrapper_t() {
-*			_Alty alloc;
-*			alloc.deallocate(_Mypair.second, _Mypair.first);
-*		}
-*		operator _Mypair_t() {
-*			return _Mypair;
-*		}
-*	private:
-*		_Mypair_t _Mypair;
-*	};
-*/
 
 	_NODISCARD static _Mypair_t _Gen_basic() {
 		_Alty alloc;
