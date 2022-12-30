@@ -471,16 +471,16 @@ private:
 
 	template <typename size_type1, typename size_type2>
 	static const bool _Overflows(size_type1 first, size_type2 second) {
-		if(_HIGH_BIT(_Mystorage_t) & first & second) 
+		if(_HIGH_BIT(_Mystorage_t) & (first & second)) 
 			return true;
-		else if(_HIGH_BIT(_Mystorage_t) & (first | second)) 
+		if(_HIGH_BIT(_Mystorage_t) & (first | second)) 
 			return _Overflows(first <<= 1, second <<= 1);
 		return false;
 	}
 
 	template <typename size_type>
 	static void _Make_abs(size_type& n) {
-		n = n < 0 ? n - (n << 1) : n;
+		n = n < 0 ? -n : n;
 	}
 
 	template <typename size_type>
