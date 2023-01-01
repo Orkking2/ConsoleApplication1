@@ -3,6 +3,7 @@
 #define _NSTD_LONGINT_
 
 #include <xmemory>
+#include <type_traits>
 #include "Defines.h"
 #include "Pair.h"
 
@@ -430,8 +431,8 @@ public:
 #endif
 
 private:
-
-	_NODISCARD static _Mypair_t _Gen_basic() {
+	_NODISCARD /*static*/ _Mypair_t _Gen_basic() {
+		_STD cout << (uint)this << " constructed\n";
 		_Alty alloc;
 		_Myptr_t p(alloc.allocate(1));
 		_Alty_traits::construct(alloc, p, 0);
@@ -439,8 +440,8 @@ private:
 	}
 
 	template <typename size_type>
-	void _Grow_if(const size_type& new_size) {
-		if(_Mysize() < new_size)
+	void _Grow_if(const size_type& new_size, const bool b = true) {
+		if(b && _Mysize() < new_size)
 			_Grow_to(new_size);
 	}
 	template <typename size_type>
@@ -459,7 +460,9 @@ private:
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
 		_NSTD_FOR_I(_Min(cache.first, new_size))
 			_Myarr()[_I] = cache.second[_I];
+		_STD cout << (uint)this << ' ' << cache.first << " to " << new_size;
 		_Alty_traits::deallocate(alloc, cache.second, cache.first);
+		_STD cout << " success\n";
 		cache.second = nullptr;
 		_Mysize() = new_size;
 	}
@@ -479,9 +482,13 @@ private:
 	}
 
 	template <typename size_type>
-	static void _Make_abs(size_type& n) {
+	typename _STD enable_if<!_STD is_unsigned<size_type>::value>::type
+	static _Make_abs(size_type& n) {
 		n = n < 0 ? -n : n;
 	}
+	template <typename size_type>
+	typename _STD enable_if< _STD is_unsigned<size_type>::value>::type
+	static _Make_abs(size_type& n) {}
 
 	template <typename size_type>
 	static const _Mysize_t _Highest(size_type count) {
@@ -533,6 +540,7 @@ private:
 	}
 
 	void _Tidy() {
+		_STD cout << (uint)this << " destructed, size: " << _Mysize() << '\n';
 		_Alty alloc;
 		alloc.deallocate(_Myarr(), _Mysize());
 	}
