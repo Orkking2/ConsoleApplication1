@@ -25,7 +25,11 @@ template <typename _Ty, typename... _Traits>
 using rebind_t = rebind<_Ty, _Traits...>::type;
 
 template <typename _Ty, typename _Kty, typename _Rty>
-using IsIndexable = _STD is_convertible<decltype(_STD declval<_Ty>()[_STD declval<_Kty>()]), _Rty>::value;
+constexpr bool is_indexable_by() {
+    return _STD is_class<_Ty>::value && 
+        _STD is_function<decltype(_STD declval<_Ty>()[_STD declval<_Kty>()])>::value &&
+        _STD is_same_v<decltype(_STD declval<_Ty>()[_STD declval<_Kty>()]), _Rty>;
+}
 
 template <typename T> struct remove_reference     { using type = T; };
 template <typename T> struct remove_reference<T&> { using type = T; };
