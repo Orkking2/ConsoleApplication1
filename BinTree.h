@@ -46,13 +46,13 @@ class BinTree {
 	using _Mynode_t		= _NSTD rebind_t<_Node, _Mykey_t, _Myval_t, _Mycompare_t>;
 
 	static_assert(_STD is_same_v<decltype(&_Mycompare_t::compare), _STD strong_ordering (_Mycompare_t::*)(_NSTD add_cr_t<_Mykey_t>, _NSTD add_cr_t<_Mykey_t>)>,
-		"T must have static method _STD strong_ordering compare(const _Key&, const _Key&)");
+		"_Comparitor must have static method _STD strong_ordering compare(const _Key&, const _Key&) -- see _Default_comparitor_t");
 
-	static_assert( _STD is_constructible_v<_Mynode_t, _NSTD add_cr_t<_Myval_t>, _NSTD add_cr_t<_Mykey_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
-		"_Node must have constructor _Node(const _Val&, const _Key&, _Node*, _Node*)");
+	static_assert(_STD is_constructible_v<_Mynode_t, _NSTD add_cr_t<_Myval_t>, _NSTD add_cr_t<_Mykey_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
+		"_Node must have constructor _Node(const _Val&, const _Key&, _Node*, _Node*) -- see _Default_node_t");
 
 	static_assert(_STD is_same_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().compare(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
-		"_Node must have nonstatic method const _Val& GetVal(const _Key&) const;");
+		"_Node must have nonstatic method const _Val& GetVal(const _Key&) const -- see _Default_node_t");
 
 
 
@@ -62,7 +62,10 @@ public:
 	using comparitor_type	= _Mycompare_t;
 	using node_type			= _Mynode_t;
 
+	template <typename size_type, typename array_type, typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
+	BinTree(const array_type& arr, const size_type& size) {
 
+	}
 
 	_NODISCARD const _Myval_t& GetVal(const _Mykey_t& key) {
 		return _Head_node.GetVal(key);
