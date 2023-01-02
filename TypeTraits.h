@@ -28,7 +28,7 @@ template <typename T> struct remove_reference     { using type = T; };
 template <typename T> struct remove_reference<T&> { using type = T; };
 template <typename T> using  remove_reference_t = remove_reference<T>::type;
 
-template <typename T> struct remove_cr { using type = _STD remove_const_t<remove_reference_t<T>>; };
+template <typename T> struct remove_cr { using type = remove_reference_t<_STD remove_const_t<T>>; };
 template <typename T> using  remove_cr_t = remove_cr<T>::type;
 
 template <typename T> struct remove_rv { using type = remove_reference_t<_STD remove_volatile_t<T>>; };
