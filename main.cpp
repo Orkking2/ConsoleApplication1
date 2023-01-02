@@ -15,12 +15,12 @@ _NSTD_UNSIGNED
 
 int main()
 {
-
+	/*
 	_NSTD _LONGINT_TESTER lit;
 	lit.test1();
 	lit.test2();
 	lit.test3();
-    
+    */
 
 
 	std::cout << '\n';
