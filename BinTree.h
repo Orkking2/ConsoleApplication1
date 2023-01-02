@@ -16,21 +16,12 @@ struct _Default_comparitor_t {
 };
 
 template <typename _Val, typename _Key, typename _Comparitor>
-class _Default_node_t {
-	using _Mykey_t		= _Key;
-	using _Myval_t		= _Val;
-	using _Mycompare_t	= _Comparitor;
+struct _Default_node_t {
+	// Will make a copy of _Val input
+	_Default_node_t(const _Val& v, const _Key& k, _Default_node_t* l, _Default_node_t* r) : _val(v), _key(k), _left(l), _right(r) {}
 
-	// Maybe relevant maybe not
-	static_assert(_STD is_same_v<decltype(&_Mycompare_t::compare), _STD strong_ordering(_Mycompare_t::*)(_NSTD add_cr_t<_Mykey_t>, _NSTD add_cr_t<_Mykey_t>)>,
-		"T must have static method _STD strong_ordering compare(const _Key&, const _Key&)");
-
-public:
-	// Will make a copy of Val input
-	_Default_node_t(const _Myval_t& v, const _Mykey_t& k, _Default_node_t* l, _Default_node_t* r) : _val(v), _key(k), _left(l), _right(r) {}
-
-	_NODISCARD const _Myval_t& GetVal(const _Key& key) const {
-		switch (_Mycompare_t::compare(key, _key)) {
+	_NODISCARD const _Val& GetVal(const _Key& key) const {
+		switch (_Comparitor::compare(key, _key)) {
 		case _STD strong_ordering::greater:
 			_NSTD_ASSERT(_right != NULL && _right != nullptr, "_right is null");
 			return _right->GetVal(key);
@@ -42,9 +33,8 @@ public:
 		}
 	}
 
-private:
-	_Mykey_t _key;
-	_Myval_t _val;
+	_Key _key;
+	_Val _val;
 	_Default_node_t* _left, * _right;
 };
 

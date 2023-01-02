@@ -5,12 +5,12 @@
 #include <type_traits>
 #include "Defines.h"
 
-// Things I thought could be useful but aren't in <type_traits
+// Things I thought could be useful but aren't in <type_traits>
 _NSTD_BEGIN
 
 template <typename _Ty>
 struct add_cr {
-	using type = const _Ty&;
+	using type = const remove_cr_t<_Ty>&;
 };
 
 template <typename _Ty>
