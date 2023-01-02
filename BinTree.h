@@ -2,46 +2,66 @@
 #ifndef _NSTD_BINTREE_
 #define _NSTD_BINTREE_
 
-#include <type_traits>
 #include <utility>
 #include "Defines.h"
+#include "TypeTraits.h"
 
 _NSTD_BEGIN
 
-template <typename Key, typename Val = void*>
+template <typename T>
+struct _Default_comparitor_t {
+	static const _STD strong_ordering compare(const T& first, const T& second) {
+		return first <=> second;
+	}
+};
+
+template <typename _Val, typename _Key, typename _Comparitor>
+struct _Default_node_t {
+	// Will make a copy of Val input
+	_Default_node_t(const _Val& v, const _Key& k, _Default_node_t* l, _Default_node_t* r) : _val(v), _key(k), _left(l), _right(r) {}
+
+	const _Val& GetVal(const _Key& key) const {
+		switch (_Comparitor::compare(key, _key)) {
+		case _STD strong_ordering::greater:
+			_NSTD_ASSERT(_right != NULL && _right != nullptr, "_right is null");
+			return _right->GetVal(key);
+		case _STD strong::ordering:less:
+			_NSTD_ASSERT(_left != NULL && _left != nullptr, "_left is null");
+			return _left->GetVal(key);
+		default:
+			return _val;
+		}
+	}
+
+	_Key _key;
+	_Val _val;
+	_Default_node_t* _left, * _right;
+};
+
+template <typename _Key, typename _Val = void*, typename _Comparitor = _Default_comparitor_t<_Key>, typename _Node = _Default_node_t<_Key, _Val, _Comparitor>>
 class BinTree {
+	using _Mykey_t		= _Key;
+	using _Myval_t		= _Val;
+	using _Mynode_t		= _Node;
+	using _Mycompare_t	= _Comparitor;
 
-	template <typename T>
-	struct has_compare {
-		template <typename U>
-		static auto test(int) -> decltype(_STD is_same_v<_STD strong_ordering, decltype(_STD declval<const U>()(_STD declval<const Key&>(), _STD declval<const Key&>()) const)>, _STD true_type());
+	static_assert(_STD is_same_v<decltype(&_Mycompare_t::compare), _STD strong_ordering (_Mycompare_t::*)(_NSTD add_cr_t<_Mykey_t>, _NSTD add_cr_t<_Mykey_t>)>,
+		"T must have static method: _STD strong_ordering compare(const _Key&, const _Key&)");
 
-		template <typename>
-		static _STD false_type test(...);
+	static_assert( _STD is_construcible_v<_Mynode_t, _NSTD add_cr_t<_Myval_t>, _NSTD add_cr_t<_Mykey_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
+		"_Node must have constructor _Node(const _Val&, const _Key&, _Node_t*, _Node_t*)");
 
-		static constexpr bool value = decltype(test<T>(0))::value;
-	};
-	template <typename T>
-	using CompareType = _STD enable_if_t<has_compare<T>::value, T>;
+	static_assert(_STD is_save_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().compare(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
+		"_Node must have nonstatic method: const _Val& GetVal(const _Key&) const;");
 
 
 
-	struct Element {
-		// Will make a copy of Val input
-		Element(const Val& v, Element* l, Element* r) : _val(v), _left(l), _right(r) {}
+public:
+	using key_type			= _Mykey_t;
+	using node_type			= _Mynode_t;
+	using value_type		= _Myval_t;
+	using comparitor_type	= _Mycompare_t;
 
-		~Element() {
-
-		}
-		// T must have: _STD strong_ordering T.operator()(const Key&, const Key&);
-		template <typename T, typename = CompareType<T>>
-		const Val& GetVal(const Key&, const T&) const {
-
-		}
-
-		Val _val;
-		Element* _left, * _right;
-	};
 
 };
 
