@@ -49,7 +49,7 @@ class BinTree {
 		"T must have static method _STD strong_ordering compare(const _Key&, const _Key&)");
 
 	static_assert( _STD is_constructible_v<_Mynode_t, _NSTD add_cr_t<_Myval_t>, _NSTD add_cr_t<_Mykey_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
-		"_Node must have constructor _Node(const _Val&, const _Key&, _Node_t*, _Node_t*)");
+		"_Node must have constructor _Node(const _Val&, const _Key&, _Node*, _Node*)");
 
 	static_assert(_STD is_same_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().compare(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
 		"_Node must have nonstatic method const _Val& GetVal(const _Key&) const;");
