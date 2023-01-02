@@ -473,7 +473,7 @@ private:
 	}
 
 	template <typename size_type1, typename size_type2>
-	_NODISCARD static const bool _Overflows(size_type1 first, size_type2 second) {
+	static const bool _Overflows(size_type1 first, size_type2 second) {
 		if(_HIGH_BIT(_Mystorage_t) & (first & second)) 
 			return true;
 		if(_HIGH_BIT(_Mystorage_t) & (first | second)) 
