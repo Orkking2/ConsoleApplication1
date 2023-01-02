@@ -24,6 +24,9 @@ struct rebind {
 template <typename _Ty, typename... _Traits>
 using rebind_t = rebind<_Ty, _Traits...>::type;
 
+template <typename _Ty, typename _Kty, typename _Rty>
+using IsIndexable = _STD is_convertible<decltype(_STD declval<_Ty>()[_STD declval<_Kty>()]), _Rty>::value;
+
 template <typename T> struct remove_reference     { using type = T; };
 template <typename T> struct remove_reference<T&> { using type = T; };
 template <typename T> using  remove_reference_t = remove_reference<T>::type;
