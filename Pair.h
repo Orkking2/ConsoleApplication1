@@ -21,6 +21,9 @@ public:
 	pair(const _STD pair<_Ty1, _Ty2>& other) : first(other.first), second(other.second) {}
 #endif
 
+	_Ty1 get_first() { return frist; }
+	_Ty2 get_second() { return second; }
+
 	_Ty1 first;
 	_Ty2 second;
 };
