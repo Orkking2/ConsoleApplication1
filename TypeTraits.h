@@ -8,9 +8,8 @@
 // Things I thought could be useful but aren't in <type_traits>
 _NSTD_BEGIN
 
-// Check if T compiles, if not, see error msg
-template <typename T> struct _Always_true { using value = true; };
-template <typename T> using  _Always_true_v = _Always_true<T>::value;
+// Template to check if template compiles, if not, see error msg
+template <typename> constexpr bool _Always_true = true;
 
 template <typename T> struct add_cr { using type = const remove_cr_t<T>&; };
 template <typename T> using  add_cr_t = add_cr<T>::type;
