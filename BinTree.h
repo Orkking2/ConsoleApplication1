@@ -5,6 +5,7 @@
 #include <utility>
 #include <memory>
 #include <compare>
+#include <concepts>
 #include "Defines.h"
 #include "TypeTraits.h"
 
@@ -67,17 +68,53 @@ public:
 	using comparitor_type	= _Mycompare_t;
 	using node_type			= _Mynode_t;
 
-	template <typename size_type, typename array_type, 
-		typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
-	BinTree(const array_type& arr, const size_type& size) {
-
+	template <typename array_type, typename _Mysize_t = _STD size_t>
+	BinTree(const array_type& arr, const _Mysize_t& size) {
+		// TODO
 	}
 
-	template <typename size_type, typename array_type,
-		typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
-	decltype(*this)& genTree(const array_type& arr, const size_type& size) {
+	template <typename array_type>
+	_NODISCARD _NSTD rebind_t<array_type, _STD add_pointer_t<_Mynode_t>> genNodeVector(const array_type& arr) const {
+		static_assert(_STD is_function_v<decltype(_STD declval<array_type>().length())>,
+			"array_type must have method array_type::length() that produces compatible size_type");
+		
+		using _Mysize_t = decltype(_STD declval<array_type>().length());
 
+		static_assert(_STD constructible_from<_Mysize_t, const _Mysize_t&>,
+			"size_type (produced by array_type::length) must be constructible from a const size_type& object");
+		
+		_Mysize_t length_copy(arr.length());
+
+		static_assert(_STD is_same_v<_Mysize_t&, decltype(--_STD declval<_Mysize_t&>())>,
+			"size_type (produced by array_type::length) must have prefix decrement operator");
+		static_assert(_STD is_convertable_v<_Mysize_t, bool>,
+			"size_type (produced by array_type::length) must be convertable to a bool to indicate when it is zero");
+		
+		// See msg on compile error
+		static_assert(_NSTD _Always_true_v<decltype(_STD declval<array_type>()[_STD declval<_Mysize_t>()])>,
+			"array_type must be indexable by const size_type& using operator[](const size_type&)");
+		static_assert(_NSTD _Always_true_v<decltype(_STD declval<array_type>().push(_STD declval<_Mykey_t>()))>,
+			"array_type must have the ability to push key_type objects as a means of expanding its contents");
+		//
+
+		using _Myarr_ret_t = decltype(_STD declval<array_type>()[_STD declval<_Mysize_t>()]);
+		
+		static_assert(_STD is_same_v<_Myval_t, _NSTD remove_crv_t<decltype(_STD declval<_Myarr_ret_t>().get_first())>>,
+			"the type that array_type carries must have a get_first method returning a value_type object");
+		static_assert(_STD is_same_v<_Mykey_t, _NSTD remove_crv_t<decltype(_STD declval<_Myarr_ret_t>().get_second())>>,
+			"the type that array_type carries must have a get_second method returning a key_type object");
+		
+
+		using _Myarr_t = _NSTD rebind_t<array_type, _STD add_pointer_t<_Mynode_t>>;
+		_Myarr_t vector;
+
+		while (--length_copy)
+			vector.push(new _Mynode_t(arr[length_copy].get_first(), arr[length_copy].get_second(), nullptr, nullptr));
+
+		return vector;
 	}
+
+
 
 	_NODISCARD const _Myval_t& GetVal(const _Mykey_t& key) {
 		return _Head_node.GetVal(key);
