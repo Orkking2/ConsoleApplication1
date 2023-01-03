@@ -91,9 +91,9 @@ public:
 			"size_type (produced by array_type::length) must be convertable to a bool to indicate when it is zero");
 		
 		// See msg on compile error
-		static_assert(_NSTD _Always_true_v<decltype(_STD declval<array_type>()[_STD declval<_Mysize_t>()])>,
+		static_assert(_NSTD _Always_true<decltype(_STD declval<array_type>()[_STD declval<_Mysize_t>()])>,
 			"array_type must be indexable by const size_type& using operator[](const size_type&)");
-		static_assert(_NSTD _Always_true_v<decltype(_STD declval<array_type>().push(_STD declval<_Mykey_t>()))>,
+		static_assert(_NSTD _Always_true<decltype(_STD declval<array_type>().push(_STD declval<_Mykey_t>()))>,
 			"array_type must have the ability to push key_type objects as a means of expanding its contents");
 		//
 
