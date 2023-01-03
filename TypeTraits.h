@@ -8,21 +8,11 @@
 // Things I thought could be useful but aren't in <type_traits>
 _NSTD_BEGIN
 
-template <typename _Ty>
-struct add_cr {
-	using type = const remove_cr_t<_Ty>&;
-};
+template <typename T> struct add_cr { using type = const remove_cr_t<T>&; };
+template <typename T> using  add_cr_t = add_cr<T>::type;
 
-template <typename _Ty>
-using add_cr_t = add_cr<_Ty>::type;
-
-template <typename _Ty, typename... _Traits>
-struct rebind {
-	using type = _Ty<_Traits...>;
-};
-
-template <typename _Ty, typename... _Traits>
-using rebind_t = rebind<_Ty, _Traits...>::type;
+template <typename T, typename... _Traits> struct rebind { using type = T<_Traits...>; };
+template <typename T, typename... _Traits> using  rebind_t = rebind<T, _Traits...>::type;
 
 template <typename _Ty, typename _Kty, typename _Rty>
 constexpr bool is_indexable_by() {
