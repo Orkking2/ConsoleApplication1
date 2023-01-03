@@ -3,10 +3,13 @@
 #define _NSTD_BINTREE_
 
 #include <utility>
+#include <memory>
+#include <compare>
 #include "Defines.h"
 #include "TypeTraits.h"
 
 _NSTD_BEGIN
+
 
 template <typename T>
 struct _Default_comparitor_t {
@@ -20,12 +23,14 @@ struct _Default_node_t {
 	// Will make a copy of _Val input
 	_Default_node_t(const _Val& v, const _Key& k, _Default_node_t* l, _Default_node_t* r) : _val(v), _key(k), _left(l), _right(r) {}
 
+	~_Default_node_t() { delete _left, _right; }
+
 	_NODISCARD const _Val& GetVal(const _Key& key) const {
 		switch (_Comparitor::compare(key, _key)) {
 		case _STD strong_ordering::greater:
 			_NSTD_ASSERT(_right != NULL && _right != nullptr, "_right is null");
 			return _right->GetVal(key);
-		case _STD strong::ordering:less:
+		case _STD strong_ordering::less:
 			_NSTD_ASSERT(_left != NULL && _left != nullptr, "_left is null");
 			return _left->GetVal(key);
 		default:
@@ -51,7 +56,7 @@ class BinTree {
 	static_assert(_STD is_constructible_v<_Mynode_t, _NSTD add_cr_t<_Myval_t>, _NSTD add_cr_t<_Mykey_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
 		"_Node must have constructor _Node(const _Val&, const _Key&, _Node*, _Node*) -- see _Default_node_t");
 
-	static_assert(_STD is_same_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().compare(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
+	static_assert(_STD is_same_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().GetVal(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
 		"_Node must have nonstatic method const _Val& GetVal(const _Key&) const -- see _Default_node_t");
 
 
@@ -62,8 +67,15 @@ public:
 	using comparitor_type	= _Mycompare_t;
 	using node_type			= _Mynode_t;
 
-	template <typename size_type, typename array_type, typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
+	template <typename size_type, typename array_type, 
+		typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
 	BinTree(const array_type& arr, const size_type& size) {
+
+	}
+
+	template <typename size_type, typename array_type,
+		typename = _STD enable_if_t<_NSTD is_indexable_by<_NSTD add_cr_t<array_type>, _NSTD add_cr_t<size_type>, _Mykey_t>()>>
+	decltype(*this)& genTree(const array_type& arr, const size_type& size) {
 
 	}
 
