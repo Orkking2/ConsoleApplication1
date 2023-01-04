@@ -44,5 +44,11 @@
     <ClInclude Include="Machine_Code_Emulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BinTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TypeTraits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
