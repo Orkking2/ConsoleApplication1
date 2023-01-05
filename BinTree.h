@@ -91,17 +91,17 @@ public:
 
 private:
 
-	_HAS_CONCEPT(length); // concept _Has_length_v
-	_HAS_CONCEPT(begin); // concept _Has_begin_v
-	_HAS_CONCEPT(end); // concept _Has_end_v
-	_HAS_CONCEPT(push, _STD declval<_Mykey_t>()); // concept _Has_push_v
+	_HAS_METHOD_CONCEPT(length); // concept _Has_length_v
+	_HAS_METHOD_CONCEPT(begin); // concept _Has_begin_v
+	_HAS_METHOD_CONCEPT(end); // concept _Has_end_v
+	_HAS_METHOD_CONCEPT(push, _STD declval<_Mykey_t>()); // concept _Has_push_v
 
 	template <typename, typename = _STD void_t<>> struct _Has_bop : _STD false_type {};
 	template <typename T> struct _Has_bop <T, _STD void_t<decltype(_STD declval<T>().operator[](_STD declval<_NSTD add_cr_t<_NSTD uint>>()))>> : _STD true_type {};	
 	template <typename T> concept _Has_bop_v = _Has_length<T>::value;
 
-	_HAS_CONCEPT(get_first); // concept _Has_get_first_v
-	_HAS_CONCEPT(get_second); // concept _Has_get_second_v
+	_HAS_METHOD_CONCEPT(get_first); // concept _Has_get_first_v
+	_HAS_METHOD_CONCEPT(get_second); // concept _Has_get_second_v
 
 	template <typename T> concept _Good_array = _Has_length_v<T> && _Has_begin_v<T> && _Has_end_v<T> && _Has_bop_v<T>	&&
 		_Has_get_first_v<decltype(_STD declval<T>().operator[](_STD declval<_NSTD add_cr_t<_NSTD uint>>()))>			&&
