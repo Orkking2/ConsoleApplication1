@@ -66,9 +66,10 @@ _NSTD_END
 #define _LOW_BIT(type)  _GET_BIT(type, 0)
 #define _ALL_BIT(type)  (_HIGH_BIT(type) - 1 + _HIGH_BIT(type))
 
+// DEPRECATED
 // concept _Has_##name##_v
-#define _HAS_METHOD_CONCEPT(name, ...) template <typename, typename = _STD void_t<>> struct _Has_##name : _STD false_type {};										\
+/*#define _HAS_METHOD_CONCEPT(name, ...) template <typename, typename = _STD void_t<>> struct _Has_##name : _STD false_type {};										\
 								template <typename T> struct _Has_##name <T, _STD void_t<decltype(_STD declval<T>().##name##( __VA_ARGS__ ))>> : _STD true_type {};	\
-								template <typename T> concept _Has_##name##_v = _Has_length<T>::value;
-
+								template <typename T> using  _Has_##name##_v = _Has_length<T>::value;
+*/
 #endif // ifndef _NSTD_DEFINES_
