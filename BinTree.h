@@ -75,28 +75,9 @@ public:
 	}
 
 	template <typename array_type>
+		requires _Good_array<array_type>
 	_NODISCARD _Mynode_t* genNode(const array_type& arr) const {
-		static_assert(_NSTD _Always_true<decltype(_STD declval<array_type>().length())>,
-			"array_type must have method array_type::length() that produces compatible size_type");
-		static_assert(_NSTD _Always_true<decltype(static_cast<_NSTD uint>(_STD declval<array_type>().length())),
-			"size_type (produced by array_type::length) must be convertable to uint");
 		
-		static_assert(_NSTD _Always_true<decltype(_STD declval<array_type>()[_STD declval<_NSTD add_cr_t<_NSTD uint>>()])>,
-			"array_type must be indexable by const size_type& using operator[](const unit&)");
-		
-		static_assert(_NSTD _Always_true<decltype(_STD declval<array_type>().push(_STD declval<_Mykey_t>()))>,
-			"array_type must have the ability to push key_type objects as a means of expanding its contents");
-		
-		static_assert(_STD _Always_true<decltype(_STD declval<array_type>().begin())>,
-			"array_type must have the ability to produce an iterator indicating where its first element is");
-		static_assert(_STD _Always_true<decltype(_STD declval<array_type>().end())>,
-			"array_type must have the ability to produce an iterator indicating where its last element is");
-
-		using _Myarr_ret_t = decltype(_STD declval<array_type>()[_STD declval<_NSTD add_cr_t<_NSTD uint>>()]);
-		static_assert(_STD is_same_v<_Myval_t, _STD remove_cvref_t<decltype(_STD declval<_Myarr_ret_t>().get_first())>>,
-			"the type that array_type carries must have a get_first method returning a value_type object");
-		static_assert(_STD is_same_v<_Mykey_t, _STD remove_cvref_t<decltype(_STD declval<_Myarr_ret_t>().get_second())>>,
-			"the type that array_type carries must have a get_second method returning a key_type object");
 		
 
 		
@@ -109,6 +90,29 @@ public:
 	}
 
 private:
+
+	_HAS_CONCEPT(length); // concept _Has_length_v
+	_HAS_CONCEPT(begin); // concept _Has_begin_v
+	_HAS_CONCEPT(end); // concept _Has_end_v
+	_HAS_CONCEPT(push, _STD declval<_Mykey_t>()); // concept _Has_push_v
+
+	template <typename, typename = _STD void_t<>> struct _Has_bop : _STD false_type {};
+	template <typename T> struct _Has_bop <T, _STD void_t<decltype(_STD declval<T>().operator[](_STD declval<_NSTD add_cr_t<_NSTD uint>>()))>> : _STD true_type {};	
+	template <typename T> concept _Has_bop_v = _Has_length<T>::value;
+
+	_HAS_CONCEPT(get_first); // concept _Has_get_first_v
+	_HAS_CONCEPT(get_second); // concept _Has_get_second_v
+
+	template <typename T> concept _Good_array = _Has_length_v<T> && _Has_begin_v<T> && _Has_end_v<T> && _Has_bop_v<T>	&&
+		_Has_get_first_v<decltype(_STD declval<T>().operator[](_STD declval<_NSTD add_cr_t<_NSTD uint>>()))>			&&
+		_Has_get_second_v<decltype(_STD declval<T>().operator[](_STD declval<_NSTD add_cr_t<_NSTD uint>>()))>;
+	
+
+	template <typename T> concept _Good_len = _STD convertible_to<T, _NSTD uint>;
+
+
+
+
 	_Mynode_t* _Head_node;
 };
 
