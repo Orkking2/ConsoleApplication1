@@ -11,8 +11,8 @@ _NSTD_BEGIN
 // Check if template compiles, if not, see error msg
 template <typename> constexpr bool _Always_true = true;
 
-template <typename T> struct add_cr { using type = const T&; };
-template <typename T> using  add_cr_t = add_cr<T>::type;
+template <typename T> struct add_cref { using type = const T&; };
+template <typename T> using  add_cref_t = add_cref<T>::type;
 
 template <typename T> constexpr bool _Is_generic = false;
 template <template <typename...> typename T, typename... _Args> constexpr bool _Is_generic<T<_Args...>> = true;
