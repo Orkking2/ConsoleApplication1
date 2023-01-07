@@ -15,8 +15,7 @@
 _NSTD_UNSIGNED
 
 template <typename T>
-	requires _NSTD _Good_array<T> && _NSTD _Good_pair<typename T::value_type, int, _STD string>
-void func() {}
+void func(_NSTD slice<T>&&) {}
 
 
 int main()
@@ -28,20 +27,20 @@ int main()
 	lit.test3();
     */
 
-	_STD vector<_NSTD pair<int, _STD string>> vec = {
+	_STD vector<_NSTD pair<int, _STD string>> vec ({
 		{1, "Hello"},
 		{2, "World"},
 		{3, "My"},
 		{4, "Name"},
 		{5, "Is"},
 		{6, "Nicolas"}
-	};
+	});
 
-	//func<decltype(vec)>();
+	//func(_NSTD slice<decltype(vec)>(vec, 0, vec.size()));
 	
 	_NSTD BinTree<int, _STD string> b(vec);
 
-	//_STD cout << b.GetVal(1);
+	_STD cout << b.GetVal(1) << b.GetVal(2) << b.GetVal(3) << b.GetVal(4) << b.GetVal(5) << b.GetVal(6);
 
 	
 	std::cout << '\n';
