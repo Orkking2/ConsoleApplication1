@@ -14,9 +14,10 @@
 
 _NSTD_UNSIGNED
 
-template <typename array_type>
-	requires _NSTD _Good_array<array_type, int, _STD string>
-void func(array_type t) {}
+template <typename T>
+	requires _NSTD _Good_array<T> && _NSTD _Good_pair<typename T::value_type, int, _STD string>
+void func() {}
+
 
 int main()
 {
@@ -35,14 +36,14 @@ int main()
 		{5, "Is"},
 		{6, "Nicolas"}
 	};
-	
-	using _M = _NSTD rebind_t<_NSTD remove_template_t<_STD vector<int>>, char>;
 
-	//_NSTD BinTree<int, _STD string> b(vec);
+	//func<decltype(vec)>();
 	
-	//timemachineman<nothing, _STD vector<int>>();
-	//static_assert(!_STD is_error_code_enum_v<decltype(_STD declval<_STD vector<int>>().operator[](_STD declval<nothing>()))>);
+	_NSTD BinTree<int, _STD string> b(vec);
 
+	//_STD cout << b.GetVal(1);
+
+	
 	std::cout << '\n';
 	std::system("pause");
 }
