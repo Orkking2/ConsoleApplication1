@@ -7,6 +7,7 @@
 #include <concepts>
 #include "Defines.h"
 #include "TypeTraits.h"
+#include "Slice.h"
 
 _NSTD_BEGIN
 
@@ -25,16 +26,16 @@ struct _Default_node_t {
 	~_Default_node_t() { delete _left, _right; }
 
 	_NODISCARD const _Val& GetVal(const _Key& key) const {
-		switch (_Comparitor::compare(key, _key)) {
-		case _STD strong_ordering::greater:
+		const _STD strong_ordering so = _Comparitor::compare(key, _key);
+		if (so == _STD strong_ordering::greater) {
 			_NSTD_ASSERT(_right != NULL && _right != nullptr, "_right is null");
 			return _right->GetVal(key);
-		case _STD strong_ordering::less:
+		} 
+		if (so == _STD strong_ordering::less) {
 			_NSTD_ASSERT(_left != NULL && _left != nullptr, "_left is null");
 			return _left->GetVal(key);
-		default:
-			return _val;
 		}
+		return _val;		
 	}
 
 	_Key _key;
@@ -43,8 +44,8 @@ struct _Default_node_t {
 };
 
 template <typename T>
-concept _Good_array = requires(T t) {
-    { t.size() }							 -> _STD convertible_to<_NSTD uint>;
+concept _Good_array = requires(_NSTD remove_cref_t<T> t) {
+    { t.size() }							 -> _STD convertible_to<_STD size_t>;
 	{ t.begin() }							 -> _STD same_as<typename T::iterator>;
 	{ t.end() }								 -> _STD same_as<typename T::iterator>;
 	{ t[_STD declval<const _NSTD uint&>()] } -> _STD same_as<typename T::reference>;
@@ -66,13 +67,13 @@ class BinTree {
 //	using _Mycompare_t	= _NSTD rebind_t<_Comparitor, _Mykey_t>;
 //	using _Mynode_t		= _NSTD rebind_t<_Node, _Mykey_t, _Myval_t, _Mycompare_t>;
 
-	static_assert(_STD is_same_v<const _STD strong_ordering, decltype(_Mycompare_t::compare(_STD declval<_NSTD add_cr_t<_Mykey_t>>(), _STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
+	static_assert(_STD is_same_v<const _STD strong_ordering, decltype(_Mycompare_t::compare(_STD declval<_NSTD add_cref_t<_Mykey_t>>(), _STD declval<_NSTD add_cref_t<_Mykey_t>>()))>,
 		"_Comparitor must have static method _STD strong_ordering compare(const _Key&, const _Key&) -- see _Default_comparitor_t");
 
-	static_assert(_STD is_constructible_v<_Mynode_t, _NSTD add_cr_t<_Mykey_t>, _NSTD add_cr_t<_Myval_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
+	static_assert(_STD is_constructible_v<_Mynode_t, _NSTD add_cref_t<_Mykey_t>, _NSTD add_cref_t<_Myval_t>, _STD add_pointer_t<_Mynode_t>, _STD add_pointer_t<_Mynode_t>>,
 		"_Node must have constructor _Node(const _Val&, const _Key&, _Node*, _Node*) -- see _Default_node_t");
 
-	static_assert(_STD is_same_v<_NSTD add_cr_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().GetVal(_STD declval<_NSTD add_cr_t<_Mykey_t>>()))>,
+	static_assert(_STD is_same_v<_NSTD add_cref_t<_Val>, decltype(_STD declval<_STD add_const_t<_Mynode_t>>().GetVal(_STD declval<_NSTD add_cref_t<_Mykey_t>>()))>,
 		"_Node must have nonstatic method const _Val& GetVal(const _Key&) const -- see _Default_node_t");
 
 
@@ -92,50 +93,34 @@ public:
 
 	template <typename array_type>
 		requires _Good_array<array_type> && _Good_pair<typename array_type::value_type, _Mykey_t, _Myval_t>
-	_NODISCARD _Mynode_t* genNode(const array_type& arr) const {
+	_NODISCARD _Mynode_t* genNode(array_type arr) const {
 		_STD sort(arr.begin(), arr.end(), 
-			[](const _Mykey_t& a, const _Mykey_t& b) -> bool { 
-				return _Mycompare_t::compare(a, b) < 0; 
+			[](const typename array_type::value_type& a, const typename array_type::value_type& b) -> bool {
+				return _Mycompare_t::compare(a.first, b.first) < 0; 
 			}
 		);
-		return _Gen_node_unchecked<array_type>({ arr, 0, arr.size() });
+		return _Gen_node_unchecked(_NSTD slice<_STD add_const_t<array_type>>(arr, 0, arr.size()));
 	}
 
 	_NODISCARD const _Myval_t& GetVal(const _Mykey_t& key) const {
 		return _Node_ptr->GetVal(key);
 	}
 
-private:	
+private:
 	template <typename T>
-	struct _Slice_t {
-		_Slice_t(T& _Under, _NSTD uint _Off, _NSTD uint _Size)
-			: _Under(_Under), _Off(_Off), _Size(_Size) {}
-
-		_Slice_t(const _Slice_t& other, _NSTD uint _Off, _NSTD uint _Size) 
-			: _Under(other._Under), _Off(_Off + other._Off), _Size(_Size) {}
-
-		T& _Under;
-		_NSTD uint _Off;
-		_NSTD uint _Size;
-
-		decltype(auto) begin() { return _Under.size() + _Off; }
-		_NSTD uint      size() { return _Size; }
-	};
-
-	template <typename T>
-	_NODISCARD _Mynode_t* _Gen_node_unchecked(_Slice_t<T>&& _Slice) const {
+	_NODISCARD _Mynode_t* _Gen_node_unchecked(_NSTD slice<T>&& _Slice) const {
 		switch (_Slice.size()) {
-		case 1:	return new _Mynode_t((*_Slice.begin()).second, (*_Slice.begin()).first, nullptr, nullptr);
-		case 2: return new _Mynode_t((*_Slice.begin()).second, (*_Slice.begin()).first, nullptr, _Gen_node_unchecked<T>({ _Slice, 1, 1 }));
+		case 1:	return new _Mynode_t((*_Slice.begin()).first, (*_Slice.begin()).second, nullptr, nullptr);
+		case 2: return new _Mynode_t((*_Slice.begin()).first, (*_Slice.begin()).second, nullptr, _Gen_node_unchecked(_NSTD slice<T>(_Slice, 1, 1)));
 		default:
 			return new _Mynode_t(
-				(*(_Slice.begin() + _Slice.size() / 2)).second, 
-				(*(_Slice.begin() + _Slice.size() / 2)).first,
-				_Gen_node_unchecked<T>({ _Slice, 0, _Slice.size() / 2 }),
-				_Gen_node_unchecked<T>({ _Slice, _Slice.size() / 2 + 1, _Slice.size() - _Slice.size() / 2 - 1 }));
+				(*(_Slice.begin() + _Slice.size() / 2)).first, 
+				(*(_Slice.begin() + _Slice.size() / 2)).second,
+				_Gen_node_unchecked(_NSTD slice<T>(_Slice, 0, _Slice.size() / 2)),
+				_Gen_node_unchecked(_NSTD slice<T>(_Slice, _Slice.size() / 2 + 1, _Slice.size() - _Slice.size() / 2 - 1))
+			);
 		}
 	}
-
 
 	_Mynode_t* _Node_ptr;
 };
