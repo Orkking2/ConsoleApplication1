@@ -21,8 +21,7 @@ class LongInt {
 	static constexpr _Mysize_t _Mybitsize  = _Mybytesize * CHAR_BIT;
 
 	// C2248
-	template <typename S, typename A>
-	friend class LongInt;
+	template <typename, typename> friend class LongInt;
 
 public:
 	using _Mypair_t = _NSTD pair<_Mysize_t, _Myptr_t>;
@@ -39,7 +38,12 @@ public:
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename st1, typename st2>
 	_NODISCARD static st1 _Real_shift(st1 num, const st2& shift, const SHIFT_DIRECTION& dir) {
-		if(dir == RIGHT) {
+		_Real_shift_set(num, shift, dir);
+		return num;
+	}
+	template <typename st1, typename st2>
+	void static _Real_shift_set(st1& num, const st2& shift, const SHIFT_DIRECTION& dir) {
+		if (dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
 				(num >>= 63) >>= 1;
 			num >>= shift % 64;
@@ -48,7 +52,6 @@ public:
 				(num <<= 63) <<= 1;
 			num <<= shift % 64;
 		}
-		return num;
 	}
 
 	// Utility(?)
@@ -64,14 +67,8 @@ public:
 	using pointer_type   = _Myptr_t;
 
 public:
-	LongInt()                                                     : _Mypair(_Gen_basic()) {}
-	LongInt(const LongInt& other)                                 : _Mypair(_Gen_basic()) { _Set_to(other); }
-	
-	template <typename other_storage_t, typename other_alloc_t>
-	LongInt(const LongInt<other_storage_t, other_alloc_t>& other) : _Mypair(_Gen_basic()) { _Set_to(other); }
-	
-	template <typename size_type>
-	LongInt(const size_type& count)                               : _Mypair(_Gen_basic()) { add(count); }
+	LongInt()                                                     : _Mypair(_Gen_basic()) {}	
+	template <typename T> LongInt(const T& other)                 : _Mypair(_Gen_basic()) { _Set_to(other); }
 
 /*	DEPRECATED - infinite production of LongInt objects
 *	template <typename size_type>
@@ -80,8 +77,8 @@ public:
 	~LongInt() { _Tidy(); }
 
 	// Grow by (in bytes)
-	template <typename size_type>
-	LongInt& grow(const size_type& size) {
+	template <typename T>
+	LongInt& grow(const T& size) {
 		_Grow_by(size);
 		return *this;
 	}
@@ -92,9 +89,9 @@ public:
 		return *this;
 	}
 
-	template <typename size_type>
-	_NODISCARD operator size_type() {
-		size_type out(0);
+	template <typename T>
+	_NODISCARD operator T() {
+		T out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
 			if(_I)
@@ -102,9 +99,9 @@ public:
 		}
 		return out;
 	}
-	template <typename size_type>
-	_NODISCARD operator const size_type() const {
-		size_type out(0);
+	template <typename T>
+	_NODISCARD operator const T() const {
+		T out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
 			if(_I)
@@ -153,76 +150,84 @@ public:
 *	}
 */
 
-	template <typename size_type>
-	LongInt& add(size_type num) {
-		if(!num) 
+	LongInt& add(const LongInt& other) {
+		if(&other == this || !other)
 			return *this;
-		_Grow_if((_Myhighest() + _Highest(num)) / _Mybitsize + 1);
+		_Grow_if(other._Mysize());
 		bool overflow(false);
 		_NSTD_FOR_I(_Mysize()) {
-			_Mystorage_t cache_num(num += (overflow ? 1 : 0));
-			overflow = _Overflows(num, _Myarr()[_I]);
-			_Myarr()[_I] += cache_num;
-			_Grow_if(_I + 1 /* _I inclusive */ + (overflow ? 1 : 0));
-			num = _Real_shift(num, _Mybitsize, RIGHT);
-		}
-		return this->shrink_fit();
-	}
-	template <typename size_type>
-	LongInt& operator+= (const size_type& count) {
-		return add(count);
-	}
-	template <typename size_type>
-	_NODISCARD LongInt operator+ (const size_type& count) const {
-		return LongInt(*this).add(count);
-	}
-
-	template <typename size_type>
-	LongInt& subtract(size_type count) {
-		_NSTD_ASSERT(*this >= count, "LongInt is unsigned -- subtracting number larger than LongInt");
-		while (count) {
-			size_type b(~this->operator size_type() & count);
-			this->operator^= (count);
-			count = b << 1;
+			overflow = _Overflows(_I < other._Mysize() ? other._Myarr()[_I] : _Mystorage_t(0), overflow ? 1 : 0);
+			_Mystorage_t cached_num((_I < other._Mysize() ? other._Myarr()[_I] : _Mystorage_t(0)) + (overflow ? 1 : 0));
+			overflow = overflow ? overflow : _Overflows(_Myarr()[_I], cached_num);
+			_Grow_if(_I + 1 + (overflow ? 1 : 0));
+			_Myarr()[_I] += cached_num;
 		}
 		return *this;
 	}
-	template <typename size_type>
-	LongInt& operator-= (const size_type& count) {
+	template <typename T>
+	LongInt& operator+= (const T& count) {
+		return add(LongInt(count));
+	}
+	template <>
+	LongInt& operator+= (const LongInt& count) {
+		return add(count);
+	}
+	template <typename T>
+	_NODISCARD LongInt operator+ (const T& count) const {
+		return LongInt(*this).operator+= (count);
+	}
+
+	LongInt& subtract(const LongInt& other) {
+		if(&other == this || !other)
+			return *this;
+		_NSTD_ASSERT(*this >= other, 
+			"LongInt is unsigned -- subtracting number larger than LongInt object");
+		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize())) {
+			if(_Myarr()[_I] < other._Myarr()[_I])
+				subtract(LongInt(1) <<= LongInt(_Mybitsize * (_I + 1)));
+			_Myarr()[_I] -= other._Myarr()[_I];
+		}
+		return *this;
+	}
+	template <typename T>
+	LongInt& operator-= (const T& count) {
+		return subtract(LongInt(count));
+	}
+	template <>
+	LongInt& operator-= (const LongInt& count) {
 		return subtract(count);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator- (const size_type& count) const {
-		return LongInt(*this).subtract(count);
+	template <typename T>
+	_NODISCARD LongInt operator- (const T& count) const {
+		return LongInt(*this).operator-= (count);
 	}
 	// LongInt is unsigned
 	LongInt operator- () = delete;
 
-	template <typename size_type>
-	LongInt& multiply(size_type count) {
-		_Make_abs(count);
-		LongInt cache(*this);
+	LongInt& multiply(const LongInt& other) {
+		LongInt tcache(*this), ocache(other);
 		_Set_zero();
-		while (count) {
-			if(count & _LOW_BIT(size_type)) 
-				this->operator+= (cache);
-			cache <<= 1;
-			count >>= 1;
+		while(ocache) {
+			if(ocache & LongInt(1))
+				*this += tcache;
+			tcache <<= 1Ui64;
+			ocache >>= 1Ui64;
 		}
 		return *this;
 	}
-	template <typename size_type>
-	LongInt& operator*= (const size_type& count) {
+	template <typename T>
+	LongInt& operator*= (const T& count) {
+		return multiply(LongInt(count));
+	}
+	LongInt& operator*= (const LongInt& count) {
 		return multiply(count);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator* (const size_type& count) const {
-		return LongInt(*this).multiply(count);
+	template <typename T>
+	LongInt& operator* (const T& count) {
+		return LongInt(*this).operator*= (count);
 	}
 
-	template <typename size_type>
-	LongInt& divide(size_type divisor) {
-		_Make_abs(divisor);
+	LongInt& divide(const LongInt& divisor) {
 		LongInt dividend(*this);
 		_Set_zero();
 		_NSTD_FOR_I_REVERSE(dividend._Myhighest() + 1) {
@@ -233,37 +238,44 @@ public:
 		}
 		return *this;
 	}
-	template <typename size_type>
-	LongInt& operator/= (const size_type& divisor) {
+	template <typename T>
+	LongInt& operator/= (const T& divisor) {
+		return divide(LongInt(divisor));
+	}
+	template <>
+	LongInt& operator/= (const LongInt& divisor) {
 		return divide(divisor);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator/ (const size_type& divisor) const {
-		return LongInt(*this).divide(divisor);
+	template <typename T>
+	_NODISCARD LongInt operator/ (const T& divisor) const {
+		return LongInt(*this).operator/= (divisor);
 	}
 
-	template <typename size_type>
-	LongInt& mod(const size_type& count) {
+	LongInt& mod(const LongInt& count) {
 		if(_Highest(count) > _Myhighest())
 			return *this;
 
-		_NSTD_FOR_I_REVERSE(_Myhighest() + 1)
+		_NSTD_FOR_I_REVERSE(_Myhighest() + LongInt(1))
 			if(this->operator> (count << _I))
 				this->operator-= (count << _I);
 
 		return *this;
 	}
-	template <typename size_type>
-	LongInt& operator%= (const size_type& count) {
+	template <typename T>
+	LongInt& operator%= (const T& count) {
+		return mod(LongInt(count));
+	}
+	template <>
+	LongInt& operator%= (const LongInt& count) {
 		return mod(count);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator% (const size_type& count) const {
-		return LongInt(*this).mod(count);
+	template <typename T>
+	_NODISCARD LongInt operator% (const T& count) const {
+		return LongInt(*this).operator%= (count);
 	}
 
-	template <typename size_type>
-	LongInt& shift(size_type count, SHIFT_DIRECTION dir) {
+	template <typename T>
+	LongInt& shift(T count, SHIFT_DIRECTION dir) {
 		if(!count) {
 			return *this;
 		} else if(count < 0) {
@@ -291,35 +303,26 @@ public:
 		}
 		return *this;
 	}
-	template <typename size_type>
-	LongInt& operator<<= (const size_type& count) {
+	template <typename T>
+	LongInt& operator<<= (const T& count) {
 		return shift(count, LEFT);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator<< (const size_type& count) const {
+	template <typename T>
+	_NODISCARD LongInt operator<< (const T& count) const {
 		return LongInt(*this).shift(count, LEFT);
 	}
-	template <typename size_type>
-	LongInt& operator>>= (const size_type& count) {
+	template <typename T>
+	LongInt& operator>>= (const T& count) {
 		return shift(count, RIGHT);
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator>> (const size_type& count) const {
+	template <typename T>
+	_NODISCARD LongInt operator>> (const T& count) const {
 		return LongInt(*this).shift(count, RIGHT);
 	}
 
 	// Logical operators vvv
-	template <typename size_type>
-	LongInt& operator= (const size_type& other) {
-		_Set_zero();
-		return add(other);
-	}
-	template <typename other_size_t, typename other_alloc_t>
-	LongInt& operator= (const LongInt<other_size_t, other_alloc_t>& other) {
-		_Set_to(other);
-		return *this;
-	}
-	LongInt& operator= (const LongInt& other) {
+	template <typename T>
+	LongInt& operator= (const T& other) {
 		if(this != _STD addressof(other))
 			_Set_to(other);
 		return *this;
@@ -340,42 +343,55 @@ public:
 		return add(1);
 	}
 
-	template <typename size_type>
-	LongInt& operator^= (const size_type& count) {
-		_NSTD_FOR_I(_Mysize()) 
-			_Myarr()[_I] ^= count >> _I * _Mybitsize;
+	template <typename T>
+	LongInt& operator^= (const T& count) {
+		return this->operator^= (LongInt(count));
+	}
+	template <>
+	LongInt& operator^= (const LongInt& other) {
+		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize()))
+			_Myarr()[_I] ^= other._Myarr()[_I];
 		return *this;
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator^ (const size_type& count) const {
+	template <typename T>
+	_NODISCARD LongInt operator^ (const T& count) const {
 		return LongInt(*this).operator^= (count);
 	}
 
-	template <typename size_type>
-	LongInt& operator&= (const size_type& count) {
+
+	template <typename T>
+	LongInt& operator&= (const T& count) {
+		return this->operator&= (LongInt(count));
+	}
+	template <>
+	LongInt& operator&= (const LongInt& other) {
 		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] &= count >> _I * _Mybitsize;
+			_Myarr()[_I] &= other._Myarr()[_I];
 		return *this;
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator& (const size_type& count) const {
+	template <typename T>
+	_NODISCARD LongInt operator& (const T& count) const {
 		return LongInt(*this).operator&= (count);
 	}
 
-	template <typename size_type>
-	LongInt& operator|= (const size_type& count) {
-		_NSTD_FOR_I(_Mysize())
-			_Myarr()[_I] |= count >> _I * _Mybitsize;
+	template <typename T>
+	LongInt& operator|= (const T& count) {
+		return this->operator|= (LongInt(count));
+	}
+	template <>
+	LongInt& operator|= (const LongInt& other) {
+		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize()))
+			_Myarr()[_I] |= other._Myarr()[_I];
 		return *this;
 	}
-	template <typename size_type>
-	_NODISCARD LongInt operator| (const size_type& count) const {
+	template <typename T>
+	_NODISCARD LongInt operator| (const T& count) const {
 		return LongInt(*this).operator|= (count);
 	}
 
 	// Comparisons
-	template <typename size_type>
-	_NODISCARD bool operator!= (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator!= (const T& count) const {
 		if(_Highest(count) != _Myhighest())
 			return true;
 		_NSTD_FOR_I_REVERSE(_Mysize())
@@ -383,13 +399,13 @@ public:
 				return true;
 		return false;
 	}
-	template <typename size_type>
-	_NODISCARD bool operator== (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator== (const T& count) const {
 		return !this->operator!= (count);
 	}
 
-	template <typename size_type>
-	_NODISCARD bool operator> (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator> (const T& count) const {
 		if(_Highest(count) != _Myhighest())
 			return _Myhighest() > _Highest(count);
 		
@@ -400,22 +416,22 @@ public:
 		}
 		return false;
 	}
-	template <typename size_type>
-	_NODISCARD bool operator>= (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator>= (const T& count) const {
 		return this->operator> (count) || this->operator== (count);
 	}
-	template <typename size_type>
-	_NODISCARD bool operator< (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator< (const T& count) const {
 		return !this->operator>= (count);
 	}
-	template <typename size_type>
-	_NODISCARD bool operator<= (const size_type& count) const {
+	template <typename T>
+	_NODISCARD bool operator<= (const T& count) const {
 		return !this->operator> (count);
 	}
 
 #ifdef _COMPARE_
-	template <typename size_type>
-	_NODISCARD _STD strong_ordering operator<=> (const size_type& count) const {
+	template <typename T>
+	_NODISCARD _STD strong_ordering operator<=> (const T& count) const {
 		if(this->operator> (count))
 			return _STD strong_ordering::greater;
 		else if(this->operator== (count))
@@ -431,25 +447,24 @@ public:
 #endif
 
 private:
-	_NODISCARD /*static*/ _Mypair_t _Gen_basic() {
-		_STD cout << (uint)this << " constructed\n";
+	_NODISCARD static _Mypair_t _Gen_basic() {
 		_Alty alloc;
 		_Myptr_t p(alloc.allocate(1));
 		_Alty_traits::construct(alloc, p, 0);
 		return _Mypair_t(1, p);
 	}
 
-	template <typename size_type>
-	void _Grow_if(const size_type& new_size, const bool b = true) {
+	template <typename T>
+	void _Grow_if(const T& new_size, const bool b = true) {
 		if(b && _Mysize() < new_size)
 			_Grow_to(new_size);
 	}
-	template <typename size_type>
-	void _Grow_by(const size_type& size) {
+	template <typename T>
+	void _Grow_by(const T& size) {
 		_Grow_to(_Mysize() + size);
 	}
-	template <typename size_type>
-	void _Grow_to(const size_type& new_size) {
+	template <typename T>
+	void _Grow_to(const T& new_size) {
 		_NSTD_ASSERT(new_size > 0, "Cannot set LongInt size to or below 0");
 		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
 
@@ -460,9 +475,7 @@ private:
 			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
 		_NSTD_FOR_I(_Min(cache.first, new_size))
 			_Myarr()[_I] = cache.second[_I];
-		_STD cout << (uint)this << ' ' << cache.first << " to " << new_size;
 		_Alty_traits::deallocate(alloc, cache.second, cache.first);
-		_STD cout << " success\n";
 		cache.second = nullptr;
 		_Mysize() = new_size;
 	}
@@ -481,24 +494,18 @@ private:
 		return false;
 	}
 
-	template <typename size_type>
-	typename _STD enable_if<!_STD is_unsigned<size_type>::value>::type
-	static _Make_abs(size_type& n) {
-		n = n < 0 ? -n : n;
-	}
-	template <typename size_type>
-	typename _STD enable_if< _STD is_unsigned<size_type>::value>::type
-	static _Make_abs(size_type& n) {}
+	template <typename T> typename _STD enable_if_t<!_STD is_unsigned_v<T>> static _Make_abs(T& n) { n = n < 0 ? -n : n; }
+	template <typename T> typename _STD enable_if_t< _STD is_unsigned_v<T>> static _Make_abs(T& n) {}
 
-	template <typename size_type>
-	static const _Mysize_t _Highest(size_type count) {
+	template <typename T>
+	static const _Mysize_t _Highest(T count) {
 		_Make_abs(count);
 		if(!count)
 			return 0;
-		const size_type cache(count);
+		const T cache(count);
 		_NSTD_FOR_I(cache) {
 			if(_Real_shift(count, _Mybitsize, RIGHT)) {
-				count = _Real_shift(count, _Mybitsize, RIGHT);
+				_Real_shift_set(count, _Mybitsize, RIGHT);
 				continue;
 			}
 			_NSTD_FOR_J_REVERSE(_Mybitsize)
@@ -521,15 +528,20 @@ private:
 		return _Highest(*this);
 	}
 
+	template <typename T>
+	void _Set_to(const T& num) {
+		_NSTD_ASSERT(num >= 0,
+			"Setting LongInt object to negative value");
+		_Set_zero();
+		_NSTD_FOR_I(_Highest(num)) 
+			_Myarr()[_I / _Mybitsize] |= (num & _GET_BIT(T, _I));
+	}
 	template <typename other_storage_t, typename other_alloc_t>
 	void _Set_to(const LongInt<other_storage_t, other_alloc_t>& other) {
 		_Set_zero();
-		_Grow_if(other._Myhighest() / other._Mybitsize + 1);
-		_NSTD_FOR_I_REVERSE(other._Mysize()) {
-			add(other._Myarr()[_I]);
-			if(_I)
-				shift(other._Mybitsize, LEFT);
-		}
+		_Grow_if(other._Myhighest() / _Mybitsize + 1);
+		_NSTD_FOR_I(other._Myhighest())
+			_Myarr()[_I / _Mybitsize] |= (other._Myarr()[_I / other._Mybitsize] & _GET_BIT(other_storage_t, _I % other._Mybitsize));
 	}
 	template <>
 	void _Set_to(const LongInt& other) {
@@ -540,7 +552,6 @@ private:
 	}
 
 	void _Tidy() {
-		_STD cout << (uint)this << " destructed, size: " << _Mysize() << '\n';
 		_Alty alloc;
 		alloc.deallocate(_Myarr(), _Mysize());
 	}
@@ -576,7 +587,7 @@ _STD ostream& operator<< (_STD ostream& os, const LongInt<storage_t, alloc_t>& l
 
 #ifdef _NSTD_LONGINT_TESTER_
 #pragma push_macro("_CATCHBLOCK")
-#define _CATCHBLOCK(msg) catch(...) { _STD cout << "LongInt FAILED: " << msg << '\n'; }
+#define _CATCHBLOCK(msg) catch(...) { _STD cout << "LongInt FAILED: " << msg << '\n'; } _STD cout << "LongInt SUCCESS: " << msg << '\n'
 
 struct _LONGINT_TESTER {
 	static void test1() { // Constructors

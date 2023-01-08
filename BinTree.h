@@ -11,9 +11,9 @@
 
 _NSTD_BEGIN
 
-template <typename T>
+template <typename size_type>
 struct _Default_comparitor_t {
-	static const _STD strong_ordering compare(const T& first, const T& second) {
+	static const _STD strong_ordering compare(const size_type& first, const size_type& second) {
 		return first <=> second;
 	}
 };
@@ -44,11 +44,11 @@ struct _Default_node_t {
 };
 
 template <typename T>
-concept _Good_array = requires(_NSTD remove_cref_t<T> t) {
+concept _Good_array = requires(T t) {
     { t.size() }							 -> _STD convertible_to<_STD size_t>;
-	{ t.begin() }							 -> _STD same_as<typename T::iterator>;
-	{ t.end() }								 -> _STD same_as<typename T::iterator>;
-	{ t[_STD declval<const _NSTD uint&>()] } -> _STD same_as<typename T::reference>;
+	{ t.begin() }							 -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
+	{ t.end() }								 -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
+	{ t[_STD declval<const _NSTD uint&>()] } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_reference, typename T::reference>>;
 };
 
 template <typename P, typename _Key, typename _Val>
@@ -57,12 +57,12 @@ concept _Good_pair = requires(P p) {
 	{ p.second } -> _STD convertible_to<_Val>;
 };
 
-template <typename _Key, typename _Val = void*, template <typename...> typename _Comparitor = _Default_comparitor_t, template <typename...> typename _Node = _Default_node_t>
+template <typename _Key, typename _Val = void*, typename _Comparitor = _Default_comparitor_t<_Key>, typename _Node = _Default_node_t<_Val, _Key, _Comparitor>>
 class BinTree {
 	using _Mykey_t		= _STD remove_cvref_t<_Key>;
 	using _Myval_t		= _STD remove_cvref_t<_Val>;
-	using _Mycompare_t  = _Comparitor<_Mykey_t>;
-	using _Mynode_t		= _Node<_Myval_t, _Mykey_t, _Mycompare_t>;
+	using _Mycompare_t  = _NSTD rebind_t<_Comparitor, _Mykey_t>;
+	using _Mynode_t		= _NSTD rebind_t<_Node, _Myval_t, _Mykey_t, _Mycompare_t>;
 
 //	using _Mycompare_t	= _NSTD rebind_t<_Comparitor, _Mykey_t>;
 //	using _Mynode_t		= _NSTD rebind_t<_Node, _Mykey_t, _Myval_t, _Mycompare_t>;
@@ -107,17 +107,17 @@ public:
 	}
 
 private:
-	template <typename T>
-	_NODISCARD _Mynode_t* _Gen_node_unchecked(_NSTD slice<T>&& _Slice) const {
+	template <typename size_type>
+	_NODISCARD _Mynode_t* _Gen_node_unchecked(_NSTD slice<size_type>&& _Slice) const {
 		switch (_Slice.size()) {
 		case 1:	return new _Mynode_t((*_Slice.begin()).first, (*_Slice.begin()).second, nullptr, nullptr);
-		case 2: return new _Mynode_t((*_Slice.begin()).first, (*_Slice.begin()).second, nullptr, _Gen_node_unchecked(_NSTD slice<T>(_Slice, 1, 1)));
+		case 2: return new _Mynode_t((*_Slice.begin()).first, (*_Slice.begin()).second, nullptr, _Gen_node_unchecked(_NSTD slice<size_type>(_Slice, 1, 1)));
 		default:
 			return new _Mynode_t(
 				(*(_Slice.begin() + _Slice.size() / 2)).first, 
 				(*(_Slice.begin() + _Slice.size() / 2)).second,
-				_Gen_node_unchecked(_NSTD slice<T>(_Slice, 0, _Slice.size() / 2)),
-				_Gen_node_unchecked(_NSTD slice<T>(_Slice, _Slice.size() / 2 + 1, _Slice.size() - _Slice.size() / 2 - 1))
+				_Gen_node_unchecked(_NSTD slice<size_type>(_Slice, 0, _Slice.size() / 2)),
+				_Gen_node_unchecked(_NSTD slice<size_type>(_Slice, _Slice.size() / 2 + 1, _Slice.size() - _Slice.size() / 2 - 1))
 			);
 		}
 	}
