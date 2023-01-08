@@ -90,17 +90,7 @@ public:
 	}
 
 	template <typename T>
-	_NODISCARD operator T() {
-		T out(0);
-		_NSTD_FOR_I_REVERSE(_Mysize()) {
-			out += _Myarr()[_I];
-			if(_I)
-				out = _Real_shift(out, _Mybitsize, LEFT);
-		}
-		return out;
-	}
-	template <typename T>
-	_NODISCARD operator const T() const {
+	_NODISCARD operator T() const {
 		T out(0);
 		_NSTD_FOR_I_REVERSE(_Mysize()) {
 			out += _Myarr()[_I];
@@ -110,13 +100,7 @@ public:
 		return out;
 	}
 
-	_NODISCARD explicit operator bool() {
-		_NSTD_FOR_I(_Mysize())
-			if(_Myarr()[_I])
-				return true;
-		return false;
-	}
-	_NODISCARD explicit operator const bool() const {
+	_NODISCARD explicit operator bool() const {
 		_NSTD_FOR_I(_Mysize())
 			if(_Myarr()[_I])
 				return true;
@@ -124,11 +108,7 @@ public:
 	}
 
 	template <typename other_storage_t, typename other_alloc_t>
-	explicit operator LongInt<other_storage_t, other_alloc_t>() {
-		return LongInt<other_storage_t, other_alloc_t>(*this);
-	}
-	template <typename other_storage_t, typename other_alloc_t>
-	explicit operator const LongInt<other_storage_t, other_alloc_t>() const {
+	explicit operator LongInt<other_storage_t, other_alloc_t>() const {
 		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 
