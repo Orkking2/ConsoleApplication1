@@ -9,12 +9,10 @@
 _NSTD_BEGIN
 
 template <typename T>
-concept _Good_under = requires(_NSTD remove_cref_t<T> t) {
+concept _Good_under = requires(T t) {
 	{ t.size() } -> _STD same_as<typename T::size_type>;
-	{ t.begin() } -> _STD same_as<typename T::iterator>;
-	{ _STD declval<const _NSTD remove_cref_t<T>>().begin() } -> _STD same_as<typename T::const_iterator>;
-	{ t.begin() + _STD declval<typename T::size_type>() } -> _STD same_as<typename T::iterator>;
-	{ _STD declval<const _NSTD remove_cref_t<T>>().begin() + _STD declval<typename T::size_type>() } -> _STD same_as<typename T::const_iterator>;
+	{ t.begin() } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
+	{ t.begin() + _STD declval<typename T::size_type>() } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
 };
 
 template <typename T>
@@ -30,7 +28,7 @@ struct slice {
 	_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator> begin() { return _Under.begin() + _Off; }
 	typename T::size_type size() { return _Size; }
 
-	const T& _Under;
+	T& _Under;
 	typename T::size_type _Off;
 	typename T::size_type _Size;
 };
