@@ -41,9 +41,6 @@
     <ClInclude Include="Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Machine_Code_Emulator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BinTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -148,7 +148,6 @@
     <ClInclude Include="BinTree.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Deque.h" />
-    <ClInclude Include="Machine_Code_Emulator.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Huff.h" />
     <ClInclude Include="Threads.h" />
