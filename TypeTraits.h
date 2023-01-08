@@ -17,11 +17,11 @@ template <typename T> using  add_cref_t = add_cref<T>::type;
 template <typename T> constexpr bool _Is_generic = false;
 template <template <typename...> typename T, typename... _Args> constexpr bool _Is_generic<T<_Args...>> = true;
 
-template <template <typename...> typename _This> struct _Rebind_base_t { template <typename... _Args> using _Base = _This<_Args...>; };
-template <typename T> concept _Rebindable = requires { _Is_generic<typename T::_Base>; };
+template <typename T> concept _Rebindable = requires { _Is_generic<T>; };
 
-//template <typename T, typename... _Traits> requires _Rebindable<T> struct rebind { using type = T::_Base<_Traits...>; };
-//template <typename T, typename... _Traits> requires _Rebindable<T> using  rebind_t = rebind<T, _Traits...>::type;
+template <typename T, typename... _Traits> struct rebind {};
+template <template <typename...> typename T, typename... _Args, typename... _Traits> struct rebind<T<_Args...>, _Traits...> { using type = T<_Traits...>; };
+template <typename T, typename... _Traits> requires _Rebindable<T> using rebind_t = rebind<T, _Traits...>::type;
 
 template <typename T> struct remove_cref { using type = _STD remove_reference_t<_STD remove_const_t<T>>; };
 template <typename T> using  remove_cref_t = remove_cref<T>::type;
