@@ -67,8 +67,9 @@ public:
 	using pointer_type   = _Myptr_t;
 
 public:
-	LongInt()                                                     : _Mypair(_Gen_basic()) {}	
-	template <typename T> LongInt(const T& other)                 : _Mypair(_Gen_basic()) { _Set_to(other); }
+	LongInt()                                     : _Mypair(_Gen_basic()) {}
+	LongInt(const LongInt& other)				  : _Mypair(_Gen_basic()) { _Set_to(other); }
+	template <typename T> LongInt(const T& other) : _Mypair(_Gen_basic()) { _Set_to(other); }
 
 /*	DEPRECATED - infinite production of LongInt objects
 *	template <typename size_type>
@@ -372,10 +373,14 @@ public:
 	// Comparisons
 	template <typename T>
 	_NODISCARD bool operator!= (const T& count) const {
-		if(_Highest(count) != _Myhighest())
+		return this->operator!= (LongInt(count));
+	}
+	template <>
+	_NODISCARD bool operator!= (const LongInt& other) const {
+		if(_Myhighest() != other._Myhighest())
 			return true;
-		_NSTD_FOR_I_REVERSE(_Mysize())
-			if(_Myarr()[_I] != static_cast<_Mystorage_t>(_Real_shift(count, _I * _Mybitsize, RIGHT)))
+		_NSTD_FOR_I(_Min(_Mysize(), other._Mysize()))
+			if(_Myarr()[_I] != other._Myarr()[_I])
 				return true;
 		return false;
 	}
@@ -386,14 +391,15 @@ public:
 
 	template <typename T>
 	_NODISCARD bool operator> (const T& count) const {
-		if(_Highest(count) != _Myhighest())
-			return _Myhighest() > _Highest(count);
-		
-		_NSTD_FOR_I_REVERSE(_Mysize()) {
-			_Mystorage_t ccache(_Real_shift(count, _I * _Mybitsize, RIGHT));
-			if(_Myarr()[_I] != ccache)
-				return _Myarr()[_I] > ccache;
-		}
+		return this->operator> (LongInt(count));
+	}
+	template <>
+	_NODISCARD bool operator> (const LongInt& other) const {
+		if(_Myhighest() != other._Myhighest())
+			return _Myhighest() > other._Myhighest();
+		_NSTD_FOR_I_REVERSE(_Min(_Mysize(), other._Mysize()))
+			if(_Myarr()[_I] != other._Myarr()[_I])
+				return _Myarr()[_I] > other._Myarr()[_I];
 		return false;
 	}
 	template <typename T>
