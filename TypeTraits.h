@@ -8,7 +8,7 @@
 // Things I thought could be useful but aren't in <type_traits>
 _NSTD_BEGIN
 
-// Check if template compiles, if not, see error msg
+// Check if template compiles, if not, see error msg (Utility ?)
 template <typename> constexpr bool _Always_true = true;
 
 template <typename T> struct add_cref { using type = const T&; };
