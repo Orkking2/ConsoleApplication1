@@ -145,12 +145,13 @@
     <ClCompile Include="Threads.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BinTree.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Deque.h" />
-    <ClInclude Include="Machine_Code_Emulator.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Huff.h" />
     <ClInclude Include="Threads.h" />
+    <ClInclude Include="TypeTraits.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

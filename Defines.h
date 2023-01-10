@@ -6,7 +6,7 @@
 #ifndef _NSTD_DEFINES_
 #define _NSTD_DEFINES_
 
-#define elif(expr) else if (expr)
+#define elif(expr) else if(expr)
 
 #ifndef NULL
 #define NULL 0
@@ -49,21 +49,21 @@ _NSTD_END
 #define _J jeepers_steeve
 #define _K keepers_steeve
 
-#define _NSTD_FOR(var_name, length) for (_NSTD uint var_name = 0; var_name < (length); var_name++)
+// _NSTD_FOR(...)
+#define _NSTD_FOR(var_name, length) for(_NSTD uint var_name = 0; var_name < (length); var_name++)
 #define _NSTD_FOR_I(len) _NSTD_FOR(_I, len)
 #define _NSTD_FOR_J(len) _NSTD_FOR(_J, len)
 #define _NSTD_FOR_K(len) _NSTD_FOR(_K, len)
-#define _NSTD_FOR_REVERSE(var_name, length) for (_NSTD uint var_name = length - 1; ~var_name; var_name--)
+#define _NSTD_FOR_REVERSE(var_name, length) for(_NSTD uint var_name = length - 1; ~var_name; var_name--)
 #define _NSTD_FOR_I_REVERSE(len) _NSTD_FOR_REVERSE(_I, len)
 #define _NSTD_FOR_J_REVERSE(len) _NSTD_FOR_REVERSE(_J, len)
 #define _NSTD_FOR_K_REVERSE(len) _NSTD_FOR_REVERSE(_K, len)
 
-
+// BIT eXtraction
 #define _GET_BIT(type, index) ((type(0) | char(1)) << (index))
 #define _BITX(index)    _GET_BIT(_NSTD uchar, index)
 #define _HIGH_BIT(type) _GET_BIT(type, sizeof(type) * CHAR_BIT - 1)
 #define _LOW_BIT(type)  _GET_BIT(type, 0)
 #define _ALL_BIT(type)  (_HIGH_BIT(type) - 1 + _HIGH_BIT(type))
-
 
 #endif // ifndef _NSTD_DEFINES_

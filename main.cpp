@@ -3,36 +3,29 @@
 #include <compare>
 #include <vector>
 
-//#define _NSTD_LONGINT_DEBUGGING_
+#define _NSTD_LONGINT_TESTER_
 
 #include "LongInt.h"
-#include "Machine_Code_Emulator.h"
+#include "BinTree.h"
+#include "Pair.h"
+//#include "Machine_Code_Emulator.h"
 //#include "Deque.h"
 //#include "Timer.h"
 
 _NSTD_UNSIGNED
 
-#include <thread>
-#include <windows.h>
+
 
 int main()
 {
-//  nstd::LongInt li(578);
-//  _STD cout << static_cast<uint>(li -= 100) << '\n';
-//  _STD cout << static_cast<uint>(li % 10); //<< " " << (static_cast<uint>(li) % 10);
-
-    std::stoi(std::string("hello"))
-    0x1b;
-    0b11011;
-    0xFF;
-
-/*  vector<string> s({"word", "good", "best", "good"});
-    auto v = Solution::findSubstring("wordgoodgoodgoodbestword", s);
-    if (!v.size())
-        cout << "\nn";
-    for (int i : v)
-        cout << i << '\t';
-*/
+	_NSTD _LONGINT_TESTER lit;
+	lit.test1();
+	lit.test2();
+	lit.test3();
+    
+	
+	
+	
 	std::cout << '\n';
 	std::system("pause");
 }

@@ -522,7 +522,6 @@ class deque<bool, _Alloc> {
 	using _Ty = bool;
 
 private:
-// ripped
 	using _Alty           = _STD _Rebind_alloc_t<_Alloc, uchar>;
 	using _Alty_traits    = _STD allocator_traits<_Alty>;
 	using _Alpty          = _STD _Rebind_alloc_t<_Alloc, typename _Alty_traits::pointer>;
