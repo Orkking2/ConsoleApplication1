@@ -190,7 +190,7 @@ public:
 		_Set_zero();
 		while(ocache) {
 			if(ocache & LongInt(1))
-				*this += tcache;
+				add(tcache);
 			tcache <<= 1Ui64;
 			ocache >>= 1Ui64;
 		}
@@ -211,10 +211,10 @@ public:
 	LongInt& divide(const LongInt& divisor) {
 		LongInt dividend(*this);
 		_Set_zero();
-		_NSTD_FOR_I_REVERSE(dividend._Myhighest() + 1) {
+		_NSTD_FOR_I_REVERSE(dividend._Myhighest() - divisor._Myhighest() + 1) {
 			if(dividend >= divisor << _I) {
 				dividend -= divisor << _I;
-				this->operator+= (LongInt(1) <<= _I);
+				add(LongInt(1) <<= _I);
 			}
 		}
 		return *this;
@@ -519,20 +519,21 @@ private:
 		_NSTD_ASSERT(num >= 0,
 			"Setting LongInt object to negative value");
 		_Set_zero();
-		_NSTD_FOR_I(_Highest(num)) 
-			_Myarr()[_I / _Mybitsize] |= (num & _GET_BIT(T, _I));
+		_Grow_if(_Highest(num) / _Mybitsize + 1);
+		_NSTD_FOR_I(_Highest(num) + 1) 
+			_Myarr()[_I / _Mybitsize] |= ((num & _GET_BIT(T, _I)) ? T(1) << _I % _Mybitsize : 0);
 	}
 	template <typename other_storage_t, typename other_alloc_t>
 	void _Set_to(const LongInt<other_storage_t, other_alloc_t>& other) {
 		_Set_zero();
-		_Grow_if(other._Myhighest() / _Mybitsize + 1);
+		_Grow_if(other._Mysize() * other._Mybitsize / _Mybitsize + 1);
 		_NSTD_FOR_I(other._Myhighest())
 			_Myarr()[_I / _Mybitsize] |= (other._Myarr()[_I / other._Mybitsize] & _GET_BIT(other_storage_t, _I % other._Mybitsize));
 	}
 	template <>
 	void _Set_to(const LongInt& other) {
 		_Set_zero();
-		_Grow_if(other._Myhighest() / _Mybitsize + 1);
+		_Grow_if(other._Mysize());
 		_NSTD_FOR_I(other._Mysize())
 			_Myarr()[_I] = other._Myarr()[_I];
 	}
