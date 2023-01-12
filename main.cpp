@@ -18,13 +18,13 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	_NSTD _LONGINT_TESTER lit;
-	lit.test1();
-	lit.test2();
-	lit.test3();
+	//_NSTD _LONGINT_TESTER lit;
+	//lit.test1();
+	//lit.test2();
+	//lit.test3();
     
-	
-	
+	_NSTD LongInt<> li(2435298);
+	_NSTD LongInt<> li2(li + 23452345);
 	
 	std::cout << '\n';
 	std::system("pause");

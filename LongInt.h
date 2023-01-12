@@ -645,9 +645,7 @@ struct _LONGINT_TESTER {
 			LongInt<> li(2435298);
 			if(!(li <= 2435298 + 1) || !(li <= 2435298))
 				throw;
-		} _CATCHBLOCK("<=");
-
-		
+		} _CATCHBLOCK("<=");		
 	}
 
 	static void test3() { // Operators
