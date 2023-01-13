@@ -24,9 +24,9 @@ int main()
 	//lit.test3();
     
 	_NSTD LongInt<> li(2435298);
-	//li / 34;
+	li / 34;
 	//_STD cout << static_cast<uint>(li / 34) << ' ' << static_cast<uint>(li) / 34 << '\n';
-	_STD cout << li / 34 << '\n' << _STD bitset<3 * CHAR_BIT>(2435298 / 34);
+	//_STD cout << li / 34 << '\n' << _STD bitset<3 * CHAR_BIT>(2435298 / 34);
 	
 	std::cout << '\n';
 	std::system("pause");

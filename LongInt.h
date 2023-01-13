@@ -163,9 +163,9 @@ public:
 			return *this;
 		_NSTD_ASSERT(*this >= other, 
 			"LongInt is unsigned -- subtracting number larger than LongInt object");
-		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize())) {
+		_NSTD_FOR_I_REVERSE(_Min(other._Mysize(), _Mysize())) {
 			if(_Myarr()[_I] < other._Myarr()[_I])
-				subtract(LongInt(1) <<= LongInt(_Mybitsize * (_I + 1)));
+				subtract(LongInt(1) <<= LongInt(_Mybitsize * _I));
 			_Myarr()[_I] -= other._Myarr()[_I];
 		}
 		return *this;
@@ -213,13 +213,10 @@ public:
 		_Set_zero();
 		_NSTD_FOR_I_REVERSE(dividend._Myhighest() - divisor._Myhighest() + 1) {
 			if(dividend >= divisor << _I) {
+				uint t(dividend);
 				dividend -= divisor << _I;
-
-				_STD cout << *this << " +\n" << (LongInt(1) <<= _I);
-
-				add(LongInt(1) <<= _I);
-
-				_STD cout << " =\n" << *this << '\n';
+				_STD cout << (t - divisor << _I != (uint)dividend ? "F\n" : "P\n");
+				_Myarr()[_I / _Mybitsize] |= _GET_BIT(_Mystorage_t, _I % _Mybitsize);
 			}
 		}
 		return *this;
