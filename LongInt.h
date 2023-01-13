@@ -214,7 +214,12 @@ public:
 		_NSTD_FOR_I_REVERSE(dividend._Myhighest() - divisor._Myhighest() + 1) {
 			if(dividend >= divisor << _I) {
 				dividend -= divisor << _I;
+
+				_STD cout << *this << " +\n" << (LongInt(1) <<= _I);
+
 				add(LongInt(1) <<= _I);
+
+				_STD cout << " =\n" << *this << '\n';
 			}
 		}
 		return *this;
