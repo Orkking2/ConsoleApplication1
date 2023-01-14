@@ -135,13 +135,10 @@ public:
 		if(&other == this || !other)
 			return *this;
 		_Grow_if(other._Mysize());
-		bool overflow(false);
-		_NSTD_FOR_I(_Mysize()) {
-			overflow = _Overflows(_I < other._Mysize() ? other._Myarr()[_I] : _Mystorage_t(0), overflow ? 1 : 0);
-			_Mystorage_t cached_num((_I < other._Mysize() ? other._Myarr()[_I] : _Mystorage_t(0)) + (overflow ? 1 : 0));
-			overflow = overflow ? overflow : _Overflows(_Myarr()[_I], cached_num);
-			_Grow_if(_I + 1 + (overflow ? 1 : 0));
-			_Myarr()[_I] += cached_num;
+		_NSTD_FOR_I(_Min(_Mysize(), other._Mysize())) {
+			if(_Overflows(other._Myarr()[_I], _Myarr()[_I]))
+				_Unary_add(_I + 1);
+			_Myarr()[_I] += other._Myarr()[_I];
 		}
 		return *this;
 	}
@@ -169,13 +166,6 @@ public:
 			_Myarr()[_I] -= other._Myarr()[_I];
 		}
 		return *this;
-	}
-	void _Unary_sub(const _Mysize_t& _Index) {
-		_NSTD_ASSERT(_Mysize() > _Index,
-			"_Unary_sub::_Index out of bounds");
-		if(!_Myarr()[_Index])
-			_Unary_sub(_Index + 1);
-		_Myarr()[_Index]--;
 	}
 	template <typename T>
 	LongInt& operator-= (const T& count) {
@@ -444,6 +434,20 @@ private:
 		return _Mypair_t(1, p);
 	}
 
+	// Overflow operators
+	void _Unary_add(const _Mysize_t& _Index) {
+		_Grow_if(_Index + 1);
+		if(!++_Myarr()[_Index])
+			_Unary_add(_Index + 1);
+	}
+	void _Unary_sub(const _Mysize_t& _Index) {
+		_NSTD_ASSERT(_Mysize() > _Index,
+			"_Unary_sub::_Index out of bounds");
+		if(!_Myarr()[_Index])
+			_Unary_sub(_Index + 1);
+		_Myarr()[_Index]--;
+	}
+
 	template <typename T>
 	void _Grow_if(const T& new_size, const bool b = true) {
 		if(b && _Mysize() < new_size)
@@ -578,10 +582,11 @@ _STD ostream& operator<< (_STD ostream& os, const LongInt<storage_t, alloc_t>& l
 
 #ifdef _NSTD_LONGINT_TESTER_
 #pragma push_macro("_CATCHBLOCK")
-#define _CATCHBLOCK(msg) catch(...) { _STD cout << "LongInt FAILED: " << msg << '\n'; } _STD cout << "LongInt SUCCESS: " << msg << '\n'
+#define _CATCHBLOCK(msg) catch(...) { b = true; } _STD cout << "LongInt " << (b ? "FAIL" : "SUCCESS") << ": " << msg << '\n'; b = false;
 
 struct _LONGINT_TESTER {
 	static void test1() { // Constructors
+		bool b = false;
 		try {
 			LongInt<> li;
 		} _CATCHBLOCK("nullary constructor");
@@ -616,94 +621,96 @@ struct _LONGINT_TESTER {
 	}
 
 	static void test2() { // Comparitors
+		bool b = false;
 		try {
 			LongInt<> li(2435298);
 			if(!(li == 2435298))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("==");
 
 		try {
 			LongInt<> li(2435298);
 			if(!(li != 2435298 - 1))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("!=");
 
 		try {
 			LongInt<> li(2435298);
 			if(!(li > 2435298 - 1))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK(">");
 
 		try {
 			LongInt<> li(2435298);
 			if(!(li >= 2435298 - 1) || !(li >= 2435298))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK(">=");
 
 		try {
 			LongInt<> li(2435298);
 			if(!(li < 2435298 + 1))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("<");
 
 		try {
 			LongInt<> li(2435298);
 			if(!(li <= 2435298 + 1) || !(li <= 2435298))
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("<=");		
 	}
 
 	static void test3() { // Operators
+		bool b = false;
 		try {
 			LongInt<> li(2435298);
 			li += 2341298;
 			if(li != 2435298 + 2341298)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("+=");
 
 		try {
 			LongInt<> li(2435298);
 			if(li + 2341298 != 2435298 + 2341298)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("+");
 
 		try {
 			LongInt<> li(2435298);
 			li -= 2341298;
 			if(li != 2435298 - 2341298)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("-=");
 
 		try {
 			LongInt<> li(2435298);
 			if(li - 2341298 != 2435298 - 2341298)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("-");
 
 		try {
 			LongInt<> li(2435298);
 			li /= 34;
 			if(li != 2435298Ui64 / 34)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("/=");
 
 		try {
 			LongInt<> li(2435298);
 			if(li / 34 != 2435298Ui64 / 34)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("/");
 
 		try {
 			LongInt<> li(2435298);
 			li %= 34;
 			if(li != 2435298 % 34)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("%=");
 
 		try {
 			LongInt<> li(2435298);
 			if(li % 34 != 2435298 % 34)
-				throw;
+				throw _STD exception();
 		} _CATCHBLOCK("%");
 
 
