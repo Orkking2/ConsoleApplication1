@@ -536,7 +536,7 @@ private:
 		_Set_zero();
 		_Grow_if(other._Mysize() * other._Mybitsize / _Mybitsize + 1);
 		_NSTD_FOR_I(other._Myhighest())
-			_Myarr()[_I / _Mybitsize] |= (other._Myarr()[_I / other._Mybitsize] & _GET_BIT(other_storage_t, _I % other._Mybitsize));
+			_Myarr()[_I / _Mybitsize] |= other._Myarr()[_I / other._Mybitsize] & _GET_BIT(other_storage_t, _I % other._Mybitsize);
 	}
 	template <>
 	void _Set_to(const LongInt& other) {
