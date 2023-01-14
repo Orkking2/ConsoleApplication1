@@ -26,8 +26,8 @@ class LongInt {
 public:
 	using _Mypair_t = _NSTD pair<_Mysize_t, _Myptr_t>;
 
-	// Max 256 bytes (exclusive)
-	static constexpr _Mysize_t _Maxsize = 256 / _Mybytesize;
+	static constexpr _Mysize_t _Maxbytes = 256;
+	static constexpr _Mysize_t _Maxsize = _Maxbytes / _Mybytesize;
 
 	/*	Utility(?)
 	*	static constexpr auto _MAX_OF = []() -> LongInt {
