@@ -29,12 +29,6 @@ public:
 	static constexpr _Mysize_t _Maxbytes = 256;
 	static constexpr _Mysize_t _Maxsize = _Maxbytes / _Mybytesize;
 
-	/*	Utility(?)
-	*	static constexpr auto _MAX_OF = []() -> LongInt {
-	*		return ~LongInt().grow(LongInt::_Maxsize - 1);
-	*	};
-	*/
-
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename st1, typename st2>
 	_NODISCARD static st1 _Real_shift(st1 num, const st2& shift, const SHIFT_DIRECTION& dir) {
@@ -67,14 +61,11 @@ public:
 	using pointer_type   = _Myptr_t;
 
 public:
-	LongInt()                                     : _Mypair(_Gen_basic()) {}
-	LongInt(const LongInt& other)				  : _Mypair(_Gen_basic()) { _Set_to(other); }
-	template <typename T> LongInt(const T& other) : _Mypair(_Gen_basic()) { _Set_to(other); }
+	LongInt()                       : _Mypair(_Gen_basic()) {}
+	LongInt(const LongInt& other)	: _Mypair(_Gen_basic()) { _Set_to(other); }
+	template <typename T> 
+	LongInt(const T& other)			: _Mypair(_Gen_basic()) { _Set_to(other); }
 
-/*	DEPRECATED - infinite production of LongInt objects
-*	template <typename size_type>
-*	LongInt(size_type&& count)									  : _Mypair(_Gen_basic()) { add(count); }
-*/
 	~LongInt() { _Tidy(); }
 
 	// Grow by (in bytes)
@@ -119,17 +110,6 @@ public:
 	_NODISCARD const _Mysize_t size() const {
 		return _Mysize();
 	}
-
-/*	Legacy
-*	template <typename size_type>
-*	static _Mysize_t deduce_size(const size_type& num) {
-*		return sizeof(size_type);
-*	}
-*	template <typename other_storage_t, typename other_alloc_t>
-*	static _Mysize_t deduce_size(const LongInt<other_storage_t, other_alloc_t>& other) {
-*		return other.size();
-*	}
-*/
 
 	LongInt& add(const LongInt& other) {
 		if(&other == this || !other)
