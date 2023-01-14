@@ -42,7 +42,7 @@ public:
 		return num;
 	}
 	template <typename st1, typename st2>
-	void static _Real_shift_set(st1& num, const st2& shift, const SHIFT_DIRECTION& dir) {
+	static void _Real_shift_set(st1& num, const st2& shift, const SHIFT_DIRECTION& dir) {
 		if (dir == RIGHT) {
 			_NSTD_FOR_I(shift / 64)
 				(num >>= 63) >>= 1;
@@ -161,14 +161,21 @@ public:
 	LongInt& subtract(const LongInt& other) {
 		if(&other == this || !other)
 			return *this;
-		_NSTD_ASSERT(*this >= other, 
+		_NSTD_ASSERT(*this >= other,
 			"LongInt is unsigned -- subtracting number larger than LongInt object");
-		_NSTD_FOR_I_REVERSE(_Min(other._Mysize(), _Mysize())) {
+		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize())) {
 			if(_Myarr()[_I] < other._Myarr()[_I])
-				subtract(LongInt(1) <<= LongInt(_Mybitsize * _I));
+				_Unary_sub(_I + 1);
 			_Myarr()[_I] -= other._Myarr()[_I];
 		}
 		return *this;
+	}
+	void _Unary_sub(const _Mysize_t& _Index) {
+		_NSTD_ASSERT(_Mysize() > _Index,
+			"_Unary_sub::_Index out of bounds");
+		if(!_Myarr()[_Index])
+			_Unary_sub(_Index + 1);
+		_Myarr()[_Index]--;
 	}
 	template <typename T>
 	LongInt& operator-= (const T& count) {
@@ -215,7 +222,6 @@ public:
 			if(dividend >= divisor << _I) {
 				uint t(dividend);
 				dividend -= divisor << _I;
-				_STD cout << (t - divisor << _I != (uint)dividend ? "F\n" : "P\n");
 				_Myarr()[_I / _Mybitsize] |= _GET_BIT(_Mystorage_t, _I % _Mybitsize);
 			}
 		}
@@ -257,14 +263,10 @@ public:
 		return LongInt(*this).operator%= (count);
 	}
 
-	template <typename T>
-	LongInt& shift(T count, SHIFT_DIRECTION dir) {
-		if(!count) {
+	LongInt& shift(_Mysize_t count, SHIFT_DIRECTION dir) {
+		if(!count) 
 			return *this;
-		} else if(count < 0) {
-			count -= count << 1;
-			dir = dir == RIGHT ? LEFT : RIGHT;
-		}
+		
 		if(dir == LEFT)
 			_Grow_if((_Myhighest() + count) / _Mybitsize + 1);
 		LongInt cache(*this);
@@ -288,7 +290,7 @@ public:
 	}
 	template <typename T>
 	LongInt& operator<<= (const T& count) {
-		return shift(count, LEFT);
+		return shift(static_cast<_Mysize_t>(count), LEFT);
 	}
 	template <typename T>
 	_NODISCARD LongInt operator<< (const T& count) const {
@@ -296,7 +298,7 @@ public:
 	}
 	template <typename T>
 	LongInt& operator>>= (const T& count) {
-		return shift(count, RIGHT);
+		return shift(static_cast<_Mysize_t>(count), RIGHT);
 	}
 	template <typename T>
 	_NODISCARD LongInt operator>> (const T& count) const {
