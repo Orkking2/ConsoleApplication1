@@ -27,7 +27,7 @@ public:
 	using _Mypair_t = _NSTD pair<_Mysize_t, _Myptr_t>;
 
 	static constexpr _Mysize_t _Maxbytes = 256;
-	static constexpr _Mysize_t _Maxsize = _Maxbytes / _Mybytesize;
+	static constexpr _Mysize_t _Maxsize  = _Maxbytes / _Mybytesize;
 
 	enum SHIFT_DIRECTION { LEFT = 0, RIGHT };
 	template <typename st1, typename st2>
@@ -48,7 +48,6 @@ public:
 		}
 	}
 
-	// Utility(?)
 	template <typename st1, typename st2>
 	_NODISCARD static constexpr auto const& _Min(const st1& first, const st2& second) {
 		return first > second ? second : first;

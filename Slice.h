@@ -8,15 +8,15 @@
 
 _NSTD_BEGIN
 
-template <typename T>
-concept _Good_under = requires(T t) {
+template <typename _Ty>
+concept _Good_under = requires(_Ty t) {
 	{ t.size() } -> _STD same_as<typename T::size_type>;
 	{ t.begin() } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
 	{ t.begin() + _STD declval<typename T::size_type>() } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
 };
 
-template <typename T>
-	requires _Good_under<T>
+template <typename _Ty>
+	requires _Good_under<_Ty>
 struct slice {
 	slice(T& _Under, typename T::size_type _Off, typename T::size_type _Size)
 		: _Under(_Under), _Off(_Off), _Size(_Size) {}
