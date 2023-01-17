@@ -3,6 +3,8 @@
 #define _NSTD_MATRIX_
 
 #include <xmemory>
+#include <thread>
+#include <mutex>
 #include "Defines.h"
 #include "TypeTraits.h"
 
@@ -64,12 +66,14 @@ private:
 				_Mapptr[_I][_J] = _Init[_I][_J];
 	}
 
-	// Forgets old
+	// Forgets old; Retains position if sizes are similar (for partitioning)
 	void _Resize_map(uint _Newmapsize, uint _Newundersize) {
-		_Dealloc();
-		_Mapsize   = _Newmapsize;
-		_Undersize = _Newundersize;
-		_Gen_map();
+		if(_Mapsize != _Newmapsize || _Undersize != _Newundersize) {
+			_Dealloc();
+			_Mapsize = _Newmapsize;
+			_Undersize = _Newundersize;
+			_Gen_map();
+		}
 	}
 
 	void _Gen_map() {
@@ -102,7 +106,7 @@ private:
 		_NSTD_ASSERT(other._Mapsize == _Mapsize && other._Undersize == _Undersize,
 			"Adding matrices of non-similar sizes");
 	}
-	Matrix _Simple_iterative_add_unchecked(const Matrix& other) {
+	Matrix _Simple_iterative_add_unchecked(const Matrix& other) const {
 		Matrix out(_Mapsize, _Undersize);
 		_NSTD_FOR_I(_Mapsize)
 			_NSTD_FOR_J(_Undersize)
@@ -113,7 +117,7 @@ private:
 		_NSTD_ASSERT(_Undersize == other._Mapsize,
 			"Multiplying matrices of non-similar sizes, consider changing the order of multiplication");
 	}
-	Matrix _Simple_iterative_multiply_unchecked(const Matrix& other) {
+	Matrix _Simple_iterative_multiply_unchecked(const Matrix& other) const {
 		Matrix out(_Mapsize, other._Undersize);
 		_NSTD_FOR_I(out._Mapsize) {
 			_NSTD_FOR_J(out._Undersize) {
@@ -124,7 +128,7 @@ private:
 		}
 		return out;
 	}
-//#ifdef _THREAD_ // THREADED METHODS
+#ifdef _THREAD_ // THREADED METHODS
 	struct Partition {
 		_Mapptr_t _Map;
 		uint _RSize, _ROff,
@@ -139,26 +143,98 @@ private:
 			_Mapptr[_I] = p._Map[_I + p._ROff] + _COff;
 	}
 
-	Matrix _Partition(uint _RSize, uint _ROff, uint _CSize, uint _COff) {
-		return Matrix(Partition{ _Mapptr, _RSize, _ROff, _CSize, _COff });
+	static Matrix _LHSplit(const Matrix& m) {
+		return Matrix(Partition{ m._Mapptr, m._Mapsize, 0, m._Undersize / 2, 0 });
 	}
-	
-	enum SELECTOR {};
-	Matrix _Merge(const Matrix& a, const Matrix& b, const SELECTOR& _Sel) {
-
+	static Matrix _RHSplit(const Matrix& m) {
+		return Matrix(Partition{ m._Mapptr, m._Mapsize, 0, m._Undersize - m._Undersize / 2, m._Undersize / 2 });
+	}
+	static Matrix _TVSplit(const Matrix& m) {
+		return Matrix(Partition{ m._Mapptr, m._Mapsize / 2, 0, m._Undersize, 0 });
+	}
+	static Matrix _BVSplit(const Matrix& m) {
+		return Matrix(Partition{ m._Mapptr, m._Mapsize - m._Mapsize / 2, m._Mapsize / 2, m._Undersize, 0 });
 	}
 
-	Matrix _Nonsquare_DaC_multiply_unchecked(const Matrix& other) {
-		switch _Max(_Mapsize, _Undersize, other._Undersize) {
-		case _Mapsize: 
+	static Matrix _HMerge(const Matrix& _Left, const Matrix& _Right) {
+		_NSTD_ASSERT(_Left._Mapsize == _Right._Mapsize,
+			"Horizontally merging matrices with different col-lengths");
+		Matrix out(_Left._Mapsize, _Left._Undersize + _Right._Undersize);
+		_NSTD_FOR_I(out._Mapsize) {
+			_NSTD_FOR_J(out._Undersize) {
+				if(_J < _Left._Undersize)
+					out.get(_I, _J) = _Left.get(_I, _J);
+				else
+					out.get(_I, _J) = _Right.get(_I, _J - _Left._Undersize);
+			}
 		}
+		return out;
 	}
-//#endif
+	static Matrix _VMerge(const Matrix& _Top, const Matrix& _Bottom) {
+		_NSTD_ASSERT(_Top._Undersize == _Bottom._Undersize,
+			"Vertically merging matrices with different row-lengths");
+		Matrix out(_Top._Mapsize + _Bottom._Mapsize, _Top._Undersize);
+		_NSTD_FOR_I(out._Mapsize) {
+			_NSTD_FOR_J(out._Undersize) {
+				if(_I < _Top._Mapsize)
+					out.get(_I, _J) = _Top.get(_I, _J);
+				else
+					out.get(_I, _J) = _Bottom.get(_I - _Top._Mapsize, _J);
+			}
+		}
+		return out;
+	}
+
+	static void _STATIC_Add_check(const Matrix& _Left, const Matrix& _Right) {
+		_NSTD_ASSERT(_Left._Mapsize == _Mapsize && _Right._Undersize == _Undersize,
+			"Adding matrices of non-similar sizes");
+	}
+	static Matrix _STATIC_Simple_iterative_add_unchecked(const Matrix& _Left, const Matrix& _Right) const {
+		Matrix out(_Left._Mapsize, _Left._Undersize);
+		_NSTD_FOR_I(out._Mapsize)
+			_NSTD_FOR_J(out._Undersize)
+			out.get(_I, _J) = _Left.get(_I, _J) + _Right.get(_I, _J);
+		return out;
+	}
+
+	static void _STATIC_Multiply_check(const Matrix& _Left, const Matrix& _Right) {
+		_NSTD_ASSERT(_Left._Undersize == _Right._Mapsize,
+			"Multiplying matrices of non-similar sizes, consider changing the order of multiplication");
+	}
+	static Matrix _STATIC_Simple_iterative_multiply_unchecked(const Matrix& _Left, const Matrix& _Right) {
+		Matrix out(_Left._Mapsize, _Right._Undersize);
+		_NSTD_FOR_I(out._Mapsize) {
+			_NSTD_FOR_J(out._Undersize) {
+				out.get(_I, _J) = 0;
+				_NSTD_FOR_K(_Left._Undersize /* = _Right._Mapsize */)
+					out.get(_I, _J) += get(_I, _K) * _Right.get(_K, _J);
+			}
+		}
+		return out;
+	}
+
+	Matrix _Multiply_header(const Matrix& _Right) {
+
+	}
+	static void _STATIC_Nonsquare_DaC_multiply_recurse(_STD mutex& mut, Matrix& _Ret, 
+		const Matrix& _Left, const Matrix& _Right
+	) {
+		_STATIC_Multiply_check(_Left, _Right);
+
+	}
+#endif // _THREAD_
 	_Mapptr_t _Mapptr;
 	_NSTD uint _Mapsize, _Undersize;
 	const bool _Is_partition = false;
 };
 
+#ifdef _THREAD_
+
+
+
+
+
+#endif // _THREAD_
 
 // TODO (may be difficult)
 template <typename _Ty, size_t _Dims = 2, typename _Alloc = _STD allocator<_Ty>>
