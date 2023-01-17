@@ -139,9 +139,19 @@ private:
 			_Mapptr[_I] = p._Map[_I + p._ROff] + _COff;
 	}
 
+	Matrix _Partition(uint _RSize, uint _ROff, uint _CSize, uint _COff) {
+		return Matrix(Partition{ _Mapptr, _RSize, _ROff, _CSize, _COff });
+	}
+	
+	enum SELECTOR {};
+	Matrix _Merge(const Matrix& a, const Matrix& b, const SELECTOR& _Sel) {
+
+	}
 
 	Matrix _Nonsquare_DaC_multiply_unchecked(const Matrix& other) {
-
+		switch _Max(_Mapsize, _Undersize, other._Undersize) {
+		case _Mapsize: 
+		}
 	}
 //#endif
 	_Mapptr_t _Mapptr;
