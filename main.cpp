@@ -2,6 +2,7 @@
 #include <bitset>
 #include <compare>
 #include <vector>
+#include <thread>
 
 #define _NSTD_LONGINT_TESTER_
 
@@ -18,10 +19,7 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	_NSTD _LONGINT_TESTER lit;
-	lit.test1();
-	lit.test2();
-	lit.test3();
+	
     
 	
 
