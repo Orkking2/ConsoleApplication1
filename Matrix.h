@@ -135,11 +135,8 @@ private:
 		uint _RSize, _ROff,
 			 _CSize, _COff;
 
+		// Unchecked to save space, never call get() outside _NSTD_FOR_I(Partition::_RSize)... etc
 		_Ty& get(size_t _Row, size_t _Col) {
-			_NSTD_ASSERT(_Row < _RSize,
-				"_Row out of bounds.");
-			_NSTD_ASSERT(_Col < _CSize,
-				"_Col out of bounds");
 			return _Map[_Row + _ROff][_Col + _COff];
 		}
 	};
@@ -200,7 +197,9 @@ private:
 
 #ifdef _THREAD_
 
+class _Matrix_thread_manager {
 
+};
 
 
 
