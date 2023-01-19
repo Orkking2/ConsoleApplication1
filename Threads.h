@@ -3,80 +3,67 @@
 #ifndef _NSTD_THREADS_
 #define _NSTD_THREADS_
 
-#include "Defines.h"
 #include <functional>
-#include <utility>
 #include <vector>
 #include <thread>
-#include <tuple>
 #include <deque>
 #include <mutex>
+#include <utility>
+#include "Defines.h"
 
 _NSTD_BEGIN
 
-//template < class R, class... Args >
-//struct func_wrapper {
-//	func_wrapper(_STD function <R(Args...)> func, _STD mutex& mut, R* ret = NULL) : func_(func), mut_(mut), ret_(ret) {}
-//		
-//	void operator() (Args... args) {
-//		_STD lock_guard<_STD mutex> ret_guard(mut_);
-//		if (ret_)
-//			*ret_ = func_(args);
-//		else
-//			func_(args);
-//	}
-//
-//	_STD function<R(Args...)> func_;
-//	_STD mutex mut_;
-//	R* ret_;
-//};
-
+/* NOTE:
+* The use of void* as a parameter for each function is done so for abstraction.
+*
+* Each function must still take void* as a parameter, even if it is not used
+* within the function.
+*
+* If the void* parameter is not used, it is recomended to set the associated
+* data element to NULL or nullptr and to simply ignore it within the function.
+*
+* Functions passed into this thread pool should reinterpret the void*, e.g.
+* reinterpret_vast<T*> (void* p), before use.
+*
+* Object(s) pointed to by the void* pointer is/are NOT protected for
+* multithreading by default.
+*
+* Function(s) passed into the pool should only ever read from the pointer
+* or use a custom system to protect its/their contents from curroption;
+* see make_thread_safe function below.
+*/
 class thread_pool {
 public:
-	typedef _NSTD uint uint;
+	using _Func = _STD function<void(void*)>;
+	using _Pair_fvp = _STD pair<_Func, void*>;
 
-	typedef _STD function<void(void*)> _Func;
-	typedef _STD pair <_Func, void*> _Pair_fvp;
-	/* NOTE:
-	* The use of void* as a parameter for each function is done so for abstraction.
-	*
-	* Each function must still take void* as a parameter, even if it is not used
-	* within the function.
-	*
-	* If the void* parameter is not used, it is recomended to set the associated
-	* data element to NULL or nullptr and to simply ignore it within the function.
-	*
-	* Functions passed into this thread pool should reinterpret the void*, e.g.
-	* reinterpret_vast<T*> (void* p), before use.
-	*
-	* Object(s) pointed to by the void* pointer is/are NOT protected for
-	* multithreading by default.
-	*
-	* Function(s) passed into the pool should only ever read from the pointer
-	* or use a custom system to protect its/their contents from curroption;
-	* see make_thread_safe function below.
-	*/
-private:
-	_STD vector<_STD thread> vThreads_;
-	_STD deque<_Pair_fvp> task_queue_;
-	_STD mutex queue_mutex_;
-	_STD condition_variable mutex_condition_;
-	bool done_;
 public:
 	thread_pool(uint count = _STD thread::hardware_concurrency() - 1) : done_(false) {
 		uint hc = _STD thread::hardware_concurrency();
-		vThreads_.resize((count >= hc) ? hc - 1: count);
+		vThreads_.resize(count >= hc ? hc - 1 : count);
 		for (_STD thread& t : vThreads_)
 			t = _STD thread([this] { thread_loop(); });
 	}
-	void release();
 	~thread_pool() { release(); }
+	
+	void release();
 
 	_NODISCARD uint num_threads() { return vThreads_.size(); }
 
 	void thread_loop();
 
 	void add_task(const _Func&, void* = NULL);
+	void add_task_inplace(const _Func&, size_t, void* = NULL);
+	
+	template <typename _Pr>
+	void add_task(_Pr _Pred, void* p = NULL) {
+		add_task(_Func(_Pred), p);
+	}
+	template <typename _Pr>
+	void add_task_inplace(_Pr _Pred, size_t _Index, void* p = NULL) {
+		add_task_inplace(_Func(_Pred), _Index, p);
+	}
+
 	void add_task(_Pair_fvp&);
 	void add_task(_STD vector<_Pair_fvp>);
 
@@ -128,6 +115,13 @@ public:
 			}
 		);
 	}
+
+private:
+	_STD vector<_STD thread> vThreads_;
+	_STD deque<_Pair_fvp> task_queue_;
+	_STD mutex queue_mutex_;
+	_STD condition_variable mutex_condition_;
+	bool done_;
 };
 
 _NSTD_END

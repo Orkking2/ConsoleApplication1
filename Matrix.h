@@ -3,12 +3,13 @@
 #define _NSTD_MATRIX_
 
 #include <xmemory>
-#include <thread>
-#include <mutex>
 #include "Defines.h"
 #include "TypeTraits.h"
+#include "Threads.h"
 
 _NSTD_BEGIN
+
+#define _NSTD_MATRIX_MULTITHREAD_
 
 template <typename _Ty, typename _Alloc = _STD allocator<_Ty>>
 class Matrix {
@@ -128,7 +129,12 @@ private:
 		}
 		return out;
 	}
-#ifdef _THREAD_ // THREADED METHODS
+#ifdef _NSTD_MATRIX_MULTITHREAD_ // THREADED METHODS
+	struct _Thread_handler {
+
+	};
+
+
 	// Lightweight slice for Matrix
 	struct Partition {
 		_Mapptr_t _Map;
@@ -193,12 +199,8 @@ private:
 	_NSTD uint _Mapsize, _Undersize;
 };
 
-#ifdef _THREAD_
+#ifdef _NSTD_MATRIX_MULTITHREAD_
 
-class _Matrix_thread_manager {
-
-
-};
 
 
 

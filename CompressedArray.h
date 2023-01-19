@@ -3,12 +3,20 @@
 #define _COMPRESSED_ARRAY_
 
 #include "Defines.h"
-#include <vector>
 
 _NSTD_BEGIN
 template <typename _Ty>
-class _Compressed_array {
+struct _Compressed_array {
+	~_Compressed_array() { delete _Under; }
 
+	_Ty& operator[] (size_t _Index) {
+		_NSTD_ASSERT(_Index < _Size,
+			"_Index larger than _Size");
+		return _Under[_Index];
+	}
+
+	_Ty* _Under;
+	size_t _Size;
 };
 
 

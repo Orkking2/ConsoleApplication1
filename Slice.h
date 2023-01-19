@@ -15,9 +15,11 @@ concept _Good_under = requires(_Ty t) {
 	{ t.begin() + _STD declval<typename T::size_type>() } -> _STD same_as<_STD conditional_t<_STD is_const_v<T>, typename T::const_iterator, typename T::iterator>>;
 };
 
-template <typename _Ty>
-	requires _Good_under<_Ty>
+template <typename T>
+	//requires _Good_under<T>
 struct slice {
+	using _Array_t = T;
+
 	slice(T& _Under, typename T::size_type _Off, typename T::size_type _Size)
 		: _Under(_Under), _Off(_Off), _Size(_Size) {}
 

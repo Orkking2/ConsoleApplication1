@@ -6,9 +6,10 @@
 
 #define _NSTD_LONGINT_TESTER_
 
-#include "LongInt.h"
-#include "BinTree.h"
-#include "Pair.h"
+#include "Threads.h"
+//#include "LongInt.h"
+//#include "BinTree.h"
+//#include "Pair.h"
 //#include "Machine_Code_Emulator.h"
 //#include "Deque.h"
 //#include "Timer.h"
@@ -20,7 +21,6 @@ _NSTD_UNSIGNED
 int main()
 {
 	
-    
 	
 
 	std::cout << '\n';
