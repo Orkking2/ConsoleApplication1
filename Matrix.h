@@ -41,7 +41,7 @@ public:
 		_Gen_map();
 		_Set(other._Mapptr);
 	}
-	~Matrix() { if(!_Is_partition) _Dealloc(); }
+	~Matrix() { _Dealloc(); }
 
 
 
@@ -178,7 +178,7 @@ private:
 		_NSTD_ASSERT(_Ret._RSize == _Left._RSize && _Ret._CSize == _Right._CSize && _Left._CSize == _Right._RSize,
 			"Multiplying partitions of non-similar sizes");
 	}
-	static Matrix _PSimple_iterative_multiply_unchecked(Partition& _Ret, const Partition& _Left, const Partition& _Right) {
+	static void _PSimple_iterative_multiply_unchecked(Partition& _Ret, const Partition& _Left, const Partition& _Right) {
 		_NSTD_FOR_I(_Ret._RSize) {
 			_NSTD_FOR_J(_Ret._CSize) {
 				_Ret.get(_I, _J) = 0;
@@ -187,17 +187,16 @@ private:
 			}
 		}
 	}
-
-	
 #endif // _THREAD_
+
 	_Mapptr_t _Mapptr;
 	_NSTD uint _Mapsize, _Undersize;
-	const bool _Is_partition = false;
 };
 
 #ifdef _THREAD_
 
 class _Matrix_thread_manager {
+
 
 };
 
