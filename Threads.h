@@ -47,6 +47,7 @@ public:
 	thread_pool& spin_up(uint = _STD thread::hardware_concurrency() - 1);
 	thread_pool& release();
 
+	_NODISCARD bool _Is_running() { return !_Done; }
 	_NODISCARD uint num_threads() { return _Threads.size(); }
 
 	void thread_loop();
@@ -114,6 +115,13 @@ public:
 			}
 		);
 	}
+
+	// Evals functions in order
+	struct _Ordered_functional {
+
+
+		_STD deque<_Pair_fvp> _To_eval;
+	};
 
 private:
 	_STD vector<_STD thread> _Threads;

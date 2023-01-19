@@ -9,7 +9,12 @@
 
 _NSTD_BEGIN
 
+// TODO vvv make comment vvv
 #define _NSTD_MATRIX_MULTITHREAD_
+
+//#ifdef _NSTD_MATRIX_MULTITHREAD_
+
+//#endif
 
 template <typename _Ty, typename _Alloc = _STD allocator<_Ty>>
 class Matrix {
@@ -130,20 +135,13 @@ private:
 		return out;
 	}
 #ifdef _NSTD_MATRIX_MULTITHREAD_ // THREADED METHODS
-	_NSTD thread_pool _Tpool = _NSTD thread_pool().release();
-
-	struct _Thread_handler {
-
-	};
-
-
 	// Lightweight slice for Matrix
 	struct Partition {
 		_Mapptr_t _Map;
 		uint _RSize, _ROff,
 			 _CSize, _COff;
 
-		// Unchecked to save space, never call get() outside _NSTD_FOR_I(Partition::_RSize)... etc
+		// Unchecked, never call get() outside _NSTD_FOR_I(Partition::_RSize)... etc
 		_Ty& get(size_t _Row, size_t _Col) {
 			return _Map[_Row + _ROff][_Col + _COff];
 		}
@@ -195,6 +193,15 @@ private:
 			}
 		}
 	}
+
+	// _Ret <- A1B1 + A2B2
+	static void _PMultAdd(Partition& _Ret, const Partition& A1, const Partition& B1,
+		const Partition& A2, const Partition& B2
+	) {
+		_Spin_up_Tpool();
+		_STD mutex m;
+		
+	}
 #endif // _THREAD_
 
 	_Mapptr_t _Mapptr;
@@ -203,7 +210,9 @@ private:
 
 #ifdef _NSTD_MATRIX_MULTITHREAD_
 
+class _Matrix_threadpool {
 
+};
 
 
 
