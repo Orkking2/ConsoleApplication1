@@ -130,6 +130,8 @@ private:
 		return out;
 	}
 #ifdef _NSTD_MATRIX_MULTITHREAD_ // THREADED METHODS
+	_NSTD thread_pool _Tpool = _NSTD thread_pool().release();
+
 	struct _Thread_handler {
 
 	};

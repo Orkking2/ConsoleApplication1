@@ -38,17 +38,16 @@ public:
 	using _Pair_fvp = _STD pair<_Func, void*>;
 
 public:
-	thread_pool(uint count = _STD thread::hardware_concurrency() - 1) : done_(false) {
-		uint hc = _STD thread::hardware_concurrency();
-		vThreads_.resize(count >= hc ? hc - 1 : count);
-		for (_STD thread& t : vThreads_)
-			t = _STD thread([this] { thread_loop(); });
+	thread_pool() : _Done(true) {}
+	thread_pool(uint count) {
+		spin_up(count);
 	}
 	~thread_pool() { release(); }
 	
-	void release();
+	thread_pool& spin_up(uint = _STD thread::hardware_concurrency() - 1);
+	thread_pool& release();
 
-	_NODISCARD uint num_threads() { return vThreads_.size(); }
+	_NODISCARD uint num_threads() { return _Threads.size(); }
 
 	void thread_loop();
 
@@ -70,10 +69,10 @@ public:
 	template <class R, class... Args>
 	void add_task(const _STD function<R(Args...)>& func, _STD mutex& tup_mutex, _STD tuple<R*, Args...>& data) {
 		{
-			_STD lock_guard<_STD mutex> lock(queue_mutex_);
-			task_queue_.push_back(_Pair_fvp(make_thread_safe_TUPLE(func, tup_mutex), reinterpret_cast<void*> (&data)));
+			_STD lock_guard<_STD mutex> lock(_QMutex);
+			_Tasks.push_back(_Pair_fvp(make_thread_safe_TUPLE(func, tup_mutex), reinterpret_cast<void*> (&data)));
 		}
-		mutex_condition_.notify_one();
+		_MutCond.notify_one();
 	}
 	template <class R, class... Args>
 	void add_task(const _STD function<R(Args...)>& func, _STD mutex& ret_mutex, R* ret, Args&&... args) {
@@ -117,11 +116,11 @@ public:
 	}
 
 private:
-	_STD vector<_STD thread> vThreads_;
-	_STD deque<_Pair_fvp> task_queue_;
-	_STD mutex queue_mutex_;
-	_STD condition_variable mutex_condition_;
-	bool done_;
+	_STD vector<_STD thread> _Threads;
+	_STD deque<_Pair_fvp> _Tasks;
+	_STD mutex _QMutex;
+	_STD condition_variable _MutCond;
+	bool _Done;
 };
 
 _NSTD_END

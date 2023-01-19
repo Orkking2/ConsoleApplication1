@@ -4,27 +4,37 @@
 
 _NSTD_BEGIN
 
-void thread_pool::release() {
+thread_pool& thread_pool::spin_up(uint count) {
+	uint hc = _STD thread::hardware_concurrency();
+	_Threads.resize(count >= hc ? hc - 1 : count);
+	_Done = false;
+	for(_STD thread& t : _Threads)
+		t = _STD thread([this] { thread_loop(); });
+	return *this;
+}
+
+thread_pool& thread_pool::release() {
 	{
-		_STD lock_guard<_STD mutex> lock(queue_mutex_);
-		done_ = true;
+		_STD lock_guard<_STD mutex> lock(_QMutex);
+		_Done = true;
 	}
-	mutex_condition_.notify_all();
-	for (_STD thread& thread : vThreads_)
-		thread.join();
-	vThreads_.clear();
+	_MutCond.notify_all();
+	for (_STD thread& t : _Threads)
+		t.join();
+	_Threads.clear();
+	return *this;
 }
 
 void thread_pool::thread_loop() {
 	while (true) {
 		_Pair_fvp task;
 		{
-			_STD unique_lock<_STD mutex> lock(queue_mutex_);
-			mutex_condition_.wait(lock, [this] { return !task_queue_.empty() || done_; });
-			if (done_ && task_queue_.empty())
+			_STD unique_lock<_STD mutex> lock(_QMutex);
+			_MutCond.wait(lock, [this] { return !_Tasks.empty() || _Done; });
+			if (_Done && _Tasks.empty())
 				return;
-			task = task_queue_.front();
-			task_queue_.pop_front();
+			task = _Tasks.front();
+			_Tasks.pop_front();
 		}
 		task.first(task.second);
 	}
@@ -32,36 +42,36 @@ void thread_pool::thread_loop() {
 
 void thread_pool::add_task(const _Func& func, void* data) {
 	{
-		_STD lock_guard<_STD mutex> lock(queue_mutex_);
-		task_queue_.emplace_back(_Pair_fvp(func, data));
+		_STD lock_guard<_STD mutex> lock(_QMutex);
+		_Tasks.emplace_back(_Pair_fvp(func, data));
 	}
-	mutex_condition_.notify_one();
+	_MutCond.notify_one();
 }
 
 void thread_pool::add_task_inplace(const _Func& _Func, size_t _Index, void* data) {
 	{
-		_STD lock_guard<_STD mutex> l(queue_mutex_);
-		task_queue_.insert(task_queue_.begin() + _Index, _Pair_fvp(_Func, data));
+		_STD lock_guard<_STD mutex> l(_QMutex);
+		_Tasks.insert(_Tasks.begin() + _Index, _Pair_fvp(_Func, data));
 	}
-	mutex_condition_.notify_one();
+	_MutCond.notify_one();
 }
 
 void thread_pool::add_task(_Pair_fvp& pair) {
 	{
-		_STD lock_guard<_STD mutex> lock(queue_mutex_);
-		task_queue_.emplace_back(pair);
+		_STD lock_guard<_STD mutex> lock(_QMutex);
+		_Tasks.emplace_back(pair);
 	}
-	mutex_condition_.notify_one();
+	_MutCond.notify_one();
 }
 
 void thread_pool::add_task(_STD vector<_Pair_fvp> task_list) {
 	{
-		_STD lock_guard<_STD mutex> lock(queue_mutex_);
+		_STD lock_guard<_STD mutex> lock(_QMutex);
 		for (_Pair_fvp& task : task_list)
-			task_queue_.push_back(task);
+			_Tasks.push_back(task);
 	}
 	_NSTD_FOR_I(task_list.size())
-		mutex_condition_.notify_one();
+		_MutCond.notify_one();
 }
 
 _NSTD_END
