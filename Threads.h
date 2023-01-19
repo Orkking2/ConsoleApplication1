@@ -116,12 +116,7 @@ public:
 		);
 	}
 
-	// Evals functions in order
-	struct _Ordered_functional {
-
-
-		_STD deque<_Pair_fvp> _To_eval;
-	};
+	
 
 private:
 	_STD vector<_STD thread> _Threads;

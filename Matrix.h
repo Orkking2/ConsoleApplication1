@@ -195,11 +195,10 @@ private:
 	}
 
 	// _Ret <- A1B1 + A2B2
-	static void _PMultAdd(Partition& _Ret, const Partition& A1, const Partition& B1,
+	static void _PMA(Partition& _Ret, const Partition& A1, const Partition& B1,
 		const Partition& A2, const Partition& B2
 	) {
-		_Spin_up_Tpool();
-		_STD mutex m;
+		_STD mutex _Add_mutex;
 		
 	}
 #endif // _THREAD_
