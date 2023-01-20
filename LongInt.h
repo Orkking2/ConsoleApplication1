@@ -293,8 +293,18 @@ public:
 	LongInt& operator-- () {
 		return subtract(1);
 	}
+	LongInt operator--(int) {
+		LongInt c(*this);
+		subtract(1);
+		return c;
+	}
 	LongInt& operator++ () {
 		return add(1);
+	}
+	LongInt operator++(int) {
+		LongInt c(*this);
+		add(1);
+		return c;
 	}
 
 	template <typename T>
