@@ -19,7 +19,7 @@ class _Contiguous_container {
 protected:
 	using value_type		= typename _Alty_traits::value_type;
 	using allocator_type	= _Alty;
-	using size_type			= typename _Alty::size_type;
+	using size_type			= typename _Alty_traits::size_type;
 	using difference_type	= typename _Alty_traits::difference_type;
 	using reference			= value_type&;
 	using const_reference	= const value_type&;
@@ -63,7 +63,6 @@ protected:
 		_NSTD_FOR_I(_Min(_Refsize, _Newsize))
 			_Myarr()[_I] = _Ref[_I];
 		_Mysize() = _Newsize;
-		_STD cout << "NEW: " << (uint)_Myarr() << "\tSIZE: " << _Mysize() << '\n';
 	}
 
 	_Contiguous_container _Copy() const {
@@ -83,9 +82,10 @@ protected:
 	}
 
 	void _Tidy_deallocate() {
-		_STD cout << "DSTY: " << (uint)_Myarr() << "\tSIZE: " << _Mysize() << '\n';
 		_Alty alloc;
 		alloc.deallocate(_Myarr(), _Mysize());
+		_Myarr() = nullptr;
+		_Mysize() = 0;
 	}
 
 	size_type& _Mysize() {

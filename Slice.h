@@ -8,6 +8,9 @@
 
 _NSTD_BEGIN
 
+// JUST USE _STD SPAN
+
+
 template <typename _Ty>
 concept _Good_under = requires(_Ty t) {
 	{ t.size() } -> _STD same_as<typename T::size_type>;
