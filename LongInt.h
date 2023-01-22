@@ -6,23 +6,16 @@
 #include <type_traits>
 #include "Defines.h"
 #include "ContiguousContainer.h"
-#include "Pair.h"
 
 _NSTD_BEGIN
 
 template <typename _Storage_type = uchar, typename _Alloc = _STD allocator<_Storage_type>>
 class LongInt : _Contiguous_container<_Storage_type, _Alloc> {
-	//using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Storage_type>;
-	//using _Alty_traits = _STD allocator_traits<_Alty>;
-	//using _Mysize_t    = typename _Alty::size_type;
-	//using _Myptr_t     = typename _Alty_traits::pointer;
-
-	using _Scary_val	= _Contiguous_container_vals<_Storage_type, _Alloc>;
 	using _Base			= _Contiguous_container<_Storage_type, _Alloc>;
 
-	using _Mysize_t		= _Scary_val::size_type;
-	using _Myptr_t		= _Scary_val::pointer;
-	using _Mystorage_t	= _Scary_val::value_type;
+	using _Mysize_t		= _Base::size_type;
+	using _Myptr_t		= _Base::pointer;
+	using _Mystorage_t	= _Base::value_type;
 
 	static constexpr _Mysize_t _Mybytesize = sizeof(_Mystorage_t);
 	static constexpr _Mysize_t _Mybitsize  = _Mybytesize * CHAR_BIT;
@@ -31,7 +24,7 @@ class LongInt : _Contiguous_container<_Storage_type, _Alloc> {
 	template <typename, typename> friend class LongInt;
 
 public:
-	using _Mypair_t = _Scary_val::pair_type;
+	using _Mypair_t = _Base::pair_type;
 
 	static constexpr _Mysize_t _Maxbytes = 256;
 	static constexpr _Mysize_t _Maxsize  = _Maxbytes / _Mybytesize;
@@ -56,18 +49,24 @@ public:
 	}
 
 public:
-	using allocator_type = _Scary_val::allocator_type;
-	using storage_type   = _Mystorage_t;
-	using size_type      = _Mysize_t;
-	using pointer_type   = _Myptr_t;
+	using value_type		= _Base::value_type;
+	using storage_type		= value_type;
+	using allocator_type	= _Base::allocator_type;
+	using size_type			= _Base::size_type;
+	using difference_type	= _Base::difference_type;
+	using reference			= _Base::reference;
+	using const_reference	= _Base::const_reference;
+	using pointer			= _Base::pointer;
+	using const_pointer		= _Base::const_pointer;
+
 
 public:
-	LongInt()                      : _Base() {}
+	LongInt()                       : _Base() {}
 	LongInt(const LongInt& other)	{ _Set_to(other); }
 	template <typename T> 
 	LongInt(const T& other)			{ _Set_to(other); }
 
-	~LongInt() { _Tidy(); }
+	//~LongInt() { _Base::~_Contiguous_container(); }
 
 	// Grow by (in bytes)
 	LongInt& grow(const size_type& size) {
@@ -522,19 +521,12 @@ private:
 	}
 	template <>
 	void _Set_to(const LongInt& other) {
-		_Set_zero();
-		_Grow_if(other._Mysize());
-		_NSTD_FOR_I(other._Mysize())
-			_Myarr()[_I] = other._Myarr()[_I];
+		_Base::_Set(other);
 	}
 
 	//_Contiguous_container<_Storage_type, _Alloc>& _To_container() {
 	//	return static_cast<_Contiguous_container<_Storage_type, _Alloc>>(*this);
 	//}
-
-	void _Tidy() {
-		_Base::_Tidy_deallocate();
-	}
 
 	_Mysize_t& _Mysize() {
 		return _Base::_Mysize();
