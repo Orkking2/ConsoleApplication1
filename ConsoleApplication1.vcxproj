@@ -145,9 +145,12 @@
     <ClCompile Include="Threads.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ContiguousContainer.h" />
     <ClInclude Include="BinTree.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Deque.h" />
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Multilock.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Huff.h" />
     <ClInclude Include="Threads.h" />

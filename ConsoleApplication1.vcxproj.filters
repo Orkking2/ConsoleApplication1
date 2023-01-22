@@ -47,5 +47,14 @@
     <ClInclude Include="TypeTraits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ContiguousContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Multilock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

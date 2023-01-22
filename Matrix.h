@@ -198,7 +198,7 @@ private:
 	static void _PMA(Partition& _Ret, const Partition& A1, const Partition& B1,
 		const Partition& A2, const Partition& B2
 	) {
-		_STD mutex _Add_mutex;
+		
 		
 	}
 #endif // _THREAD_
@@ -209,9 +209,7 @@ private:
 
 #ifdef _NSTD_MATRIX_MULTITHREAD_
 
-class _Matrix_threadpool {
 
-};
 
 
 
