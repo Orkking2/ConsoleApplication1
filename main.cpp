@@ -7,10 +7,10 @@
 #define _NSTD_LONGINT_TESTER_
 
 #include "Threads.h"
-//#include "LongInt.h"
+#include "LongInt.h"
 //#include "BinTree.h"
 //#include "Pair.h"
-//#include "Machine_Code_Emulator.h"
+//#include "ContiguousContainer.h"
 //#include "Deque.h"
 //#include "Timer.h"
 
@@ -20,7 +20,10 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	
+	_NSTD _LONGINT_TESTER lt;
+	lt.test1();
+	lt.test2();
+	lt.test3();
 	
 
 	std::cout << '\n';

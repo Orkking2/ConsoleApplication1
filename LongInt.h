@@ -5,17 +5,24 @@
 #include <xmemory>
 #include <type_traits>
 #include "Defines.h"
+#include "ContiguousContainer.h"
 #include "Pair.h"
 
 _NSTD_BEGIN
 
 template <typename _Storage_type = uchar, typename _Alloc = _STD allocator<_Storage_type>>
-class LongInt {
-	using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Storage_type>;
-	using _Alty_traits = _STD allocator_traits<_Alty>;
-	using _Mysize_t    = typename _Alty::size_type;
-	using _Mystorage_t = typename _Alty_traits::value_type;
-	using _Myptr_t     = typename _Alty_traits::pointer;
+class LongInt : _Contiguous_container<_Storage_type, _Alloc> {
+	//using _Alty        = _STD _Rebind_alloc_t<_Alloc, _Storage_type>;
+	//using _Alty_traits = _STD allocator_traits<_Alty>;
+	//using _Mysize_t    = typename _Alty::size_type;
+	//using _Myptr_t     = typename _Alty_traits::pointer;
+
+	using _Scary_val	= _Contiguous_container_vals<_Storage_type, _Alloc>;
+	using _Base			= _Contiguous_container<_Storage_type, _Alloc>;
+
+	using _Mysize_t		= _Scary_val::size_type;
+	using _Myptr_t		= _Scary_val::pointer;
+	using _Mystorage_t	= _Scary_val::value_type;
 
 	static constexpr _Mysize_t _Mybytesize = sizeof(_Mystorage_t);
 	static constexpr _Mysize_t _Mybitsize  = _Mybytesize * CHAR_BIT;
@@ -24,7 +31,7 @@ class LongInt {
 	template <typename, typename> friend class LongInt;
 
 public:
-	using _Mypair_t = _NSTD pair<_Mysize_t, _Myptr_t>;
+	using _Mypair_t = _Scary_val::pair_type;
 
 	static constexpr _Mysize_t _Maxbytes = 256;
 	static constexpr _Mysize_t _Maxsize  = _Maxbytes / _Mybytesize;
@@ -48,28 +55,22 @@ public:
 		}
 	}
 
-	template <typename st1, typename st2>
-	_NODISCARD static constexpr auto const& _Min(const st1& first, const st2& second) {
-		return first > second ? second : first;
-	}
-
 public:
-	using allocator_type = _Alty;
+	using allocator_type = _Scary_val::allocator_type;
 	using storage_type   = _Mystorage_t;
 	using size_type      = _Mysize_t;
 	using pointer_type   = _Myptr_t;
 
 public:
-	LongInt()                       : _Mypair(_Gen_basic()) {}
-	LongInt(const LongInt& other)	: _Mypair(_Gen_basic()) { _Set_to(other); }
+	LongInt()                      : _Base() {}
+	LongInt(const LongInt& other)	{ _Set_to(other); }
 	template <typename T> 
-	LongInt(const T& other)			: _Mypair(_Gen_basic()) { _Set_to(other); }
+	LongInt(const T& other)			{ _Set_to(other); }
 
 	~LongInt() { _Tidy(); }
 
 	// Grow by (in bytes)
-	template <typename T>
-	LongInt& grow(const T& size) {
+	LongInt& grow(const size_type& size) {
 		_Grow_by(size);
 		return *this;
 	}
@@ -99,7 +100,7 @@ public:
 	}
 
 	template <typename other_storage_t, typename other_alloc_t>
-	explicit operator LongInt<other_storage_t, other_alloc_t>() const {
+	_NODISCARD explicit operator LongInt<other_storage_t, other_alloc_t>() const {
 		return LongInt<other_storage_t, other_alloc_t>(*this);
 	}
 
@@ -114,7 +115,7 @@ public:
 		if(&other == this || !other)
 			return *this;
 		_Grow_if(other._Mysize());
-		_NSTD_FOR_I(_Min(_Mysize(), other._Mysize())) {
+		_NSTD_FOR_I(_Base::_Min(_Mysize(), other._Mysize())) {
 			if(_Overflows(other._Myarr()[_I], _Myarr()[_I]))
 				_Unary_add(_I + 1);
 			_Myarr()[_I] += other._Myarr()[_I];
@@ -139,7 +140,7 @@ public:
 			return *this;
 		_NSTD_ASSERT(*this >= other,
 			"LongInt is unsigned -- subtracting number larger than LongInt object");
-		_NSTD_FOR_I(_Min(other._Mysize(), _Mysize())) {
+		_NSTD_FOR_I(_Base::_Min(other._Mysize(), _Mysize())) {
 			if(_Myarr()[_I] < other._Myarr()[_I])
 				_Unary_sub(_I + 1);
 			_Myarr()[_I] -= other._Myarr()[_I];
@@ -259,7 +260,7 @@ public:
 	}
 	template <typename T>
 	LongInt& operator<<= (const T& count) {
-		return shift(static_cast<_Mysize_t>(count), LEFT);
+		return shift(count, LEFT);
 	}
 	template <typename T>
 	_NODISCARD LongInt operator<< (const T& count) const {
@@ -267,7 +268,7 @@ public:
 	}
 	template <typename T>
 	LongInt& operator>>= (const T& count) {
-		return shift(static_cast<_Mysize_t>(count), RIGHT);
+		return shift(count, RIGHT);
 	}
 	template <typename T>
 	_NODISCARD LongInt operator>> (const T& count) const {
@@ -416,13 +417,6 @@ public:
 #endif
 
 private:
-	_NODISCARD static _Mypair_t _Gen_basic() {
-		_Alty alloc;
-		_Myptr_t p(alloc.allocate(1));
-		_Alty_traits::construct(alloc, p, 0);
-		return _Mypair_t(1, p);
-	}
-
 	// Overflow operators
 	void _Unary_add(const _Mysize_t& _Index) {
 		_Grow_if(_Index + 1);
@@ -437,30 +431,29 @@ private:
 		_Myarr()[_Index]--;
 	}
 
-	template <typename T>
-	void _Grow_if(const T& new_size, const bool b = true) {
+	void _Grow_if(const _Mysize_t& new_size, const bool b = true) {
 		if(b && _Mysize() < new_size)
 			_Grow_to(new_size);
 	}
-	template <typename T>
-	void _Grow_by(const T& size) {
+	void _Grow_by(const _Mysize_t& size) {
 		_Grow_to(_Mysize() + size);
 	}
-	template <typename T>
-	void _Grow_to(const T& new_size) {
+	void _Grow_to(const _Mysize_t& new_size) {
 		_NSTD_ASSERT(new_size > 0, "Cannot set LongInt size to or below 0");
 		_NSTD_ASSERT(new_size <= _Maxsize, "LongInt grown to size above _Maxsize");
 
-		_Alty alloc;
-		_Mypair_t cache(_Mypair);
-		_Myarr() = alloc.allocate(new_size);
-		_NSTD_FOR_I(new_size)
-			_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
-		_NSTD_FOR_I(_Min(cache.first, new_size))
-			_Myarr()[_I] = cache.second[_I];
-		_Alty_traits::deallocate(alloc, cache.second, cache.first);
-		cache.second = nullptr;
-		_Mysize() = new_size;
+		_Base::_Grow(new_size);
+
+		//_Alty alloc;
+		//_Mypair_t cache(_Mypair);
+		//_Myarr() = alloc.allocate(new_size);
+		//_NSTD_FOR_I(new_size)
+		//	_Alty_traits::construct(alloc, (_Myarr() + _I), 0);
+		//_NSTD_FOR_I(_Min(cache.first, new_size))
+		//	_Myarr()[_I] = cache.second[_I];
+		//_Alty_traits::deallocate(alloc, cache.second, cache.first);
+		//cache.second = nullptr;
+		//_Mysize() = new_size;
 	}
 	
 	void _Set_zero() {
@@ -535,26 +528,29 @@ private:
 			_Myarr()[_I] = other._Myarr()[_I];
 	}
 
+	//_Contiguous_container<_Storage_type, _Alloc>& _To_container() {
+	//	return static_cast<_Contiguous_container<_Storage_type, _Alloc>>(*this);
+	//}
+
 	void _Tidy() {
-		_Alty alloc;
-		alloc.deallocate(_Myarr(), _Mysize());
+		_Base::_Tidy_deallocate();
 	}
 
 	_Mysize_t& _Mysize() {
-		return _Mypair.first;
+		return _Base::_Mysize();
 	}
 	const _Mysize_t& _Mysize() const {
-		return _Mypair.first;
+		return _Base::_Mysize();
 	}
-
+	
 	_Myptr_t& _Myarr() {
-		return _Mypair.second;
+		return _Base::_Myarr();
 	}
 	const _Myptr_t& _Myarr() const {
-		return _Mypair.second;
+		return _Base::_Myarr();
 	}
 
-	_Mypair_t _Mypair;
+	//_Mypair_t _Mypair;
 };
 
 #ifdef _IOSTREAM_
