@@ -42,10 +42,18 @@ protected:
 
 protected:
 	_Contiguous_container()											: _Mypair({ 0, 0 }) {}
+	_Contiguous_container(const size_type& size)					: _Mypair({ 0, 0 }) { _Grow(size); }
 	_Contiguous_container(const _Contiguous_container& other)		: _Mypair({ 0, 0 }) { _Set(other); }
 	_Contiguous_container(const_pointer _Ref, size_type _Refsize)	: _Mypair({ 0, 0 }) { _Grow(_Refsize, _Ref, _Refsize); }
 
 	~_Contiguous_container() { _Tidy_deallocate(); }
+
+protected:
+	auto& operator[] (const size_type& index) const {
+		_NSTD_ASSERT(index < _Mysize(),
+			"index out of bounds");
+		return _Myarr()[index];
+	}
 
 protected:
 	void _Grow(const size_type& _Newsize, const_pointer _Ref, size_type _Refsize) {

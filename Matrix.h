@@ -4,6 +4,7 @@
 
 #include <xmemory>
 #include "Defines.h"
+#include "ContiguousContainer.h"
 #include "TypeTraits.h"
 #include "Threads.h"
 
@@ -17,12 +18,13 @@ _NSTD_BEGIN
 //#endif
 
 template <typename _Ty, typename _Alloc = _STD allocator<_Ty>>
-class Matrix {
-	using _Alty			= _STD _Rebind_alloc_t<_Alloc, _Ty>;
-	using _Alty_traits	= _STD allocator_traits<_Alty>;
-	using _Alpty		= _STD _Rebind_alloc_t<_Alloc, typename _Alty_traits::pointer>;
-	using _Alpty_traits = _STD allocator_traits<_Alpty>;
-	using _Mapptr_t		= typename _Alpty_traits::pointer;
+class Matrix : _NSTD _Contiguous_container<_Ty, _Alloc> {
+	using _Base = _NSTD _Contiguous_container<_Ty, _Alloc>;
+	//using _Alty			= _STD _Rebind_alloc_t<_Alloc, _Ty>;
+	//using _Alty_traits	= _STD allocator_traits<_Alty>;
+	//using _Alpty		= _STD _Rebind_alloc_t<_Alloc, typename _Alty_traits::pointer>;
+	//using _Alpty_traits = _STD allocator_traits<_Alpty>;
+	//using _Mapptr_t		= typename _Alpty_traits::pointer;
 
 	static constexpr size_t _Max(size_t a, size_t b, size_t c) {
 		return 
@@ -59,54 +61,12 @@ public:
 	}
 
 	Matrix& operator= (const Matrix& other) {
-		_Resize_map(other._Mapsize, other._Undersize);
-		_Set(other._Mapptr);
+		
 		return *this;
 	}
 
 private:
-	// Assumes _Init has dimensions _Mapsize x _Undersize
-	void _Set(_Mapptr_t _Init) {
-		_NSTD_FOR_I(_Mapsize)
-			_NSTD_FOR_J(_Undersize)
-				_Mapptr[_I][_J] = _Init[_I][_J];
-	}
-
-	// Forgets old; Retains position if sizes are similar (for partitioning)
-	void _Resize_map(uint _Newmapsize, uint _Newundersize) {
-		if(_Mapsize != _Newmapsize || _Undersize != _Newundersize) {
-			_Dealloc();
-			_Mapsize = _Newmapsize;
-			_Undersize = _Newundersize;
-			_Gen_map();
-		}
-	}
-
-	void _Gen_map() {
-		_Alpty palloc;
-		_Mapptr = _Alpty::allocate(palloc, _Mapsize);
-
-		_Alty alloc;
-		_NSTD_FOR_I(_Mapsize)
-			_Mapptr[_I] = _Alty::allocate(alloc, _Undersize);
-	}
-
-	void _Dealloc() {
-		_Dealloc_under();
-		_Dealloc_map();
-	}
-	void _Dealloc_under() {
-		_Alty alloc;
-		_NSTD_FOR_I(_Mapsize) {
-			_Alty::deallocate(alloc, _Mapptr[_I], _Undersize);
-			_Mapptr[_I] = nullptr;
-		}
-	}
-	void _Dealloc_map() {
-		_Alpty palloc;
-		_Alpty::deallocate(palloc, _Mapptr, _Mapsize);
-		_Mapptr = nullptr;
-	}
+	
 
 	void _Add_check(const Matrix& other) {
 		_NSTD_ASSERT(other._Mapsize == _Mapsize && other._Undersize == _Undersize,
