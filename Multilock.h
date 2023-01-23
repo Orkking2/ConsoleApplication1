@@ -4,13 +4,13 @@
 
 #include "Defines.h"
 #include "ContiguousContainer.h"
-#include <mutex>
+
 
 _NSTD_BEGIN
 
 template <typename _Storage_t = uint, typename _Alloc = _STD allocator<_Storage_t>>
-class Multilock : _NSTD _Contiguous_container<_Storage_t, _STD allocator<uchar>> {
-	using _Base = _NSTD _Contiguous_container<_Storage_t, _STD allocator<uchar>>;
+class Multilock : _NSTD _Contiguous_container<_Storage_t, _STD allocator<_Storage_t>> {
+	using _Base = _NSTD _Contiguous_container<_Storage_t, _STD allocator<_Storage_t>>;
 
 public:
 	using storage_type		= _Base::value_type;
@@ -35,7 +35,7 @@ public:
 	void lock(const size_type& index) {
 
 	}
-	_NODISCARD bool lock_nobind(const size_type& index) {
+	_NODISCARD bool try_lock(const size_type& index) {
 
 	}
 
