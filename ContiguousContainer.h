@@ -32,7 +32,11 @@ protected:
 //	using reverse_iterator =
 //	using const_reverse_iterator =
 
-	using pair_type = _NSTD pair<size_type, pointer>; 
+	using pair_type = _NSTD pair<size_type, pointer>;
+
+private:
+	static constexpr size_type	_Mybytesize	= sizeof(value_type);
+	static constexpr bool		_Copyable	= _STD is_trivially_copy_constructible_v<value_type>;
 
 protected:
 		template <typename st1, typename st2>
@@ -66,14 +70,24 @@ protected:
 
 		_Alty alloc;
 		_Myarr() = alloc.allocate(_Newsize);
-		_NSTD_FOR_I(_Newsize)
-			_Alty_traits::construct(alloc, (_Myarr() + _I), value_type());
-		_NSTD_FOR_I(_Min(_Refsize, _Newsize))
-			_Myarr()[_I] = _Ref[_I];
 		_Mysize() = _Newsize;
+		_Construct_default(alloc);
+		_Construct(_Ref, _Refsize);
 	}
 
-	_Contiguous_container _Copy() const {
+	template <bool b = true>
+	_STD enable_if_t<b> _Construct(const_pointer _Ref, size_type _Refsize) {
+		_NSTD_FOR_I(_Min(_Refsize, _Mysize()))
+			_Myarr()[_I] = _Ref[_I];
+	}
+
+	template <bool b>
+	_STD enable_if_t<!b> _Construct(const_pointer _Ref, size_type _Refsize) {
+		_NSTD_FOR_I(_Min(_Refsize * _Mybytesize, _Mysize() * _Mybytesize))
+			reinterpret_cast<char*>(_Myarr())[_I] = reinterpret_cast<const char*>(_Ref)[_I];
+	}
+
+	_STD enable_if_t<_Copyable, _Contiguous_container> _Copy() const {
 		_Contiguous_container c;
 		c._Grow(_Mysize(), _Myarr(), _Mysize());
 		return c;
@@ -85,7 +99,9 @@ protected:
 		_Grow(_Newsize, c._Myarr(), c._Mysize());
 	}
 
-	void _Set(const _Contiguous_container& other) {
+
+	//_STD enable_if_t<!_Copyable> _Set(const _Contiguous_container&) = delete;
+	_STD enable_if_t<_Copyable> _Set(const _Contiguous_container& other) {
 		_Grow(other._Mysize(), other._Myarr(), other._Mysize());
 	}
 
@@ -112,6 +128,12 @@ protected:
 	}
 
 private:
+	_STD enable_if_t<!_STD is_default_constructible_v<value_type>> _Construct_default(_Alty) {}
+	_STD enable_if_t< _STD is_default_constructible_v<value_type>> _Construct_default(_Alty alloc) {
+		_NSTD_FOR_I(_Mysize())
+			_Alty_traits::construct(alloc, (_Myarr() + _I), value_type());
+	}
+
 	pair_type _Mypair;
 };
 

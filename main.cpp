@@ -8,6 +8,7 @@
 
 #include "Threads.h"
 #include "LongInt.h"
+#include "Multilock.h"
 //#include "BinTree.h"
 //#include "Pair.h"
 //#include "ContiguousContainer.h"

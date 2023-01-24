@@ -2,15 +2,47 @@
 #ifndef _NSTD_MULTILOCK_
 #define _NSTD_MULTILOCK_
 
+#include <synchapi.h>
 #include "Defines.h"
 #include "ContiguousContainer.h"
 
 
 _NSTD_BEGIN
 
-template <typename _Storage_t = uint, typename _Alloc = _STD allocator<_Storage_t>>
-class Multilock : _NSTD _Contiguous_container<_Storage_t, _STD allocator<_Storage_t>> {
-	using _Base = _NSTD _Contiguous_container<_Storage_t, _STD allocator<_Storage_t>>;
+// SRWLOCK wrapper
+class _LWMtx_t {
+public:
+	_LWMtx_t() {
+		InitializeSRWLock(&_SRWLock);
+	}
+
+	void lock() {
+		AcquireSRWLockExclusive(&_SRWLock);
+	}
+
+	bool try_lock() {
+		return TryAcquireSRWLockExclusive(&_SRWLock) != 0;
+	}
+
+	void unlock() {
+		ReleaseSRWLockExclusive(&_SRWLock);
+	}
+
+	PSRWLOCK native_handle() {
+		return &_SRWLock;
+	}
+	
+	_LWMtx_t(const _LWMtx_t&)				= delete;
+	_LWMtx_t& operator=(const _LWMtx_t&)	= delete;
+
+private:
+	SRWLOCK _SRWLock;
+};
+
+
+
+class Multilock : _NSTD _Contiguous_container<_LWMtx_t, _STD allocator<_LWMtx_t>> {
+	using _Base = _NSTD _Contiguous_container<_LWMtx_t, _STD allocator<_LWMtx_t>>;
 
 public:
 	using storage_type		= _Base::value_type;
@@ -29,7 +61,8 @@ private:
 public:
 	Multilock()							: _Base() {}
 	Multilock(const size_type& size)	: _Base(size) {}
-	Multilock(const Multilock& other)	: _Base(other) {}
+	Multilock(const Multilock&)			= delete; // _LWMtx_t uncopyable
+	Multilock& operator=(const Multilock&) = delete; // _LWMtx_T uncopyable
 
 public:
 	void lock(const size_type& index) {
@@ -40,7 +73,7 @@ public:
 	}
 
 
-
+	
 
 
 
