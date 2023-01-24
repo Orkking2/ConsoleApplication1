@@ -68,21 +68,30 @@ protected:
 
 		_Tidy_deallocate();
 
-		_Alty alloc;
-		_Myarr() = alloc.allocate(_Newsize);
+		_Myarr() = _Alloc(_Newsize);
 		_Mysize() = _Newsize;
 		_Construct_default(alloc);
 		_Construct(_Ref, _Refsize);
 	}
 
-	template <bool b = true>
-	_STD enable_if_t<b> _Construct(const_pointer _Ref, size_type _Refsize) {
+	// Forward alloc.allocate()
+	pointer _Alloc(const size_type& _Size) {
+		_Alty alloc;
+		return alloc.allocate(_Size);
+	}
+
+	void _Grow_RAWCOPY(const size_type& _Newsize, const_pointer _Ref, size_type _Refsize) {
+		_Tidy_deallocate();
+		_Alty alloc;
+		
+	}
+
+	_STD enable_if_t<_Copyable> _Construct(const_pointer _Ref, size_type _Refsize) {
 		_NSTD_FOR_I(_Min(_Refsize, _Mysize()))
 			_Myarr()[_I] = _Ref[_I];
 	}
 
-	template <bool b>
-	_STD enable_if_t<!b> _Construct(const_pointer _Ref, size_type _Refsize) {
+	void _Construct_RAWCOPY(const_pointer _Ref, size_type _Refsize) {
 		_NSTD_FOR_I(_Min(_Refsize * _Mybytesize, _Mysize() * _Mybytesize))
 			reinterpret_cast<char*>(_Myarr())[_I] = reinterpret_cast<const char*>(_Ref)[_I];
 	}
