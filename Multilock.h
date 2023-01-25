@@ -8,7 +8,6 @@
 #include "ContiguousContainer.h"
 
 
-
 _NSTD_BEGIN
 
 // SRWLOCK wrapper
