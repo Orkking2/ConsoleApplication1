@@ -74,16 +74,10 @@ protected:
 		_Construct(_Ref, _Refsize);
 	}
 
-	// Forward alloc.allocate()
+	// Forward _Alty::allocate(_Size)
 	pointer _Alloc(const size_type& _Size) {
 		_Alty alloc;
 		return alloc.allocate(_Size);
-	}
-
-	void _Grow_RAWCOPY(const size_type& _Newsize, const_pointer _Ref, size_type _Refsize) {
-		_Tidy_deallocate();
-		_Alty alloc;
-		
 	}
 
 	_STD enable_if_t<_Copyable> _Construct(const_pointer _Ref, size_type _Refsize) {
@@ -91,10 +85,6 @@ protected:
 			_Myarr()[_I] = _Ref[_I];
 	}
 
-	void _Construct_RAWCOPY(const_pointer _Ref, size_type _Refsize) {
-		_NSTD_FOR_I(_Min(_Refsize * _Mybytesize, _Mysize() * _Mybytesize))
-			reinterpret_cast<char*>(_Myarr())[_I] = reinterpret_cast<const char*>(_Ref)[_I];
-	}
 
 	_STD enable_if_t<_Copyable, _Contiguous_container> _Copy() const {
 		_Contiguous_container c;
@@ -137,11 +127,25 @@ protected:
 	}
 
 private:
-	_STD enable_if_t<!_STD is_default_constructible_v<value_type>> _Construct_default(_Alty) {}
+	//_STD enable_if_t<!_STD is_default_constructible_v<value_type>> _Construct_default(_Alty) {}
 	_STD enable_if_t< _STD is_default_constructible_v<value_type>> _Construct_default(_Alty alloc) {
 		_NSTD_FOR_I(_Mysize())
 			_Alty_traits::construct(alloc, (_Myarr() + _I), value_type());
 	}
+
+	void _Grow_RAWCOPY(const size_type& _Newsize, const_pointer _Ref, size_type _Refsize) {
+		_Tidy_deallocate();
+		_Myarr() = _Alloc(_Newsize);
+		_Mysize() = _Newsize;
+		_Construct_default();
+		_Construct_RAWCOPY(_Ref, _Refsize);
+	}
+
+	void _Construct_RAWCOPY(const_pointer _Ref, size_type _Refsize) {
+		_NSTD_FOR_I(_Min(_Refsize * _Mybytesize, _Mysize() * _Mybytesize))
+			reinterpret_cast<char*>(_Myarr())[_I] = reinterpret_cast<const char*>(_Ref)[_I];
+	}
+
 
 	pair_type _Mypair;
 };

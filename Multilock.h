@@ -3,6 +3,7 @@
 #define _NSTD_MULTILOCK_
 
 #include <synchapi.h>
+#include <vector>
 #include "Defines.h"
 #include "ContiguousContainer.h"
 
