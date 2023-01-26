@@ -70,7 +70,7 @@ protected:
 
 		_Myarr() = _Alloc(_Newsize);
 		_Mysize() = _Newsize;
-		_Construct_default(alloc);
+		_Construct_default();
 		_Construct(_Ref, _Refsize);
 	}
 
@@ -93,9 +93,10 @@ protected:
 	}
 
 	void _Grow(const size_type& _Newsize) {
-		_Contiguous_container c(_Copy());
-		_Tidy_deallocate();
-		_Grow(_Newsize, c._Myarr(), c._Mysize());
+		const_pointer p = _Myarr();
+		size_type s = _Mysize();
+		_Grow_RAWCOPY(_Newsize, c._Myarr(), c._Mysize());
+		_Deallocate(p, s);
 	}
 
 
@@ -105,10 +106,15 @@ protected:
 	}
 
 	void _Tidy_deallocate() {
-		_Alty alloc;
-		alloc.deallocate(_Myarr(), _Mysize());
+		_Deallocate(_Myarr(), _Mysize());
 		_Myarr() = nullptr;
 		_Mysize() = 0;
+	}
+
+	// Forward _Alty::deallocate
+	void _Deallocate(const_pointer p, size_type s) {
+		_Alty alloc;
+		alloc.deallocate(p, s);
 	}
 
 	size_type& _Mysize() {
@@ -127,8 +133,9 @@ protected:
 	}
 
 private:
-	//_STD enable_if_t<!_STD is_default_constructible_v<value_type>> _Construct_default(_Alty) {}
-	_STD enable_if_t< _STD is_default_constructible_v<value_type>> _Construct_default(_Alty alloc) {
+	//_STD enable_if_t<!_STD is_default_constructible_v<value_type>> _Construct_default() {}
+	_STD enable_if_t< _STD is_default_constructible_v<value_type>> _Construct_default() {
+		_Alty alloc;
 		_NSTD_FOR_I(_Mysize())
 			_Alty_traits::construct(alloc, (_Myarr() + _I), value_type());
 	}
