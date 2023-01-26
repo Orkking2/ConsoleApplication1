@@ -70,7 +70,7 @@ protected:
 
 		_Myarr() = _Alloc(_Newsize);
 		_Mysize() = _Newsize;
-		_Construct_default(alloc);
+		_Construct_default();
 		_Construct(_Ref, _Refsize);
 	}
 
