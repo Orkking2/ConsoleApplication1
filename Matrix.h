@@ -20,12 +20,18 @@ _NSTD_BEGIN
 template <typename _Ty, typename _Alloc = _STD allocator<_Ty>>
 class Matrix : _NSTD _Contiguous_container<_Ty, _Alloc> {
 	using _Base = _NSTD _Contiguous_container<_Ty, _Alloc>;
-	//using _Alty			= _STD _Rebind_alloc_t<_Alloc, _Ty>;
-	//using _Alty_traits	= _STD allocator_traits<_Alty>;
-	//using _Alpty		= _STD _Rebind_alloc_t<_Alloc, typename _Alty_traits::pointer>;
-	//using _Alpty_traits = _STD allocator_traits<_Alpty>;
-	//using _Mapptr_t		= typename _Alpty_traits::pointer;
 
+public:
+	using storage_type = _Base::value_type;
+	using allocator_type = _Base::allocator_type;
+	using size_type = _Base::size_type;
+	using difference_type = _Base::difference_type;
+	//	using reference			= _Base::reference;
+	//	using const_reference	= _Base::const_reference;
+	//	using pointer			= _Base::pointer;
+	//	using const_pointer		= _Base::const_pointer;
+
+private:
 	static constexpr size_t _Max(size_t a, size_t b, size_t c) {
 		return 
 			a > b ?
@@ -38,26 +44,24 @@ class Matrix : _NSTD _Contiguous_container<_Ty, _Alloc> {
 	}
 
 public:
-	Matrix(_Mapptr_t init, const uint& row, const uint& col) : _Mapsize(row), _Undersize(col) {
-		_Gen_map();
-		_Set(init);
+	Matrix(const uint& row, const uint& col) {
+		
 	}
-	Matrix(const uint& row, const uint& col) : _Mapsize(row), _Undersize(col) {
-		_Gen_map();
+	Matrix(const uint& row, const uint& col) {
+		
 	}
-	Matrix(const Matrix& other) : _Mapsize(other._Mapsize), _Undersize(other._Undersize) {
-		_Gen_map();
-		_Set(other._Mapptr);
+	Matrix(const Matrix& other) {
+		
 	}
-	~Matrix() { _Dealloc(); }
+	
 
 
 
 	_Ty& get(const uint& row, const uint& col) {
-		return _Mapptr[row][col];
+		return ;
 	}
 	const _Ty& get(const uint& row, const uint& col) const {
-		return _Mapptr[row][col];
+		return ;
 	}
 
 	Matrix& operator= (const Matrix& other) {
@@ -199,7 +203,6 @@ class NDMatrix {
 
 public:
 
-//	Commented because no return statement	
 //	template <size_t n>
 //	NDMatrix<T, _Min(_Dims, n)> multiply(const NDMatrix<T, n>& other) const {
 //		_NSTD_ASSERT(_Size == other._Size,
