@@ -33,9 +33,9 @@ class HuffTree {
 	class __any_iterator_holder : public __any_iterator_interface {
 	public:
 		__any_iterator_holder(const _Iter& base) : _base(base) {}
-		__any_iterator_interface* clone()	const override { return new __any_iterator_holder(  _base); }
+		__any_iterator_interface* clone() const override { return new __any_iterator_holder(  _base); }
 		__any_iterator_interface* operator++(int) override { return new __any_iterator_holder(++_base); }
-		operator bool()						const override { return static_cast<bool>(_base); }
+		operator bool()	const override { return static_cast<bool>(_base); }
 	private:
 		_Iter _base;
 	};
@@ -44,7 +44,7 @@ class HuffTree {
 	class __any_iterator {
 	public:
 		template <class _Iter>
-		__any_iterator(const _Iter& iter)			: _contents(new __any_iterator_holder<_Iter>(iter)) {}
+		__any_iterator(const _Iter& iter) : _contents(new __any_iterator_holder<_Iter>(iter)) {}
 		__any_iterator(const __any_iterator& other) : _contents(other._contents->clone())				{}
 
 		__any_iterator(__any_iterator_interface* contents) : _contents(contents) {
@@ -65,7 +65,7 @@ class HuffTree {
 
 	struct __element_interface {
 		virtual ~__element_interface() = default;
-		virtual       __unref_ty& _get(__any_iterator&)       = 0;
+		virtual __unref_ty& _get(__any_iterator&)       = 0;
 		virtual const __unref_ty& _get(__any_iterator&) const = 0;
 		//virtual const bool _is_node() const = 0;
 		virtual const uint _getFreq() const = 0;
@@ -76,9 +76,9 @@ class HuffTree {
 	class __element : public __element_interface {
 	public:
 		__element(_Ty ref) : _ref(ref) {}
-		      __unref_ty& _get(__any_iterator&)       override { return  _ref; }
+		__unref_ty& _get(__any_iterator&) override { return  _ref; }
 		const __unref_ty& _get(__any_iterator&) const override { return  _ref; }
-		const uint		  _getFreq()			const override { return _freq; }
+		const uint _getFreq() const override { return _freq; }
 
 	private:
 		_Ty _ref;
