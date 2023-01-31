@@ -22,10 +22,10 @@ class Matrix : _NSTD _Contiguous_container<_Ty, _Alloc> {
 	using _Base = _NSTD _Contiguous_container<_Ty, _Alloc>;
 
 public:
-	using storage_type = _Base::value_type;
-	using allocator_type = _Base::allocator_type;
-	using size_type = _Base::size_type;
-	using difference_type = _Base::difference_type;
+	using storage_type		= _Base::value_type;
+	using allocator_type	= _Base::allocator_type;
+	using size_type			= _Base::size_type;
+	using difference_type	= _Base::difference_type;
 	//	using reference			= _Base::reference;
 	//	using const_reference	= _Base::const_reference;
 	//	using pointer			= _Base::pointer;
