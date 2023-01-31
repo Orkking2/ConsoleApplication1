@@ -18,8 +18,13 @@ concept __huffman_good_iter = _STD convertible_to<_Iter, bool> &&
 template <typename _Ty>
 class HuffTree {
 	template <typename T> using __unref = _STD remove_cvref_t<T>;
-	using __unref_ty = __unref<_Ty>;
+	using __unref_t = __unref<_Ty>;
 
+public:
+	using value_type = __unref_t;
+
+
+private:
 	class __any_iterator_interface {
 	public:
 		virtual ~__any_iterator_interface() = default;
@@ -65,8 +70,8 @@ class HuffTree {
 
 	struct __element_interface {
 		virtual ~__element_interface() = default;
-		virtual __unref_ty& _get(__any_iterator&)       = 0;
-		virtual const __unref_ty& _get(__any_iterator&) const = 0;
+		virtual __unref_t& _get(__any_iterator&)       = 0;
+		virtual const __unref_t& _get(__any_iterator&) const = 0;
 		//virtual const bool _is_node() const = 0;
 		virtual const uint _getFreq() const = 0;
 		//virtual _STD vector<_Ty&> _arr() const = 0;
@@ -75,9 +80,9 @@ class HuffTree {
 	// Can own or hold reference to _ref (_Ty can be reference type)
 	class __element : public __element_interface {
 	public:
-		__element(_Ty ref) : _ref(ref) {}
-		__unref_ty& _get(__any_iterator&) override { return  _ref; }
-		const __unref_ty& _get(__any_iterator&) const override { return  _ref; }
+		__element(_Ty ref, uint freq) : _ref(ref), _freq(freq) {}
+		__unref_t& _get(__any_iterator&) override { return  _ref; }
+		const __unref_t& _get(__any_iterator&) const override { return  _ref; }
 		const uint _getFreq() const override { return _freq; }
 
 	private:
@@ -95,12 +100,12 @@ class HuffTree {
 		const uint _getFreq() const override { 
 			return _left->_getFreq() + _right->_getFreq(); 
 		}
-		__unref_ty& _get(__any_iterator& _iter) override {
+		__unref_t& _get(__any_iterator& _iter) override {
 			if(++_iter)
 				return _right->_get(_iter);
 			return _left->_get(_iter);
 		}
-		const __unref_ty& _get(__any_iterator& _iter) const override {
+		const __unref_t& _get(__any_iterator& _iter) const override {
 			if(++_iter)
 				return _right->_get(_iter);
 			return _left->_get(_iter);
@@ -110,13 +115,34 @@ class HuffTree {
 		__element_interface* _left, * _right;
 	};
 
+public:
 
 
 
+	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair, typename... _PTraits>
+	void gen_tree(_Array<_Pair<_Ty, uint, _PTraits...>, _ATraits...> list) {
+		this->~HuffTree();
+		if(!list.size())
+			return;
+		if(list.size() == 1) {
+			_root = new __element(list[0].first, list[0].second);
+			return;
+		}
+		
+		_NSTD_FOR_I(list.size())
+			_encoder_map.insert({ list[_I].first, _STD vector<bool>() });
 
 
+	}
+	
+
+	~HuffTree() { delete _root; _root = nullptr; _encoder_map.clear(); }
+
+private:
 
 
+	__element_interface* _root;
+	_STD unordered_map<__unref_t, _STD vector<bool>> _encoder_map;
 };
 
 
@@ -274,9 +300,9 @@ class HuffTree {
 //};
 //
 _NSTD_END
+#endif // !_NSTD_HUFF_
 
 
-//#endif // !_NSTD_HUFF_
 //
 //#ifdef _NSTD_HUFF_DEBUGGING_
 //#include <iostream>
@@ -327,4 +353,4 @@ _NSTD_END
 //	std::cout << "\nSize shrunk:\n" << d.real_size();
 //	std::cout << "\nShrunk percent compression:\n" << (1 - static_cast<double> (d.real_size()) / (sizeof(_Ty) * vals.size())) * 100 << '%';
 //}
-#endif // _NSTD_HUFF_DEBUGGING_
+//#endif // _NSTD_HUFF_DEBUGGING_
