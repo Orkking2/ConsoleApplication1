@@ -10,52 +10,102 @@
 
 _NSTD_BEGIN
 
-template <typename _Iter>
-concept __huffman_good_iter = _STD convertible_to<bool> &&
-	_STD is_same_v<_Iter&, decltype(_STD declval<_Iter>().operator++(int));
+template <class _Iter>
+concept __huffman_good_iter = _STD convertible_to<_Iter, bool> &&
+	_STD is_same_v<_Iter&, decltype(_STD declval<_Iter>().operator++(0))> &&
+	_STD convertible_to<const _Iter&, _Iter>;
 
-template <typename _Ty, typename _Iter, typename _Pred = _STD less<_Ty>>
+template <typename _Ty>
 class HuffTree {
-	using __unref = _STD remove_cvref_t<_Ty>;
+	template <typename T> using __unref = _STD remove_cvref_t<T>;
+	using __unref_ty = __unref<_Ty>;
+
+	class __any_iterator_interface {
+	public:
+		virtual ~__any_iterator_interface() = default;
+		virtual __any_iterator_interface* clone() const = 0;
+		virtual __any_iterator_interface* operator++(int) = 0;
+		virtual operator bool() const = 0;
+	};
+
+	template <class _Iter>
+		requires __huffman_good_iter<_Iter>
+	class __any_iterator_holder : public __any_iterator_interface {
+	public:
+		__any_iterator_holder(const _Iter& base) : _base(base) {}
+		__any_iterator_interface* clone()	const override { return new __any_iterator_holder(  _base); }
+		__any_iterator_interface* operator++(int) override { return new __any_iterator_holder(++_base); }
+		operator bool()						const override { return static_cast<bool>(_base); }
+	private:
+		_Iter _base;
+	};
+
+	// Must always wrap an iterator
+	class __any_iterator {
+	public:
+		template <class _Iter>
+		__any_iterator(const _Iter& iter)			: _contents(new __any_iterator_holder<_Iter>(iter)) {}
+		__any_iterator(const __any_iterator& other) : _contents(other._contents->clone())				{}
+
+		__any_iterator(__any_iterator_interface* contents) : _contents(contents) {
+			_NSTD_ASSERT(_contents != NULL && _contents != nullptr,
+				"__any_iterator must always wrap an iterator");
+		}
+
+		~__any_iterator() { delete _contents; }
+
+		__any_iterator operator++(int) { return __any_iterator(_contents->operator++(0)); }
+		operator bool() { return _contents->operator bool(); }
+
+	private:
+		__any_iterator_interface* _contents;
+	};
+
+
 
 	struct __element_interface {
 		virtual ~__element_interface() = default;
-		virtual		  __unref& _get(_Iter&)       = 0;
-		virtual const __unref& _get(_Iter&) const = 0;
+		virtual       __unref_ty& _get(__any_iterator&)       = 0;
+		virtual const __unref_ty& _get(__any_iterator&) const = 0;
 		//virtual const bool _is_node() const = 0;
-		//virtual const uint _freq() const = 0;
+		virtual const uint _getFreq() const = 0;
 		//virtual _STD vector<_Ty&> _arr() const = 0;
 	};
 
-	// Can own or hold reference to _ref (_Ty can be reference)
+	// Can own or hold reference to _ref (_Ty can be reference type)
 	class __element : public __element_interface {
 	public:
 		__element(_Ty ref) : _ref(ref) {}
-			  __unref& _get(_Iter&)       override { return _ref; }
-		const __unref& _get(_Iter&) const override { return _ref; }
+		      __unref_ty& _get(__any_iterator&)       override { return  _ref; }
+		const __unref_ty& _get(__any_iterator&) const override { return  _ref; }
+		const uint		  _getFreq()			const override { return _freq; }
 
 	private:
 		_Ty _ref;
+		uint _freq;
 	};
 
+	
 	class __element_node : public __element_interface {
 	public:
 		__element_node(__element_interface* left, __element_interface* right) : _left(left), _right(right) {
 			_NSTD_ASSERT(_left != NULL && _left != nullptr && _right != NULL && _right != nullptr,
-				"Must provide __element_node with valid pointers -- completely filled tree");
+				"__element_node may not contain invalid _left or _right pointers");
 		};
-		__unref& _get(_Iter& _iter) override {
+		const _getFreq() const override { 
+			return _left->_getFreq() + _right->_getFreq(); 
+		}
+		__unref_ty& _get(__any_iterator& _iter) override {
 			if(++_iter)
 				return _right->_get(bits);
 			return _left->_get(bits);
 		}
-		const __unref& _get(_Iter& _iter) const override {
+		const __unref_ty& _get(__any_iterator& _iter) const override {
 			if(++_iter)
-				return _right->_get(bits);
-			return _left->_get(bits);
+				return _right->_get(_iter);
+			return _left->_get(_iter);
 		}
-
-
+		~__element_node() { delete _left, _right; }
 	private:
 		__element_interface* _left, * _right;
 	};
