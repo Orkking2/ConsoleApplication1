@@ -92,20 +92,20 @@ class HuffTree {
 			_NSTD_ASSERT(_left != NULL && _left != nullptr && _right != NULL && _right != nullptr,
 				"__element_node may not contain invalid _left or _right pointers");
 		};
-		const _getFreq() const override { 
+		const uint _getFreq() const override { 
 			return _left->_getFreq() + _right->_getFreq(); 
 		}
 		__unref_ty& _get(__any_iterator& _iter) override {
 			if(++_iter)
-				return _right->_get(bits);
-			return _left->_get(bits);
+				return _right->_get(_iter);
+			return _left->_get(_iter);
 		}
 		const __unref_ty& _get(__any_iterator& _iter) const override {
 			if(++_iter)
 				return _right->_get(_iter);
 			return _left->_get(_iter);
 		}
-		~__element_node() { delete _left, _right; }
+		~__element_node() override { delete _left, _right; }
 	private:
 		__element_interface* _left, * _right;
 	};
@@ -273,7 +273,9 @@ class HuffTree {
 //	}
 //};
 //
-//_NSTD_END
+_NSTD_END
+
+
 //#endif // !_NSTD_HUFF_
 //
 //#ifdef _NSTD_HUFF_DEBUGGING_

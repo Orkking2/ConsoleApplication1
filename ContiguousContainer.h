@@ -95,7 +95,7 @@ protected:
 	void _Grow(const size_type& _Newsize) {
 		const_pointer p = _Myarr();
 		size_type s = _Mysize();
-		_Grow_RAWCOPY(_Newsize, c._Myarr(), c._Mysize());
+		_Grow_RAWCOPY(_Newsize, p, s);
 		_Deallocate(p, s);
 	}
 

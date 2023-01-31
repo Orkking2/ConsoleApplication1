@@ -3,7 +3,7 @@
 
 
 _NSTD_BEGIN
-
+/*
 // HuffTree::Node:: methods
 _STD vector<void*> HuffTree::Node::vpArr() const {
 	_STD vector<void*> l(l_->vpArr());
@@ -89,7 +89,7 @@ void HuffTree::create_tree_NOREVERSE(_STD vector<_STD pair<void*, uint>> vals) {
 //	ptr_ = p->ptr_;
 //	freq_ = p->freq_;
 //}
-
+*/
 _NSTD_END
 #else // ^^^ _NSTD_HUFF_ / !_NSTD_HUFF_ vvv
 #pragma once(message, "Huff.h not found")
