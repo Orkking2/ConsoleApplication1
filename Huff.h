@@ -45,7 +45,7 @@ class HuffTree {
 	public:
 		template <class _Iter>
 		__any_iterator(const _Iter& iter) : _contents(new __any_iterator_holder<_Iter>(iter)) {}
-		__any_iterator(const __any_iterator& other) : _contents(other._contents->clone())				{}
+		__any_iterator(const __any_iterator& other) : _contents(other._contents->clone()) {}
 
 		__any_iterator(__any_iterator_interface* contents) : _contents(contents) {
 			_NSTD_ASSERT(_contents != NULL && _contents != nullptr,
