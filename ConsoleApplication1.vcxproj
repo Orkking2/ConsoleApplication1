@@ -152,7 +152,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Multilock.h" />
     <ClInclude Include="Timer.h" />
-    <ClInclude Include="Huff.h" />
+    <ClInclude Include="Huff.hpp" />
     <ClInclude Include="Threads.h" />
     <ClInclude Include="TypeTraits.h" />
   </ItemGroup>

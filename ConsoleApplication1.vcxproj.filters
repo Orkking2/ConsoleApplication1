@@ -32,7 +32,7 @@
     <ClInclude Include="Defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Huff.h">
+    <ClInclude Include="Huff.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Deque.h">
