@@ -70,20 +70,34 @@ private:
 
 	struct __element_interface {
 		virtual ~__element_interface() = default;
-		virtual __unref_t& _get(__any_iterator&)       = 0;
+		virtual __unref_t& _get(__any_iterator&) = 0;
 		virtual const __unref_t& _get(__any_iterator&) const = 0;
 		//virtual const bool _is_node() const = 0;
 		virtual const uint _getFreq() const = 0;
-		//virtual _STD vector<_Ty&> _arr() const = 0;
+		virtual _STD vector<const __unref_t&> _genArr() const = 0;
+		virtual __element_interface* clone() const = 0;
 	};
 
 	// Can own or hold reference to _ref (_Ty can be reference type)
 	class __element : public __element_interface {
 	public:
 		__element(_Ty ref, uint freq) : _ref(ref), _freq(freq) {}
-		__unref_t& _get(__any_iterator&) override { return  _ref; }
-		const __unref_t& _get(__any_iterator&) const override { return  _ref; }
-		const uint _getFreq() const override { return _freq; }
+
+		__unref_t& _get(__any_iterator&) override { 
+			return  _ref; 
+		}
+		const __unref_t& _get(__any_iterator&) const override { 
+			return  _ref; 
+		}
+		const uint _getFreq() const override { 
+			return _freq; 
+		}
+		_STD vector<const __unref_t&> _genArr() { 
+			return { _ref }; 
+		}
+		__element_interface* clone() const override { 
+			return new __element(_ref, _freq); 
+		}
 
 	private:
 		_Ty _ref;
@@ -110,18 +124,31 @@ private:
 				return _right->_get(_iter);
 			return _left->_get(_iter);
 		}
+		_STD vector<const __unref_t&> _genArr() {
+			_STD vector<const __unref_t&> out(_left->_genArr());
+			_STD vector<const __unref_t&> temp(_right->_genArr());
+			out.insert(out.end(), temp.begin(), temp.end());
+			return out;
+		}
+		__element_interface* clone() const override {
+			return new __element_node(_left->clone(), _right->clone());
+		}
 		~__element_node() override { delete _left, _right; }
 	private:
 		__element_interface* _left, * _right;
 	};
 
 public:
+	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair, typename... _PTraits>
+	HuffTree(_Array<_Pair<_Ty, uint, _PTraits...>, _ATraits...> list) { gen_tree(list); }
 
-
+	HuffTree(const HuffTree& other) : _root(other._root->clone()) {}
+	HuffTree() : _root(nullptr) {}
 
 	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair, typename... _PTraits>
 	void gen_tree(_Array<_Pair<_Ty, uint, _PTraits...>, _ATraits...> list) {
 		this->~HuffTree();
+
 		if(!list.size())
 			return;
 		if(list.size() == 1) {
@@ -129,12 +156,89 @@ public:
 			return;
 		}
 		
-		_NSTD_FOR_I(list.size())
-			_encoder_map.insert({ list[_I].first, _STD vector<bool>() });
+		_STD vector<__element_interface*> _elements;
+		_NSTD_FOR_I(list.size()) {
+			if(!_encoder_map.contains(list[_I].first)) {
+				_encoder_map.insert({ list[_I].first, _STD vector<bool>() });
+				_elements.push_back(new __element(list[_I].first, list[_I].second));
+			}	
+		}
+		
+		while(_elements.size() != 1) {
+			uint lindex = 0, hindex = 0;
+			_NSTD_FOR_I(_elements.size()) {
+				if(_elements[_I]->_getFreq() < _elements[lindex]->_getFreq()) {
+					hindex = lindex;
+					lindex = _I;
+				} else if(hindex == lindex || _elements[_I]->_getFreq() < _elements[hindex]->_getFreq()) {
+					hindex = _I;
+				}
+			}
+			__element_interface* temp = new __element_node(_elements[lindex], _elements[hindex]);
 
+			_STD vector<const __unref_t&> ltemp(_elements[lindex]->_genArr());
+			for(const __unref_t& t : ltemp)
+				_encoder_map.at(t).push_back(false);
+			
+			_STD vector<const __unref_t&> rtemp(_elements[hindex]->_genArr());
+			for(const __unref_t& t : rtemp)
+				_encoder_map.at(t).push_back(true);
+			
+			_elements.erase(_elements.begin() + lindex);
+			_elements.erase(_elements.begin() + hindex);
 
+			_elements.push_back(temp);
+		}
+
+		_root = _elements[0];
 	}
-	
+
+	template <class _Arr>
+	_STD vector<bool> encode(_Arr arr) {
+		encode(arr.begin(), arr.end());
+	}
+
+	template <class _Iter>
+	_STD vector<bool> encode(_Iter begin, _Iter end) {
+		_NSTD_ASSERT(!empty(),
+			"encode called with empty root");
+		_STD vector<bool> out;
+		for(_Iter i = begin; i != end; i++)
+			out.insert(out.end(), _encoder_map.at(i).begin(), _encoder_map.at(i).end());
+		return out;
+	}
+
+	template <class _Iter>
+	__unref_t decode(_Iter iter) {
+		return _root->_get(iter);
+	}
+
+	template <class _Iter>
+	const __unref_t& decode(_Iter iter) const {
+		return _root->_get(iter);
+	}
+
+	template <template <typename...> class _Arr, template <typename> class _Alloc, typename... _ExtraTraits>
+	_Arr<__unref_t, _Alloc<__unref_t>, _ExtraTraits...> decode(_Arr<bool, _Alloc<bool>, _ExtraTraits...> arr) {
+		_Arr<__unref_t, _Alloc<__unref_t>> out;
+		for(auto i = arr.begin(); i != arr.end(); i++)
+			out.push_back(decode(i));
+		
+		return out;
+	}
+
+	template <template <typename...> class _Arr, template <typename> class _Alloc, typename... _ExtraTraits>
+	_Arr<const __unref_t&, _Alloc<const __unref_t&>, _ExtraTraits...> decode(_Arr<bool, _Alloc<bool>, _ExtraTraits...> arr) const {
+		_Arr<const __unref_t&, _Alloc<const __unref_t&>> out;
+		for(auto i = arr.begin(); i != arr.end(); i++)
+			out.push_back(decode(i));
+
+		return out;
+	}
+
+	const bool empty() {
+		return _root == nullptr || _root == NULL;
+	}
 
 	~HuffTree() { delete _root; _root = nullptr; _encoder_map.clear(); }
 
@@ -145,212 +249,5 @@ private:
 	_STD unordered_map<__unref_t, _STD vector<bool>> _encoder_map;
 };
 
-
-
-//class HuffTree {
-//	typedef _NSTD uint uint;
-//	typedef _STD pair<void*, uint> _Pair_vpu;
-//
-//public:
-//	struct IElement {
-//		virtual ~IElement() = default;
-//		virtual const void* GetP(_NSTD deque<bool>&) const = 0;
-//		virtual const bool isNode()                  const = 0;
-//		virtual const uint GetFreq()                 const = 0;
-//		virtual _STD vector<void*> vpArr()           const = 0;
-//	};
-//
-//	class vPtr : public IElement {
-//		void* ptr_;
-//		uint freq_;
-//	public:
-//		vPtr(void* ptr, const uint freq) : ptr_(ptr),            freq_(freq)            {}
-//		vPtr(_Pair_vpu val_pair)         : ptr_(val_pair.first), freq_(val_pair.second) {}
-//
-//		_NODISCARD const void* GetP(_NSTD deque<bool>&) const override { return ptr_; }
-//		_NODISCARD const bool isNode()                  const override { return false; }
-//		_NODISCARD const uint GetFreq()                 const override { return freq_; }
-//		_NODISCARD _STD vector<void*> vpArr()           const override { return { ptr_ }; }
-//	};
-//
-//	class Node : public IElement {
-//		IElement* l_, * r_;
-//	public:
-//		Node(IElement* l, IElement* r) : l_(l), r_(r){}
-//		~Node() override { delete l_, r_; }
-//
-//		_NODISCARD const void* GetP(_NSTD deque<bool>& deque) const override { return deque.pop_front() ? r_->GetP(deque) : l_->GetP(deque); }
-//		_NODISCARD const bool isNode()                        const override { return true; }
-//		_NODISCARD const uint GetFreq()                       const override { return l_->GetFreq() + r_->GetFreq(); }
-//		_NODISCARD _STD vector<void*> vpArr()                 const override;
-//	};
-//private:
-//	bool ptrs_set_;
-//	_STD vector<void*> ptrs_;
-//	_STD unordered_map<void*, _STD vector<bool>> map_;
-//
-//	IElement* Fin_node_;
-//public:
-//	HuffTree()                            : ptrs_set_(false), Fin_node_(NULL) {}
-//	HuffTree(_STD vector<_Pair_vpu> vals) : ptrs_set_(false), Fin_node_(NULL) { create_tree(vals); }
-//	~HuffTree() {
-//		release_ptrs();
-//	}
-//
-//	// Debugging
-//	_STD vector<void*>& get_ptrs() {
-//		return ptrs_;
-//	}
-//
-//	void release_ptrs() {
-//		for (void*& ptr : ptrs_) 
-//			delete ptr;
-//		release_ptrs_NODELETE();
-//	}
-//
-//	void release_ptrs_NODELETE();
-//
-//	void create_tree(_STD vector<_Pair_vpu> vals);
-//	void create_tree_NOREVERSE(_STD vector<_Pair_vpu> vals);
-//
-//	template <class _Ty>
-//	_NODISCARD static _STD vector<_Pair_vpu> gen_freqs(_STD vector<_Ty> vals) {
-//		_STD unordered_map<_Ty, uint> checker;
-//		_STD vector<void*> unique_ptrs;
-//		for (const _Ty& val : vals) {
-//			if (!checker.contains(val)) {
-//				// If a HuffTree object creates a tree using this method, 
-//				// it should call HuffTree::release_ptrs<_Ty>()
-//				unique_ptrs.push_back(reinterpret_cast<void*> (new _Ty(val)));
-//				checker[val] = 1;
-//			} else {
-//				checker[val]++;
-//			}
-//		}
-//
-//		_STD vector<_Pair_vpu> out;
-//		for (void*& p : unique_ptrs) 
-//			out.push_back(_Pair_vpu(p, checker[*reinterpret_cast<_Ty*> (p)]));
-//		
-//		return out;
-//	}
-//
-//	template <class _Ty>
-//	_NODISCARD _STD unordered_map<_Ty, _STD vector<bool>> gen_val_map() {
-//		_STD unordered_map<_Ty, _STD vector<bool>> out;
-//		if (ptrs_set_) {
-//			for (void*& p : ptrs_) {
-//				const _Ty* pVal = reinterpret_cast<_Ty*> (p);
-//				out[*pVal] = map_[p];
-//			}
-//		}
-//		return out;
-//	}
-//
-//	template <class _Ty>
-//	_NODISCARD _NSTD deque<bool> encode(_STD vector<_Ty> vals) {
-//		_STD unordered_map<_Ty, _STD vector<bool>> map(gen_val_map<_Ty>());
-//		_NSTD deque<bool> out;
-//		if (ptrs_set_) {
-//			for (const _Ty& val : vals) {
-//				if (map.contains(val)) {
-//					for (bool b : map[val]) {
-//						out.push_back(b);
-//					}
-//				}
-//			}
-//		}
-//		return out;
-//	}
-//
-//	template <>
-//	// Heterogenous encode
-//	_NODISCARD _NSTD deque<bool> encode<void*>(_STD vector<void*> ptrs) {
-//		_NSTD deque<bool> out;
-//		if (ptrs_set_) {
-//			for (void*& p : ptrs) {
-//				for (const bool& b : map_[p]) {
-//					out.push_back(b);
-//				}
-//			}
-//		}
-//		return out;
-//	}
-//
-//	template <class _Ty>
-//	_NODISCARD _STD vector<_Ty> decode(_NSTD deque<bool> bool_list) {
-//		_STD vector<_Ty> out;
-//		if (ptrs_set_) {
-//			while (!bool_list.empty())
-//				out.push_back(*reinterpret_cast<_Ty*> (const_cast<void*> (Fin_node_->GetP(bool_list))));
-//		}
-//		return out;
-//	}
-//
-//	template <>
-//	// Heterogenous decode
-//	_NODISCARD _STD vector<void*> decode<void*>(_NSTD deque<bool> bool_list) {
-//		_STD vector<void*> out;
-//		if (ptrs_set_) {
-//			while (!bool_list.empty())
-//				out.push_back(const_cast<void*> (Fin_node_->GetP(bool_list)));
-//		}
-//		return out;
-//	}
-//};
-//
 _NSTD_END
 #endif // !_NSTD_HUFF_
-
-
-//
-//#ifdef _NSTD_HUFF_DEBUGGING_
-//#include <iostream>
-//#include <functional>
-//template <class _Ty>
-//void test(nstd::uint num_tests, _STD function<_Ty(void)> rand_generator, bool err_switch = false) {
-//	std::vector<_Ty> vals;
-//	vals.resize(num_tests);
-//	_NSTD_FOR_I(num_tests)
-//		vals[_I] = rand_generator();
-//
-//	nstd::HuffTree t1(nstd::HuffTree::gen_freqs<_Ty>(vals));
-//	_NSTD deque<bool> d(t1.encode(vals));
-//	if (err_switch) {
-//		unsigned int error_pos(rand() % d.size());
-//		// Introduce error
-//		d.flip(error_pos);
-//		std::cout << "Error at pos " << error_pos << '\n';
-//	}
-//	int d_sz_cashe(d.real_size());
-//	_STD vector<_Ty> v(t1.decode<_Ty>(d.shrink_fit()));
-//
-//	if (vals.size() != v.size()) {
-//		std::cout << "ERROR: vals.size() = " << vals.size() << " != v.size() = " << v.size();
-//		return;
-//	}
-//
-//	_STD vector<unsigned int> indexi;
-//	_NSTD_FOR_I(vals.size()) {
-//		if (vals[_I] != v[_I]) {
-//			indexi.push_back(_I);
-//		}
-//	}
-//	std::cout << "Errors: ";
-//	if (!indexi.size())
-//		std::cout << "None";
-//	_NSTD_FOR_I(indexi.size())
-//		std::cout << indexi[_I] << ", ";
-//	if (!indexi.empty())
-//		std::cout << "\nFrom ____ to ____:\n";
-//	_NSTD_FOR_I(indexi.size())
-//		std::cout << vals[indexi[_I]] << "-" << v[indexi[_I]] << ", ";
-//
-//
-//	std::cout << "\nSize of original array:\n" << sizeof(_Ty) * vals.size();
-//	std::cout << "\nSize unshrunk:\n" << d_sz_cashe;
-//	std::cout << "\nUnshrunk percent compression:\n" << (1 - static_cast<double> (d_sz_cashe) / (sizeof(_Ty) * vals.size())) * 100 << '%';
-//	std::cout << "\nSize shrunk:\n" << d.real_size();
-//	std::cout << "\nShrunk percent compression:\n" << (1 - static_cast<double> (d.real_size()) / (sizeof(_Ty) * vals.size())) * 100 << '%';
-//}
-//#endif // _NSTD_HUFF_DEBUGGING_
