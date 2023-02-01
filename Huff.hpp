@@ -11,8 +11,8 @@
 _NSTD_BEGIN
 
 template <class _Iter>
-concept __huffman_good_iter = _STD convertible_to<_Iter, bool> &&
-	_STD is_same_v<_Iter&, decltype(_STD declval<_Iter>().operator++(0))> &&
+concept __huffman_good_iter = _STD convertible_to<decltype(_STD declval<_Iter>().operator*()), bool> &&
+	_STD convertible_to<_Iter&, decltype(_STD declval<_Iter>().operator++(0))> &&
 	_STD convertible_to<const _Iter&, _Iter>;
 
 template <typename _Ty>
@@ -30,7 +30,7 @@ private:
 		virtual ~__any_iterator_interface() = default;
 		virtual __any_iterator_interface* clone() const = 0;
 		virtual __any_iterator_interface* operator++(int) = 0;
-		virtual operator bool() const = 0;
+		virtual bool operator*() const = 0;
 	};
 
 	template <class _Iter>
@@ -38,9 +38,15 @@ private:
 	class __any_iterator_holder : public __any_iterator_interface {
 	public:
 		__any_iterator_holder(const _Iter& base) : _base(base) {}
-		__any_iterator_interface* clone() const override { return new __any_iterator_holder(  _base); }
-		__any_iterator_interface* operator++(int) override { return new __any_iterator_holder(++_base); }
-		operator bool()	const override { return static_cast<bool>(_base); }
+		__any_iterator_interface* clone() const override { 
+			return new __any_iterator_holder(_base); 
+		}
+		__any_iterator_interface* operator++(int) override { 
+			return new __any_iterator_holder(_base++); 
+		}
+		bool operator*() const override { 
+			return *_base; 
+		}
 	private:
 		_Iter _base;
 	};
@@ -59,8 +65,14 @@ private:
 
 		~__any_iterator() { delete _contents; }
 
-		__any_iterator operator++(int) { return __any_iterator(_contents->operator++(0)); }
-		operator bool() { return _contents->operator bool(); }
+		__any_iterator operator++(int) { 
+			return __any_iterator(_contents->operator++(0)); 
+		}
+		bool operator*() { 
+			return _contents->operator*(); }
+		operator bool() { 
+			return **this; 
+		}
 
 	private:
 		__any_iterator_interface* _contents;
@@ -70,11 +82,11 @@ private:
 
 	struct __element_interface {
 		virtual ~__element_interface() = default;
-		virtual __unref_t& _get(__any_iterator&) = 0;
-		virtual const __unref_t& _get(__any_iterator&) const = 0;
+		virtual __unref_t* _get(__any_iterator&) = 0;
+		virtual const __unref_t* _get(__any_iterator&) const = 0;
 		//virtual const bool _is_node() const = 0;
 		virtual const uint _getFreq() const = 0;
-		virtual _STD vector<const __unref_t&> _genArr() const = 0;
+		virtual _STD vector<const __unref_t*> _genArr() const = 0;
 		virtual __element_interface* clone() const = 0;
 	};
 
@@ -83,17 +95,17 @@ private:
 	public:
 		__element(_Ty ref, uint freq) : _ref(ref), _freq(freq) {}
 
-		__unref_t& _get(__any_iterator&) override { 
-			return  _ref; 
+		__unref_t* _get(__any_iterator&) override { 
+			return  &_ref; 
 		}
-		const __unref_t& _get(__any_iterator&) const override { 
-			return  _ref; 
+		const __unref_t* _get(__any_iterator&) const override { 
+			return  &_ref; 
 		}
 		const uint _getFreq() const override { 
 			return _freq; 
 		}
-		_STD vector<const __unref_t&> _genArr() { 
-			return { _ref }; 
+		_STD vector<const __unref_t*> _genArr() const override { 
+			return { &_ref }; 
 		}
 		__element_interface* clone() const override { 
 			return new __element(_ref, _freq); 
@@ -114,19 +126,19 @@ private:
 		const uint _getFreq() const override { 
 			return _left->_getFreq() + _right->_getFreq(); 
 		}
-		__unref_t& _get(__any_iterator& _iter) override {
-			if(++_iter)
+		__unref_t* _get(__any_iterator& _iter) override {
+			if(_iter++)
 				return _right->_get(_iter);
 			return _left->_get(_iter);
 		}
-		const __unref_t& _get(__any_iterator& _iter) const override {
-			if(++_iter)
+		const __unref_t* _get(__any_iterator& _iter) const override {
+			if(_iter++)
 				return _right->_get(_iter);
 			return _left->_get(_iter);
 		}
-		_STD vector<const __unref_t&> _genArr() {
-			_STD vector<const __unref_t&> out(_left->_genArr());
-			_STD vector<const __unref_t&> temp(_right->_genArr());
+		_STD vector<const __unref_t*> _genArr() const override {
+			auto out(_left->_genArr());
+			auto temp(_right->_genArr());
 			out.insert(out.end(), temp.begin(), temp.end());
 			return out;
 		}
@@ -139,17 +151,17 @@ private:
 	};
 
 public:
-	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair, typename... _PTraits>
-	HuffTree(_Array<_Pair<_Ty, uint, _PTraits...>, _ATraits...> list) { gen_tree(list); }
+	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair>
+	HuffTree(_Array<_Pair<_Ty, uint>, _ATraits...> list) { gen_tree(list); }
 
 	HuffTree(const HuffTree& other) : _root(other._root->clone()) {}
 	HuffTree() : _root(nullptr) {}
 
-	template <template <typename...> class _Array, typename... _ATraits, template <typename...> class _Pair, typename... _PTraits>
-	void gen_tree(_Array<_Pair<_Ty, uint, _PTraits...>, _ATraits...> list) {
-		this->~HuffTree();
+	template <template <typename...> class _Array, typename... _ATraits, template <typename, typename> class _Pair>
+	void gen_tree(_Array<_Pair<_Ty, uint>, _ATraits...> list) {
+		clear();
 
-		if(!list.size())
+		if(!list.size()) 
 			return;
 		if(list.size() == 1) {
 			_root = new __element(list[0].first, list[0].second);
@@ -161,7 +173,7 @@ public:
 			if(!_encoder_map.contains(list[_I].first)) {
 				_encoder_map.insert({ list[_I].first, _STD vector<bool>() });
 				_elements.push_back(new __element(list[_I].first, list[_I].second));
-			}	
+			}
 		}
 		
 		while(_elements.size() != 1) {
@@ -174,18 +186,19 @@ public:
 					hindex = _I;
 				}
 			}
+
 			__element_interface* temp = new __element_node(_elements[lindex], _elements[hindex]);
 
-			_STD vector<const __unref_t&> ltemp(_elements[lindex]->_genArr());
-			for(const __unref_t& t : ltemp)
-				_encoder_map.at(t).push_back(false);
+			auto ltemp(_elements[lindex]->_genArr());
+			for(const __unref_t* t : ltemp)
+				_encoder_map.at(*t).push_back(false);
 			
-			_STD vector<const __unref_t&> rtemp(_elements[hindex]->_genArr());
-			for(const __unref_t& t : rtemp)
-				_encoder_map.at(t).push_back(true);
+			auto rtemp(_elements[hindex]->_genArr());
+			for(const __unref_t* t : rtemp)
+				_encoder_map.at(*t).push_back(true);
 			
 			_elements.erase(_elements.begin() + lindex);
-			_elements.erase(_elements.begin() + hindex);
+			_elements.erase(_elements.begin() + hindex - (hindex < lindex ? 0 : 1));
 
 			_elements.push_back(temp);
 		}
@@ -193,33 +206,33 @@ public:
 		_root = _elements[0];
 	}
 
-	template <class _Arr>
-	_STD vector<bool> encode(_Arr arr) {
-		encode(arr.begin(), arr.end());
+	template <template <typename...> class _Arr, typename... _Traits>
+	_NODISCARD _STD vector<bool> encode(const _Arr<_Ty, _Traits...>& arr) {
+		return encode(arr.begin(), arr.end());
 	}
 
 	template <class _Iter>
-	_STD vector<bool> encode(_Iter begin, _Iter end) {
+	_NODISCARD _STD vector<bool> encode(_Iter begin, _Iter end) {
 		_NSTD_ASSERT(!empty(),
 			"encode called with empty root");
 		_STD vector<bool> out;
-		for(_Iter i = begin; i != end; i++)
-			out.insert(out.end(), _encoder_map.at(i).begin(), _encoder_map.at(i).end());
+		for(auto i = begin; i != end; i++)
+			out.insert(out.end(), _encoder_map.at(*i).begin(), _encoder_map.at(*i).end());
 		return out;
 	}
 
-	template <class _Iter>
-	__unref_t decode(_Iter iter) {
-		return _root->_get(iter);
+	_NODISCARD _STD vector<bool> encode(const __unref_t& item) const {
+		return _encoder_map.at(item);
 	}
 
 	template <class _Iter>
-	const __unref_t& decode(_Iter iter) const {
-		return _root->_get(iter);
+	_NODISCARD __unref_t decode(_Iter iter) const {
+		auto itref = __any_iterator(iter);
+		return *_root->_get(itref);
 	}
 
 	template <template <typename...> class _Arr, template <typename> class _Alloc, typename... _ExtraTraits>
-	_Arr<__unref_t, _Alloc<__unref_t>, _ExtraTraits...> decode(_Arr<bool, _Alloc<bool>, _ExtraTraits...> arr) {
+	_NODISCARD _Arr<__unref_t, _Alloc<__unref_t>, _ExtraTraits...> decode(const _Arr<bool, _Alloc<bool>, _ExtraTraits...>& arr) const {
 		_Arr<__unref_t, _Alloc<__unref_t>> out;
 		for(auto i = arr.begin(); i != arr.end(); i++)
 			out.push_back(decode(i));
@@ -227,20 +240,17 @@ public:
 		return out;
 	}
 
-	template <template <typename...> class _Arr, template <typename> class _Alloc, typename... _ExtraTraits>
-	_Arr<const __unref_t&, _Alloc<const __unref_t&>, _ExtraTraits...> decode(_Arr<bool, _Alloc<bool>, _ExtraTraits...> arr) const {
-		_Arr<const __unref_t&, _Alloc<const __unref_t&>> out;
-		for(auto i = arr.begin(); i != arr.end(); i++)
-			out.push_back(decode(i));
-
-		return out;
-	}
-
-	const bool empty() {
+	_NODISCARD const bool empty() {
 		return _root == nullptr || _root == NULL;
 	}
 
-	~HuffTree() { delete _root; _root = nullptr; _encoder_map.clear(); }
+	void clear() {
+		delete _root;
+		_root = nullptr;
+		_encoder_map.clear();
+	}
+
+	~HuffTree() { clear(); }
 
 private:
 
