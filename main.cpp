@@ -3,6 +3,7 @@
 #include <compare>
 #include <vector>
 #include <thread>
+#include <concepts>
 #include "Defines.h"
 
 #define _NSTD_LONGINT_TESTER_
