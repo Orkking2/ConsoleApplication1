@@ -36,12 +36,14 @@ int main()
 	
 	auto vec = ht.encode(ints);
 
-	auto vec3 = ht.encode(1);
+	auto vec3 = ht.encode(6);
 
 	_STD cout << _STD boolalpha;
 
 	_NSTD_FOR_I(vec3.size())
 		_STD cout << vec3[_I] << " ";
+
+	_STD cout << "\n" << ht.decode(vec3.begin());
 	
 	//_STD cout << ht.decode(vec3.begin());
 

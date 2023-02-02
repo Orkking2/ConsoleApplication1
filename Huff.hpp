@@ -203,6 +203,9 @@ public:
 			_elements.push_back(temp);
 		}
 
+		for(auto i = _encoder_map.begin(); i != _encoder_map.end(); i++)
+			_STD reverse(i->second.begin(), i->second.end());
+
 		_root = _elements[0];
 	}
 
@@ -234,7 +237,7 @@ public:
 	template <template <typename...> class _Arr, template <typename> class _Alloc, typename... _ExtraTraits>
 	_NODISCARD _Arr<__unref_t, _Alloc<__unref_t>, _ExtraTraits...> decode(const _Arr<bool, _Alloc<bool>, _ExtraTraits...>& arr) const {
 		_Arr<__unref_t, _Alloc<__unref_t>> out;
-		for(auto i = arr.begin(); i != arr.end(); i++)
+		for(auto i = arr.begin(); i != arr.end();)
 			out.push_back(decode(i));
 		
 		return out;
