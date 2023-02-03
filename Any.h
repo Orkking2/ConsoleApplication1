@@ -6,10 +6,23 @@
 #include "Defines.h"
 #include "TypeTraits.h"
 
-template <class _Base>
+
+template <class _Interface>
+struct __get_interface_ptr {
+	using pointer = _STD add_pointer_t<_Interface>;
+};
+template <class _Interface> using __get_interface_ptr_p = __get_interface_ptr<_Interface>::pointer;
+
+
+
+template <class _Interface>
 struct __clone_base { // add clone() as necessarily implemented method
-	using pointer = _STD add_pointer_t<_Base>;
-	virtual pointer clone() const = 0;
+	virtual __get_interface_ptr_p<_Interface> clone() const = 0;
+};
+
+template <class _Interface>
+struct __pointed_to {
+	virtual __get_interface_ptr_p<_Interface> operator->() = 0;
 };
 
 //template <class _Class>
@@ -17,33 +30,83 @@ struct __clone_base { // add clone() as necessarily implemented method
 //	{ p->clone() } -> _STD same_as<_STD add_pointer_t<_Class>>;
 //}
 
-template <class _Interface>
+template <class _Interface, typename _Under_t>
 	//requires __cloneable<_Interface>
-class __any_base : _Interface, __clone_base<_Interface> {
-	using _Cbase = __clone_base<_Interface>;
-
-public:
-	using pointer = _Cbase::pointer;
-
-public:
-	__any_base() : _data(0) {}
-	__any_base(pointer data) : _data(data->clone()) {}
-	__any_base(const __any_base& other) : _data(other.clone()) {}
-
-	pointer clone() { // (*this)->clone()
-		if(!_data)
-			return 0;
-		return _data->clone();
-	}
+class __any_container_base : public _Interface, public __clone_base<_Interface> {
 	
-	pointer operator->() { // (*this)->op <=> ((*this)->)->op
-		return _data;
+public:
+	using interface_t = _Interface;
+	using pointer = __get_interface_ptr_p<_Interface>;
+	using under_t = _Under_t;
+
+public:
+	__any_container_base(const under_t& other) : _under(other) {}
+
+	pointer clone() const override {
+		return new __any_container_base(_under);
 	}
 
+protected:
+	under_t& _getUnder() {
+		return _under;
+	}
 
 private:
-	pointer _data;
+	under_t _under;
 };
+
+template <typename _Intermediary>
+struct __any_size_t_interface : public __clone_base<decltype(this)> {
+	using pointer = __get_interface_ptr_p<decltype(this)>;
+	using intermediary = _STD remove_cvref_t<_Intermediary>;
+
+	virtual ~__any_size_t_interface() = default;
+	virtual pointer operator+ (const intermediary&) const = 0;
+	virtual pointer operator+=(const intermediary&) = 0;
+	virtual pointer operator- (const intermediary&) const = 0;
+	virtual pointer operator-=(const intermediary&) = 0;
+	virtual operator intermediary() const = 0;
+	pointer operator->() = delete;
+};
+
+template <typename _Size_t, typename _Intermediary = _STD size_t>
+class __any_size_t_container : public __any_container_base<__any_size_t_interface<_Intermediary>, _Size_t> {
+	using _Contbase = __any_container_base<__any_size_t_interface<_Intermediary>, _Size_t>;
+	using _Myinterface = _Contbase::interface_t;
+
+public:
+	using pointer = _Contbase::pointer;
+	using intermediary = _Myinterface::intermediary;
+
+public:
+	pointer operator+(const intermediary& inter) const override {
+		return new pointer(_Contbase::_getUnder() + inter);
+	}
+	pointer operator+=(const intermediary& inter) override {
+		return new pointer(_Contbase::_getUnder() += inter)
+	}
+	pointer operator-(const intermediary& inter) const override {
+		return new pointer(_Contbase::_getUnder() - inter);
+	}
+	pointer operator-=(const intermediary& inter) override {
+		return new pointer(_Contbase::_getUnder() -= inter);
+	}
+	operator intermediary() const override {
+		return static_cast<intermediary>(_Contbase::_getUnder());
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 template <typename _Ret>
