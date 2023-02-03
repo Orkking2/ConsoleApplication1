@@ -13,7 +13,10 @@ struct __get_interface_ptr {
 };
 template <class _Interface> using __get_interface_ptr_p = __get_interface_ptr<_Interface>::pointer;
 
-
+template <class _Class>
+concept __cloneable = requires {
+	static_cast<__get_interface_ptr_p<_Class>>(_STD declval<__get_interface_ptr_p<_Class>>()->clone());
+};
 
 template <class _Interface>
 struct __clone_base { // add clone() as necessarily implemented method
@@ -25,13 +28,7 @@ struct __pointed_to {
 	virtual __get_interface_ptr_p<_Interface> operator->() = 0;
 };
 
-//template <class _Class>
-//concept __cloneable = requires(_STD add_pointer_t<_Class> p) {
-//	{ p->clone() } -> _STD same_as<_STD add_pointer_t<_Class>>;
-//}
-
 template <class _Interface, typename _Under_t>
-	//requires __cloneable<_Interface>
 class __any_container_base : public _Interface, public __clone_base<_Interface> {
 	
 public:
@@ -96,7 +93,48 @@ public:
 	}
 };
 
+//template <class, class>
+//struct __any_base : _STD false_type {};
 
+template <class _Interface, class _Container>
+	//requires __cloneable<_Interface> // commented for syntax highlighting
+class __any_base /* : _STD true_type*/ {
+	template <typename T>
+	using __replaced_container = _STD _Replace_first_parameter<T, _Container>::type;
+public:
+	using pointer = __get_interface_ptr_p<_Interface>;
+
+public:
+	template <typename _Base>
+	__any_base(const _Base& base) : _contents(new _Container(base)) {}
+	__any_base(const __any_base& other) : _contents(other->clone()) {}
+
+
+
+	pointer operator->() {
+		return _contents;
+	}
+
+	~__any_base() {
+		delete _contents;
+	}
+
+protected:
+	pointer& _getContents() {
+		return _contents;
+	}
+
+private:
+	pointer _contents;
+};
+
+template <typename _Intermediary>
+class __any_size_t : __any_base<__any_size_t_interface<_Intermediary>, __any_size_t_container> {
+
+
+
+
+};
 
 
 
