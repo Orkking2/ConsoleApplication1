@@ -41,9 +41,9 @@ public:
 public:
 	__any_container_base(const under_t& other) : _under(other) {}
 
-	pointer clone() const override {
-		return new __any_container_base(_under);
-	}
+	//pointer clone() const override {
+	//	return new __any_container_base(_under);
+	//}
 
 protected:
 	under_t& _getUnder() {
@@ -93,6 +93,10 @@ public:
 
 	pointer operator->() {
 		return _contents;
+	}
+
+	bool empty() const {
+		return _contents == nullptr;
 	}
 
 	void clear() {
@@ -147,17 +151,24 @@ public:
 	using intermediary = interface_t::intermediary;
 
 public:
+	template <typename T>
+	__any_size_t_container(const T& t) : _Contbase(t) {}
+
+	pointer clone() const override {
+		return new __any_size_t_container(_Contbase::_getUnder());
+	}
+
 	pointer operator+(const intermediary& inter) const override {
-		return new pointer(_Contbase::_getUnder() + inter);
+		return new __any_size_t_container(_Contbase::_getUnder() + inter);
 	}
 	pointer operator+=(const intermediary& inter) override {
-		return new pointer(_Contbase::_getUnder() += inter);
+		return new __any_size_t_container(_Contbase::_getUnder() += inter);
 	}
 	pointer operator-(const intermediary& inter) const override {
-		return new pointer(_Contbase::_getUnder() - inter);
+		return new __any_size_t_container(_Contbase::_getUnder() - inter);
 	}
 	pointer operator-=(const intermediary& inter) override {
-		return new pointer(_Contbase::_getUnder() -= inter);
+		return new __any_size_t_container(_Contbase::_getUnder() -= inter);
 	}
 	operator intermediary() const override {
 		return static_cast<intermediary>(_Contbase::_getUnder());
