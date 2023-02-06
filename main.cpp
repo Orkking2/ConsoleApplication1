@@ -25,8 +25,8 @@ _NSTD_UNSIGNED
 
 int main()
 {
-	_NSTD __any_size_t<_STD size_t> a(3.234);
-	a.clear();
+	_NSTD __any_iterator<_STD size_t> a;
+
 
 
 	std::cout << '\n';

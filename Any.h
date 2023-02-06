@@ -63,6 +63,13 @@ struct __any_base {
 		"__any_base invalid params.");
 };
 
+template <template <typename, typename...> class _Container, typename... _Traits>
+struct __any_base<_Container<void, _Traits...>> {
+	using container = _Container<void, _Traits...>;
+	using interface_t = container::interface_t;
+	using pointer = container::pointer;
+};
+
 template <template <typename, typename...> class _Container, typename _Default_val, typename... _Traits>
 class __any_base<_Container<_Default_val, _Traits...>> {
 	using _Mycontainer = _Container<_Default_val, _Traits...>;
@@ -230,9 +237,9 @@ public:
 
 template <typename _Ret, typename _Intermediary>
 struct __any_iterator_interface {
-	using value_type = _Ret;
+	using value_type = _STD remove_cvref_t<_Ret>;
 	using intermediary = _Intermediary;
-	using pointer = __get_interface_ptr_p<__any_iterator_interface<_Ret>>;
+	using pointer = __get_interface_ptr_p<__any_iterator_interface<_Ret, _Intermediary>>;
 
 	virtual ~__any_iterator_interface() = default;
 	virtual pointer operator+ (const __any_size_t<intermediary>&) const = 0;
@@ -245,21 +252,29 @@ struct __any_iterator_interface {
 	virtual pointer operator--(int) = 0;
 	virtual pointer operator--() = 0;
 
-	virtual value_type operator*() const = 0;
-	virtual value_type operator->() = 0;
+	virtual const value_type& operator*() const = 0; // (this) const
+	virtual value_type& operator*() = 0;
 };
 
 template <class _Iter, typename _Ret = typename _Iter::value_type, typename _Intermediary = typename _Iter::size_type>
 class __any_iterator_container : __any_container_base<__any_iterator_interface<_Ret, _Intermediary>, _Iter> {
-	using _Contbase = __any_iterator_interface<_Ret>;
+	using _Contbase = __any_iterator_interface<_Ret, _Intermediary>;
 
 public:
 	using interface_t = _Contbase::interface_t;
 	using pointer = _Contbase::pointer;
 	using under_t = _Contbase::under_t;
+	using value_type = interface_t::value_type;
 	using intermediary = interface_t::intermediary;
 
 public:
+	template <typename T>
+	__any_iterator_container(const T& t) : _Contbase(t) {}
+
+	pointer clone() const override {
+		return new __any_iterator_container(_Contbase::_getUnder());
+	}
+
 	pointer operator+ (const __any_size_t<_Intermediary>& size) const override {
 		return new __any_iterator_container(
 			_Contbase::_getUnder() + static_cast<_Intermediary>(size)
@@ -297,6 +312,18 @@ public:
 		--_Contbase::_getUnder();
 		return this;
 	}
+
+	const value_type& opertor*() const override {
+		return *_Contbase::_getUnder();
+	}
+	value_type& operator*() override {
+		return *_Contbase::_getUnder();
+	}
+};
+
+template <typename _Ret, typename _Intermediary>
+class __any_iterator : __any_base<__any_iterator_container<void, _Ret, _Intermediary> {
+	
 };
 
 _NSTD_END
