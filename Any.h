@@ -209,33 +209,24 @@ public:
 	}
 };
 
-
-
-
-
-
-
-
-
-
-
-
 template <typename _Ret>
-struct __any_iterator_interface : __clone_base<__any_iterator_interface<_Ret>> {
+struct __any_iterator_interface {
 	using value_type = _Ret;
+	using pointer = __get_interface_ptr_p<__any_iterator_interface<_Ret>>;
 
 	virtual ~__any_iterator_interface() = default;
-	virtual __any_iterator_interface<_Ret>* operator+ (const __any_iterator_interface<_Ret>*&) const = 0;
-	virtual __any_iterator_interface<_Ret>* operator+=(const __any_iterator_interface<_Ret>*&) = 0;
-	virtual __any_iterator_interface<_Ret>* operator++(int) = 0;
-	virtual __any_iterator_interface<_Ret>* operator++() = 0;
+	virtual pointer operator+ (const __any_size_t<>&) const = 0;
+	virtual pointer operator+=(const __any_size_t<>&) = 0;
+	virtual pointer operator++(int) = 0;
+	virtual pointer operator++() = 0;
 
-	virtual __any_iterator_interface<_Ret>* operator- (const __any_iterator_interface<_Ret>*&) const = 0;
-	virtual __any_iterator_interface<_Ret>* operator-=(const __any_iterator_interface<_Ret>*&) = 0;
-	virtual __any_iterator_interface<_Ret>* operator--(int) = 0;
-	virtual __any_iterator_interface<_Ret>* operator--() = 0;
+	virtual pointer operator- (const __any_size_t<>&) const = 0;
+	virtual pointer operator-=(const __any_size_t<>&) = 0;
+	virtual pointer operator--(int) = 0;
+	virtual pointer operator--() = 0;
 
 	virtual value_type operator*() const = 0;
+	virtual value_type operator->() = 0;
 };
 
 template <class _Iter, typename _Ret = typename _Iter::value_type>
@@ -244,7 +235,7 @@ class __any_iterator_container : __any_container_base<__any_iterator_interface<_
 	using __iter = _STD remove_cvref_t<_Iter>;
 
 public:
-	using value_type = __base::value_type;
+	
 
 
 
