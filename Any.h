@@ -126,11 +126,15 @@ struct __any_size_t_interface {
 	
 	virtual pointer operator+ (const intermediary&) const = 0;
 	virtual pointer operator+=(const intermediary&) = 0;
+	virtual pointer operator++(int) = 0;
+	virtual pointer operator++() = 0;
 	template <typename T> pointer operator+ (const T& t) const { return operator+ (static_cast<intermediary>(t)); }
 	template <typename T> pointer operator+=(const T& t)       { return operator+=(static_cast<intermediary>(t)); }
 
 	virtual pointer operator- (const intermediary&) const = 0;
 	virtual pointer operator-=(const intermediary&) = 0;
+	virtual pointer operator--(int) = 0;
+	virtual pointer operator--() = 0;
 	template <typename T> pointer operator- (const T& t) const { return operator- (static_cast<intermediary>(t)); }
 	template <typename T> pointer operator-=(const T& t)       { return operator-=(static_cast<intermediary>(t)); }
 	
@@ -164,11 +168,26 @@ public:
 	pointer operator+=(const intermediary& inter) override {
 		return new __any_size_t_container(_Contbase::_getUnder() += inter);
 	}
+	pointer operator++(int) override { // postfix
+		return new __any_size_t_container(_Contbase::_getUnder()++);
+	}
+	pointer operator++() override { // prefix
+		++_Contbase::_getUnder();
+		return this;
+	}
+
 	pointer operator-(const intermediary& inter) const override {
 		return new __any_size_t_container(_Contbase::_getUnder() - inter);
 	}
 	pointer operator-=(const intermediary& inter) override {
 		return new __any_size_t_container(_Contbase::_getUnder() -= inter);
+	}
+	pointer operator--(int) override { // postfix
+		return new __any_size_t_container(_Contbase::_getUnder()--);
+	}
+	pointer operator--() override { // prefix
+		--_Contbase::_getUnder();
+		return this;
 	}
 	operator intermediary() const override {
 		return static_cast<intermediary>(_Contbase::_getUnder());
@@ -209,19 +228,20 @@ public:
 	}
 };
 
-template <typename _Ret>
+template <typename _Ret, typename _Intermediary>
 struct __any_iterator_interface {
 	using value_type = _Ret;
+	using intermediary = _Intermediary;
 	using pointer = __get_interface_ptr_p<__any_iterator_interface<_Ret>>;
 
 	virtual ~__any_iterator_interface() = default;
-	virtual pointer operator+ (const __any_size_t<>&) const = 0;
-	virtual pointer operator+=(const __any_size_t<>&) = 0;
+	virtual pointer operator+ (const __any_size_t<intermediary>&) const = 0;
+	virtual pointer operator+=(const __any_size_t<intermediary>&) = 0;
 	virtual pointer operator++(int) = 0;
 	virtual pointer operator++() = 0;
 
-	virtual pointer operator- (const __any_size_t<>&) const = 0;
-	virtual pointer operator-=(const __any_size_t<>&) = 0;
+	virtual pointer operator- (const __any_size_t<intermediary>&) const = 0;
+	virtual pointer operator-=(const __any_size_t<intermediary>&) = 0;
 	virtual pointer operator--(int) = 0;
 	virtual pointer operator--() = 0;
 
@@ -229,21 +249,54 @@ struct __any_iterator_interface {
 	virtual value_type operator->() = 0;
 };
 
-template <class _Iter, typename _Ret = typename _Iter::value_type>
-class __any_iterator_container : __any_container_base<__any_iterator_interface<_Ret>, _Iter> {
-	using __base = __any_iterator_interface<_Ret>;
-	using __iter = _STD remove_cvref_t<_Iter>;
+template <class _Iter, typename _Ret = typename _Iter::value_type, typename _Intermediary = typename _Iter::size_type>
+class __any_iterator_container : __any_container_base<__any_iterator_interface<_Ret, _Intermediary>, _Iter> {
+	using _Contbase = __any_iterator_interface<_Ret>;
 
 public:
-	
+	using interface_t = _Contbase::interface_t;
+	using pointer = _Contbase::pointer;
+	using under_t = _Contbase::under_t;
+	using intermediary = interface_t::intermediary;
 
+public:
+	pointer operator+ (const __any_size_t<_Intermediary>& size) const override {
+		return new __any_iterator_container(
+			_Contbase::_getUnder() + static_cast<_Intermediary>(size)
+		);
+	}
+	pointer operator+=(const __any_size_t<_Intermediary>& size) override {
+		_Contbase::_getUnder() += static_cast<_Intermediary>(size);
+		return this;
+	}
+	pointer operator++(int) override {
+		return new __any_iterator_container(
+			_Contbase::_getUnder()++
+		);
+	}
+	pointer operator++() override {
+		++_Contbase::_getUnder();
+		return this;
+	}
 
-
-
-
-
-private:
-	__iter _contents;
+	pointer operator- (const __any_size_t<_Intermediary>& size) const override {
+		return new __any_iterator_container(
+			_Contbase::_getUnder() - static_cast<_Intermediary>(size)
+		);
+	}
+	pointer operator-=(const __any_size_t<_Intermediary>& size) override {
+		_Contbase::_getUnder() -= static_cast<_Intermediary>(size);
+		return this;
+	}
+	pointer operator--(int) override {
+		return new __any_iterator_container(
+			_Contbase::_getUnder()--
+		);
+	}
+	pointer operator--() override {
+		--_Contbase::_getUnder();
+		return this;
+	}
 };
 
 _NSTD_END
