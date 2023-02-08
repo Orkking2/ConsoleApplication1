@@ -72,7 +72,7 @@ struct __any_base<_Container<void, _Traits...>> {
 
 template <template <typename, typename...> class _Container, typename _Default_val, typename... _Traits>
 class __any_base<_Container<_Default_val, _Traits...>> {
-	using _Mycontainer = _Container<_Default_val, _Traits...>;
+	using _Mycontainer = _Container<void, _Traits...>;
 
 	template <typename T>
 	using __replaced_container = _Container<T, _Traits...>;
