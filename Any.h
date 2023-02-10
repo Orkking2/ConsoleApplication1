@@ -63,13 +63,6 @@ struct __any_base {
 		"__any_base invalid params.");
 };
 
-template <template <typename, typename...> class _Container, typename... _Traits>
-struct __any_base<_Container<void, _Traits...>> {
-	using container = _Container<void, _Traits...>;
-	using interface_t = container::interface_t;
-	using pointer = container::pointer;
-};
-
 template <template <typename, typename...> class _Container, typename _Default_val, typename... _Traits>
 class __any_base<_Container<_Default_val, _Traits...>> {
 	using _Mycontainer = _Container<void, _Traits...>;
@@ -322,8 +315,21 @@ public:
 };
 
 template <typename _Ret, typename _Intermediary>
-class __any_iterator : __any_base<__any_iterator_container<void, _Ret, _Intermediary> {
-	
+class __any_iterator : __any_base<__any_iterator_container<void, _Ret, _Intermediary>> {
+	using __base = __any_base<__any_iterator_container<void, _Ret, _Intermediary>>;
+
+public:
+	using interface_t = __base::interface_t;
+	using pointer = __base::pointer;
+	using intermediary = __base::container::intermediary;
+
+public:
+	template <class _Iter>
+	__any_iterator(const _Iter& other) : __base(other) {}
+	__any_iterator(const __any_iterator& other) : __base(static_cast<__base>(other)) {}
+
+
+
 };
 
 _NSTD_END

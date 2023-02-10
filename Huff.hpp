@@ -69,7 +69,8 @@ private:
 			return __any_iterator(_contents->operator++(0)); 
 		}
 		bool operator*() { 
-			return _contents->operator*(); }
+			return _contents->operator*(); 
+		}
 		operator bool() { 
 			return **this; 
 		}
