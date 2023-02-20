@@ -18,14 +18,14 @@
 //#include "Deque.h"
 //#include "Timer.h"
 #include "Huff.hpp"
-#include "Any.h"
+//#include "Any.h"
 
 _NSTD_UNSIGNED
 
 
 int main()
 {
-	_NSTD __any_iterator<_STD size_t> a;
+	
 
 
 
