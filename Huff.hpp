@@ -166,6 +166,7 @@ public:
 			return;
 		if(list.size() == 1) {
 			_root = new __element(list[0].first, list[0].second);
+			_encoder_map.insert({ list[0].first, _STD vector<bool>() { 0 } });
 			return;
 		}
 		
